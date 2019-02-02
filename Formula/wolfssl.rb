@@ -2,21 +2,17 @@ class Wolfssl < Formula
   desc "Embedded SSL Library written in C"
   homepage "https://www.wolfssl.com/wolfSSL/Home.html"
   url "https://github.com/wolfSSL/wolfssl.git",
-      :tag      => "v3.15.5-stable",
-      :revision => "39506e61d16ef40583f251cafcb63302d22fd7f3"
+      :tag      => "v3.15.7-stable",
+      :revision => "a7350b7d2ed15648443253cb39ad9195df184139"
   sha256 "4e15f494604e41725499f8b708798f8ddc2fcaa8f39b4369bcd000b3cab482d8"
   head "https://github.com/wolfSSL/wolfssl.git"
 
   bottle do
     cellar :any
-    sha256 "beb57fb2808a63073b9df4b8e263a04b61940da8b044892c390b16bec249cdc5" => :mojave
-    sha256 "c57645d93606b126e25c5b028499903efd524dd85fd7fe08560c338eb891f93a" => :high_sierra
-    sha256 "13f656f75a2f877910803de4a55b15ea449c8093c0a2e69e1baa8c440ecdf9a8" => :sierra
+    sha256 "d34e3fc6fbe662b9b03e07cbdc57808f10fa24f1b93108a2d5afb1047d77965f" => :mojave
+    sha256 "d9efcf36b72442a4284baacf92fbb22a559a4b775e5e35da6843ce86ca6ea15f" => :high_sierra
+    sha256 "646439cffbf0099aaa255f1a643061559f426b3868f7bd11c53042771c4a152d" => :sierra
   end
-
-  option "without-test", "Skip compile-time tests"
-
-  deprecated_option "without-check" => "without-test"
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
@@ -77,25 +73,19 @@ class Wolfssl < Formula
       --enable-supportedcurves
       --enable-tls13
       --enable-sp
+      --enable-fastmath
+      --enable-fasthugemath
     ]
-
-    if MacOS.prefer_64_bit?
-      args << "--enable-fastmath" << "--enable-fasthugemath"
-    else
-      args << "--disable-fastmath" << "--disable-fasthugemath"
-    end
-
-    args << "--enable-aesni" if Hardware::CPU.aes? && !build.bottle?
 
     # Extra flag is stated as a needed for the Mac platform.
     # https://wolfssl.com/wolfSSL/Docs-wolfssl-manual-2-building-wolfssl.html
     # Also, only applies if fastmath is enabled.
-    ENV.append_to_cflags "-mdynamic-no-pic" if MacOS.prefer_64_bit?
+    ENV.append_to_cflags "-mdynamic-no-pic"
 
     system "./autogen.sh"
     system "./configure", *args
     system "make"
-    system "make", "check" if build.with? "test"
+    system "make", "check"
     system "make", "install"
   end
 

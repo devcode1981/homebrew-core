@@ -1,13 +1,13 @@
 class Librsvg < Formula
   desc "Library to render SVG files using Cairo"
   homepage "https://wiki.gnome.org/Projects/LibRsvg"
-  url "https://download.gnome.org/sources/librsvg/2.44/librsvg-2.44.9.tar.xz"
-  sha256 "92bf288cbee6ab21907fb71228ab001f64940919e29fbbbb85d2d17f3e3b6fc7"
+  url "https://download.gnome.org/sources/librsvg/2.44/librsvg-2.44.12.tar.xz"
+  sha256 "66830b093a24262cc9bd2d1c921f6f59133a99893399d79768f7509021b678c0"
 
   bottle do
-    sha256 "eb9fce9d4823ecc8c16336c5041b91620969ee97b1931a2ac59c809420b94914" => :mojave
-    sha256 "868c3f08ff62083e01e7a4087f1d63da324ca7b2f8f4ecbb498e39f57e99889e" => :high_sierra
-    sha256 "644e3f5d815ade5568f9c815a2217d3961741f6bbeda47f3aebc690f20a30772" => :sierra
+    sha256 "1b95275d9a2ad8e04a8c36d303f421eea3ab3f2dd408f47f3bae1c021a601910" => :mojave
+    sha256 "806a41a5fbdf127453268a83d2814fb2dc3bd804f2d21774c6fe6daeb15da4ab" => :high_sierra
+    sha256 "6476aa9da86421a41ca5d12a65f05f6d9feb6c9a5ed8965239c933098290c40f" => :sierra
   end
 
   depends_on "gobject-introspection" => :build
@@ -18,7 +18,6 @@ class Librsvg < Formula
   depends_on "glib"
   depends_on "libcroco"
   depends_on "pango"
-  depends_on "gtk+3" => :optional
 
   def install
     args = %W[

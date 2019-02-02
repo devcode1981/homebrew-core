@@ -1,8 +1,8 @@
 class VertX < Formula
   desc "Toolkit for building reactive applications on the JVM"
   homepage "https://vertx.io/"
-  url "https://dl.bintray.com/vertx/downloads/vert.x-3.6.0-full.tar.gz"
-  sha256 "df2737aa6d5e5a921abec487263fa82354c22468677c61baafbfb05bcdbdcd79"
+  url "https://dl.bintray.com/vertx/downloads/vert.x-3.6.3-full.tar.gz"
+  sha256 "8025c994f1ef3b80ace23a9d92975abe3b3f41e75f6060127e3f95bc2ee8e9fd"
 
   bottle :unneeded
   depends_on :java => "1.8+"

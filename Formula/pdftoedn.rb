@@ -1,15 +1,14 @@
 class Pdftoedn < Formula
   desc "Extract PDF document data and save the output in EDN format"
   homepage "https://github.com/edporras/pdftoedn"
-  url "https://github.com/edporras/pdftoedn/archive/v0.36.1.tar.gz"
-  sha256 "14e6df5df9a24225fcb9a92669899c2ab9ccb3742a2738300fc393b8b95416c4"
-  revision 1
+  url "https://github.com/edporras/pdftoedn/archive/v0.36.4.tar.gz"
+  sha256 "4714f2525a41574ad8601b5d68d82975615a52475088fa9f02e83ecb7a68b363"
 
   bottle do
     cellar :any
-    sha256 "d2555c6523532ad0ea177a20b4a84abca5f336fae4dcf7ee631ba25a6284bd1e" => :mojave
-    sha256 "bb5bfd1f9eb72c085a516a9155dac320d45b0584709cc9985bf4fdc9c7833be1" => :high_sierra
-    sha256 "f9c45af7767fcdffe0e32960a47e8e1f9befdaed2cb3013427460eae9c247833" => :sierra
+    sha256 "7e53b96f447baea58576a688c5c3befd58572de8248735b71c4e9ba444fea18c" => :mojave
+    sha256 "247102a575acfbb7c8f10596c0646f1fdabb3e72767738dfc7f15e9c148016b1" => :high_sierra
+    sha256 "9a0c5fdcdb031793063d460e503e11f6fc2d9e6804d4a5665c40ce8da0a58445" => :sierra
   end
 
   depends_on "autoconf" => :build
@@ -22,8 +21,6 @@ class Pdftoedn < Formula
   depends_on "openssl"
   depends_on "poppler"
   depends_on "rapidjson"
-
-  needs :cxx11
 
   def install
     ENV.cxx11

@@ -1,19 +1,18 @@
 class Haproxy < Formula
   desc "Reliable, high performance TCP/HTTP load balancer"
   homepage "https://www.haproxy.org/"
-  url "https://www.haproxy.org/download/1.8/src/haproxy-1.8.14.tar.gz"
-  sha256 "b17e402578be85e58af7a3eac99b1f675953bea9f67af2e964cf8bdbd1bd3fdf"
+  url "https://www.haproxy.org/download/1.8/src/haproxy-1.8.17.tar.gz"
+  sha256 "7b789b177875afdd5ddeff058e7efde73aa895dc2dcf728b464358635ae3948e"
 
   bottle do
     cellar :any
-    sha256 "c83ee8dacc8bd8876ac0c236b9119b8ddda1b58e4a144403f64ea2e6f6257ccd" => :mojave
-    sha256 "df7f46bcdb36f484dfdf6b2f853c65a3dea86e04fd2dd0618487f410de3289ef" => :high_sierra
-    sha256 "2c61d13f11f969466e169e68556c08612c7ee39205c970c1e52f4fbd9dac4733" => :sierra
+    sha256 "f7fb5817c7c95c7c2a87c049de2c935693264131ada4c1305066ccd96f0b08f0" => :mojave
+    sha256 "e88abbe9f9db6833d50d6f4cba611002ddf90d34540e5c43bd1c46122503eed0" => :high_sierra
+    sha256 "65117861a4d041027c104d967dcb1ba2e1a10ed9fb39bfd29679b2b89ea7f826" => :sierra
   end
 
   depends_on "openssl"
   depends_on "pcre"
-  depends_on "lua" => :optional
 
   def install
     args = %w[
@@ -26,14 +25,6 @@ class Haproxy < Formula
       USE_ZLIB=1
       ADDLIB=-lcrypto
     ]
-
-    if build.with?("lua")
-      lua = Formula["lua"]
-      args << "USE_LUA=1"
-      args << "LUA_LIB=#{lua.opt_lib}"
-      args << "LUA_INC=#{lua.opt_include}/lua"
-      args << "LUA_LD_FLAGS=-L#{lua.opt_lib}"
-    end
 
     # We build generic since the Makefile.osx doesn't appear to work
     system "make", "CC=#{ENV.cc}", "CFLAGS=#{ENV.cflags}", "LDFLAGS=#{ENV.ldflags}", *args

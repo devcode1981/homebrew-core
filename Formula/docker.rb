@@ -2,14 +2,14 @@ class Docker < Formula
   desc "Pack, ship and run any application as a lightweight container"
   homepage "https://www.docker.com/"
   url "https://github.com/docker/docker-ce.git",
-      :tag      => "v18.09.0",
-      :revision => "4d60db472b2bde6931072ca6467f2667c2590dff"
+      :tag      => "v18.09.1",
+      :revision => "4c52b901c6cb019f7552cd93055f9688c6538be4"
 
   bottle do
     cellar :any_skip_relocation
-    sha256 "fd7f17039daf874ced54a20a4d0b285cebcc35edf547a6ac62a5beb6c4c05326" => :mojave
-    sha256 "53d7acd92ee10128d04e95073019d1aa34bfe04aa42a204f73476ba58ff6c4ca" => :high_sierra
-    sha256 "215d40ac7582617b43d177452db01e6c5bfbac7442b2c721e98f788cb63b36b2" => :sierra
+    sha256 "36d14b033a7dd9933212c2a0fd0ecd977c3a11292c634a0877f38ffc7d40abee" => :mojave
+    sha256 "55e92241acd35c6986f55b3532fb3ee2e0f8b957c90423fdf8b07fd770fbbd1d" => :high_sierra
+    sha256 "17577fc908305dd285760bfb92a8f3f96162c348eabaf6c9fd8cc3e1a102aee9" => :sierra
   end
 
   depends_on "go" => :build
@@ -20,8 +20,11 @@ class Docker < Formula
     dir.install (buildpath/"components/cli").children
     cd dir do
       commit = Utils.popen_read("git rev-parse --short HEAD").chomp
-      ldflags = ["-X github.com/docker/cli/cli.GitCommit=#{commit}",
-                 "-X github.com/docker/cli/cli.Version=#{version}-ce"]
+      build_time = Utils.popen_read("date -u +'%Y-%m-%dT%H:%M:%SZ' 2> /dev/null").chomp
+      ldflags = ["-X \"github.com/docker/cli/cli.BuildTime=#{build_time}\"",
+                 "-X github.com/docker/cli/cli.GitCommit=#{commit}",
+                 "-X github.com/docker/cli/cli.Version=#{version}",
+                 "-X \"github.com/docker/cli/cli.PlatformName=Docker Engine - Community\""]
       system "go", "build", "-o", bin/"docker", "-ldflags", ldflags.join(" "),
              "github.com/docker/cli/cmd/docker"
 
