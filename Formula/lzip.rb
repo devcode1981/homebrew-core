@@ -1,15 +1,21 @@
 class Lzip < Formula
   desc "LZMA-based compression program similar to gzip or bzip2"
   homepage "https://www.nongnu.org/lzip/"
-  url "https://download-mirror.savannah.gnu.org/releases/lzip/lzip-1.20.tar.gz"
-  sha256 "c93b81a5a7788ef5812423d311345ba5d3bd4f5ebf1f693911e3a13553c1290c"
+  url "https://download-mirror.savannah.gnu.org/releases/lzip/lzip-1.22.tar.gz"
+  sha256 "c3342d42e67139c165b8b128d033b5c96893a13ac5f25933190315214e87a948"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url "https://download.savannah.gnu.org/releases/lzip/"
+    regex(/href=.*?lzip[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "c43e2df881d99817f8769e144703f4fd297a2fe6a561f6d27c1db3f0bbbbdea5" => :mojave
-    sha256 "f854fdd0c02100534ebeeba5f120a40524b3e5048665fadb0b2e30519310dbb7" => :high_sierra
-    sha256 "8fd74d6652d03e9d5af035e0948e6835f38fd6ca45758c0392f825f232e4b4c6" => :sierra
-    sha256 "1b61136446eba909e98195b10340174e3aba0c28264336242408a1c61f4cca90" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "78014ac2f6011ba98beeabd7aa79e37b6ee78a5e9c72b7bf7594005bfcc7f082"
+    sha256 cellar: :any_skip_relocation, big_sur:       "dd3e7b00a64e6de1f1cbb0446c2a3c0dac5033dd9b2de5f52fe56d7375c0d339"
+    sha256 cellar: :any_skip_relocation, catalina:      "91a7214e357c949e0a06736e6a73eb667c0c487efaeebeb4df6fae99ee660575"
+    sha256 cellar: :any_skip_relocation, mojave:        "7c4d9d33bda8dd4043a48903d9348e683c1c64c1b0ab39b1680fcaadb952896f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "72895e72f99898b116d3b89b7e594a21917d95a08a46f927a9a2532e5269133d"
   end
 
   def install

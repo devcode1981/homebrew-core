@@ -1,14 +1,16 @@
 class Xsimd < Formula
   desc "Modern, portable C++ wrappers for SIMD intrinsics"
   homepage "https://xsimd.readthedocs.io/en/latest/"
-  url "https://github.com/QuantStack/xsimd/archive/7.1.0.tar.gz"
-  sha256 "a7dfed9add408195e0aed617ba5aaefe9f701080eb49f66ef6e2308736250f6e"
+  url "https://github.com/QuantStack/xsimd/archive/7.5.0.tar.gz"
+  sha256 "45337317c7f238fe0d64bb5d5418d264a427efc53400ddf8e6a964b6bcb31ce9"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1132f2aefaa703caf2ba477f3e45ae0c3a63c1ac3a5fc11eeba38553c94545a5" => :mojave
-    sha256 "4600e692dcf447175726ea9004333d02c76579ea07866f53e5852c36648b9b9c" => :high_sierra
-    sha256 "4600e692dcf447175726ea9004333d02c76579ea07866f53e5852c36648b9b9c" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "c8c0550dcc933117abe0a9ac6369dcfa3f5fc67192a5470213200d70e8b34a49"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c8c0550dcc933117abe0a9ac6369dcfa3f5fc67192a5470213200d70e8b34a49"
+    sha256 cellar: :any_skip_relocation, catalina:      "c8c0550dcc933117abe0a9ac6369dcfa3f5fc67192a5470213200d70e8b34a49"
+    sha256 cellar: :any_skip_relocation, mojave:        "c8c0550dcc933117abe0a9ac6369dcfa3f5fc67192a5470213200d70e8b34a49"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "65cdb6754f3b1b6c42569b851e81ff800b95f2de91d246bce8f4f881eca4035f"
   end
 
   depends_on "cmake" => :build

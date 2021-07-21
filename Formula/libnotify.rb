@@ -1,27 +1,75 @@
 class Libnotify < Formula
   desc "Library that sends desktop notifications to a notification daemon"
   homepage "https://developer.gnome.org/libnotify"
-  url "https://download.gnome.org/sources/libnotify/0.7/libnotify-0.7.7.tar.xz"
-  sha256 "9cb4ce315b2655860c524d46b56010874214ec27e854086c1a1d0260137efc04"
-  revision 1
+  url "https://download.gnome.org/sources/libnotify/0.7/libnotify-0.7.9.tar.xz"
+  sha256 "66c0517ed16df7af258e83208faaf5069727dfd66995c4bbc51c16954d674761"
+  license "LGPL-2.1"
 
-  bottle do
-    sha256 "d45147d1218ee584b2d67ce23e6bd60553a83424c3c0a69cd8a14f6e238a398c" => :mojave
-    sha256 "f88f445a6b5719c695aa606da3050d3e24ddc1c7a586f6541186025551d273e6" => :high_sierra
-    sha256 "09166e1efa743eed930b7aca87b084de644735f8af17133bf697e24b70f8018f" => :sierra
-    sha256 "0139ddf8047c88ee6c29abfa8a112dce897150d54a0d83b9d2892d5033829a6d" => :el_capitan
+  # libnotify uses GNOME's "even-numbered minor is stable" version scheme but
+  # we've been using a development version 0.7.x for many years, so we have to
+  # match development versions until we're on a stable release.
+  livecheck do
+    url :stable
+    regex(/libnotify-(\d+(?:\.\d+)+)\.t/i)
   end
 
+  bottle do
+    sha256 cellar: :any, arm64_big_sur: "49e795c1869eb3f544ef5710861ec3ef0f829f6b8db64b3c44722025e2c4ba97"
+    sha256 cellar: :any, big_sur:       "415ef3754d6910255fc161e352b0b5a7006efe3aa5684fbf8abeb98514358562"
+    sha256 cellar: :any, catalina:      "367a8d51cb565452392b9bc92c753ca641c23f91fc4ff93fb6166b63f2beafda"
+    sha256 cellar: :any, mojave:        "e6d5a6a87f885bf421e6a70c9cef1c6aaf89db46a98216af6c06754246a8f896"
+    sha256 cellar: :any, high_sierra:   "0560e601843a3e42a4823904dd5534212efd823292444a9588f1cf99ea8bc8f5"
+  end
+
+  depends_on "docbook-xsl" => :build
   depends_on "gobject-introspection" => :build
+  depends_on "gtk-doc" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "gdk-pixbuf"
 
   def install
-    system "./configure", "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--prefix=#{prefix}",
-                          "--disable-tests",
-                          "--enable-introspection"
-    system "make", "install"
+    ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
+
+    mkdir "build" do
+      system "meson", *std_meson_args, "-Dtests=false", ".."
+      system "ninja"
+      system "ninja", "install"
+    end
+  end
+
+  test do
+    (testpath/"test.c").write <<~EOS
+      #include <libnotify/notify.h>
+
+      int main(int argc, char *argv[]) {
+        g_assert_true(notify_init("testapp"));
+        return 0;
+      }
+    EOS
+    gettext = Formula["gettext"]
+    glib = Formula["glib"]
+    gdk_pixbuf = Formula["gdk-pixbuf"]
+    flags = %W[
+      -I#{gettext.opt_include}
+      -I#{gdk_pixbuf.opt_include}/gdk-pixbuf-2.0
+      -I#{glib.opt_include}/glib-2.0
+      -I#{glib.opt_lib}/glib-2.0/include
+      -I#{include}
+      -D_REENTRANT
+      -L#{gettext.opt_lib}
+      -L#{glib.opt_lib}
+      -L#{gdk_pixbuf.opt_lib}
+      -L#{lib}
+      -lnotify
+      -lgdk_pixbuf-2.0
+      -lgio-2.0
+      -lglib-2.0
+      -lgobject-2.0
+      -lintl
+    ]
+    system ENV.cc, "test.c", "-o", "test", *flags
+    system "./test"
   end
 end

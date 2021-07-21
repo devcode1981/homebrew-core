@@ -1,25 +1,34 @@
 class Wxmac < Formula
   desc "Cross-platform C++ GUI toolkit (wxWidgets for macOS)"
   homepage "https://www.wxwidgets.org"
-  url "https://github.com/wxWidgets/wxWidgets/releases/download/v3.0.4/wxWidgets-3.0.4.tar.bz2"
-  sha256 "96157f988d261b7368e5340afa1a0cad943768f35929c22841f62c25b17bf7f0"
-  revision 1
+  url "https://github.com/wxWidgets/wxWidgets/releases/download/v3.1.5/wxWidgets-3.1.5.tar.bz2"
+  sha256 "d7b3666de33aa5c10ea41bb9405c40326e1aeb74ee725bb88f90f1d50270a224"
+  license "wxWindows"
   head "https://github.com/wxWidgets/wxWidgets.git"
 
-  bottle do
-    cellar :any
-    sha256 "1ddeb111fc0519d87dbdb4cf3887c0976ea4e077bb6e6c26493b7d1ec930b048" => :mojave
-    sha256 "32357b2ab1590b209e89c02fd36c54b5378fe79d32e82abc4047ab4fbae2663c" => :high_sierra
-    sha256 "666f423fdee434b4e4f91d6035678f658cf149df8077dae01151c0ebe781445a" => :sierra
-    sha256 "6acfa572e370c0f9c2f48f89ab8807a42d81726151e8ebddccca48aa634514de" => :el_capitan
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
-  option "with-stl", "use standard C++ classes for everything"
-  option "with-static", "build static libraries"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "9080b4b039c1267c300977b6a1bab583717f0829f6858eeec580a55473e25a2f"
+    sha256 cellar: :any,                 big_sur:       "a4ca829d8774407a89b727677286788c2088c7f5814e4e21b07cd339453f6950"
+    sha256 cellar: :any,                 catalina:      "1b1e632388b899230f8728e21ac2336e741b8233094bf572e9b5e93e9028efe1"
+    sha256 cellar: :any,                 mojave:        "1be251946ba9b3c4f5acf14a1c3a99f9a5d06360dce108d62ba495c84594159c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "4e1acbd860a4b0225c8a3e26f938ca5cb2ed281c03b3fae23be99a3e4ea0ca20"
+  end
 
   depends_on "jpeg"
   depends_on "libpng"
   depends_on "libtiff"
+
+  on_linux do
+    depends_on "pkg-config" => :build
+    depends_on "gtk+"
+    depends_on "libsm"
+    depends_on "mesa-glu"
+  end
 
   def install
     args = [
@@ -33,23 +42,24 @@ class Wxmac < Formula
       "--enable-std_string",
       "--enable-svg",
       "--enable-unicode",
-      "--enable-webkit",
+      "--enable-webviewwebkit",
       "--with-expat",
       "--with-libjpeg",
       "--with-libpng",
       "--with-libtiff",
       "--with-opengl",
-      "--with-osx_cocoa",
       "--with-zlib",
       "--disable-precomp-headers",
       # This is the default option, but be explicit
       "--disable-monolithic",
-      # Set with-macosx-version-min to avoid configure defaulting to 10.5
-      "--with-macosx-version-min=#{MacOS.version}",
     ]
 
-    args << "--enable-stl" if build.with? "stl"
-    args << (build.with?("static") ? "--disable-shared" : "--enable-shared")
+    on_macos do
+      # Set with-macosx-version-min to avoid configure defaulting to 10.5
+      args << "--with-macosx-version-min=#{MacOS.version}"
+      args << "--with-osx_cocoa"
+      args << "--with-libiconv"
+    end
 
     system "./configure", *args
     system "make", "install"
@@ -59,6 +69,10 @@ class Wxmac < Formula
     # using wx-config can find both wxmac and wxpython headers,
     # which are linked to the same place
     inreplace "#{bin}/wx-config", prefix, HOMEBREW_PREFIX
+
+    # For consistency with the versioned wxmac formulae
+    bin.install_symlink "#{bin}/wx-config" => "wx-config-#{version.major_minor}"
+    (share/"wx"/version.major_minor).install share/"aclocal", share/"bakefile"
   end
 
   test do

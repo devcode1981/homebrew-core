@@ -1,36 +1,35 @@
 class Cfssl < Formula
   desc "CloudFlare's PKI toolkit"
   homepage "https://cfssl.org/"
-  url "https://github.com/cloudflare/cfssl/archive/1.3.2.tar.gz"
-  sha256 "69ddddb25beebe65e6fe316b9ab3472eae1cd21b2f377447ddc104624233e419"
+  url "https://github.com/cloudflare/cfssl/archive/v1.6.0.tar.gz"
+  sha256 "9694e84b42bf3fc547fa5ac5b15099da28129b9b274b3aad3534d7145ca1cc04"
+  license "BSD-2-Clause"
   head "https://github.com/cloudflare/cfssl.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a27ed12dd059541da98e774f8ad32351a5936276abda210b92eff5c29f3997de" => :mojave
-    sha256 "fcb0d745472f74dd799bfff8099a2330a8262fb24358a679b4dd417c8ef0552b" => :high_sierra
-    sha256 "046cddc312759ba84d66a0f0242eb32aa54b4015011ce8ebb7d8e0978306e1e9" => :sierra
-    sha256 "c354f5d2b7767ccd9ec5b50901a7be8e541f1ba0eb6c7c3d2ddc3b89ea3fb574" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "637f4d77e1d9504dd8c8bc9e9e3635191de063898630b2b17fa84dfb27c6294f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b2626630c57a40160555ae195b187284a6ea65bfeca30a0506ac24fe4764f77f"
+    sha256 cellar: :any_skip_relocation, catalina:      "06b89c2bb37493bf060d0632cc3d30d7b82ee1c432af8b7a6d22d144afddaf05"
+    sha256 cellar: :any_skip_relocation, mojave:        "12c889e31ea954b04e73a764e6879d0993a533de5daabcbdf6a6d995d9531289"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "0ed6a9422bc3f93102b8b91422e2a6d384c0c820b3379ac23a26874902aa0848"
   end
 
   depends_on "go" => :build
   depends_on "libtool"
 
   def install
-    ENV["GOPATH"] = buildpath
-    cfsslpath = buildpath/"src/github.com/cloudflare/cfssl"
-    cfsslpath.install Dir["{*,.git}"]
-    cd "src/github.com/cloudflare/cfssl" do
-      system "go", "build", "-o", "#{bin}/cfssl", "cmd/cfssl/cfssl.go"
-      system "go", "build", "-o", "#{bin}/cfssljson", "cmd/cfssljson/cfssljson.go"
-      system "go", "build", "-o", "#{bin}/cfsslmkbundle", "cmd/mkbundle/mkbundle.go"
-    end
+    ldflags = "-s -w -X github.com/cloudflare/cfssl/cli/version.version=#{version}"
+
+    system "go", "build", *std_go_args(ldflags: ldflags), "-o", "#{bin}/cfssl", "cmd/cfssl/cfssl.go"
+    system "go", "build", *std_go_args(ldflags: ldflags), "-o", "#{bin}/cfssljson", "cmd/cfssljson/cfssljson.go"
+    system "go", "build", "-o", "#{bin}/cfsslmkbundle", "cmd/mkbundle/mkbundle.go"
   end
 
-  def caveats; <<~EOS
-    `mkbundle` has been installed as `cfsslmkbundle` to avoid conflict
-    with Mono and other tools that ship the same executable.
-  EOS
+  def caveats
+    <<~EOS
+      `mkbundle` has been installed as `cfsslmkbundle` to avoid conflict
+      with Mono and other tools that ship the same executable.
+    EOS
   end
 
   test do
@@ -59,5 +58,7 @@ class Cfssl < Formula
     assert_match(/.*-----END CERTIFICATE-----$/, response["cert"])
     assert_match(/^-----BEGIN RSA PRIVATE KEY-----.*/, response["key"])
     assert_match(/.*-----END RSA PRIVATE KEY-----$/, response["key"])
+
+    assert_match(/^Version:\s+#{version}/, shell_output("#{bin}/cfssl version"))
   end
 end

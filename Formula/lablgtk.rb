@@ -1,17 +1,23 @@
 class Lablgtk < Formula
   desc "Objective Caml interface to gtk+"
   homepage "http://lablgtk.forge.ocamlcore.org"
-  url "https://forge.ocamlcore.org/frs/download.php/1726/lablgtk-2.18.6.tar.gz"
-  sha256 "4ddca243066418e2a88ac49ebf2d846fac4b667b1b1753efadd078ae777368f8"
+  url "https://github.com/garrigue/lablgtk/archive/2.18.11.tar.gz"
+  sha256 "ff3c551df4e220b0c0fb9a3da6429413bff14f8fc93f4dd6807a35463982c863"
+  license "LGPL-2.1"
   revision 3
 
-  bottle do
-    sha256 "e1de84a04e013f1e02a6e72397bc3d0a51f972661260e232c64bdab1e6f5fa34" => :mojave
-    sha256 "1edc1b76a28384340a571a9238a22ebe65abd569defc1346ab0ba923305b8733" => :high_sierra
-    sha256 "dbdeb42914d089ba2844d92de8802714b5c31fb82dbe2f1f2bb96da49776dea2" => :sierra
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
-  depends_on "camlp4" => :build
+  bottle do
+    sha256 cellar: :any, arm64_big_sur: "684afad25502ebfcdb6c20d870590c98310de235efbde39c1b4950635b3d8f86"
+    sha256 cellar: :any, big_sur:       "5a7b9fb8ff6ac9d8ce0f952c59e5705f295849df5f00e10b4771f2edbd4fb056"
+    sha256 cellar: :any, catalina:      "e9e7ed3fba9b4aea756fd38e46b178d9cbafd588fd4b6160683e08ba1ba2ae3a"
+    sha256 cellar: :any, mojave:        "60ecd5b76592917ec79b3fd2851d655eac39f3c08b945f24d154e4743a16fca1"
+  end
+
   depends_on "pkg-config" => :build
   depends_on "gtk+"
   depends_on "gtksourceview"

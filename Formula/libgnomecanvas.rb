@@ -3,14 +3,13 @@ class Libgnomecanvas < Formula
   homepage "https://developer.gnome.org/libgnomecanvas/2.30/"
   url "https://download.gnome.org/sources/libgnomecanvas/2.30/libgnomecanvas-2.30.3.tar.bz2"
   sha256 "859b78e08489fce4d5c15c676fec1cd79782f115f516e8ad8bed6abcb8dedd40"
-  revision 3
+  revision 5
 
   bottle do
-    cellar :any
-    sha256 "45cf95b18206ce16aecc6d642d7fe453b3f03a2dd50a2fdfcfb574cf3e428239" => :mojave
-    sha256 "91610f96cef0504b4be9fb6355cac9f628867cc3bb6b8833aaad48c583f47dea" => :high_sierra
-    sha256 "ed520a02e7ea3cd0bcd48dba1ed262d89921bd5f5518c1d672f43a833c6bd758" => :sierra
-    sha256 "b1a71d30655833a45b35af8770181fbe3f5df7e66d1b08f491900d5e875acfef" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "ed9d17d2b7100e9c5ef536c547119eb78e8658bc273f958e673d47383290c3d7"
+    sha256 cellar: :any, big_sur:       "e2ae279ca7759e74bf93ed0577838d7e80fef134ad5f76c671263d023bca3dd1"
+    sha256 cellar: :any, catalina:      "816cd9bf11520fba1126073191c236f2355c45a137905ba978f16a506960fef0"
+    sha256 cellar: :any, mojave:        "bedab86245aa4185fc9c009496ec2d0fc0d1ea53074493db08afc81bdf424a60"
   end
 
   depends_on "intltool" => :build
@@ -81,17 +80,23 @@ class Libgnomecanvas < Formula
       -lart_lgpl_2
       -latk-1.0
       -lcairo
-      -lgdk-quartz-2.0
       -lgdk_pixbuf-2.0
       -lgio-2.0
       -lglib-2.0
       -lgnomecanvas-2
       -lgobject-2.0
-      -lgtk-quartz-2.0
-      -lintl
       -lpango-1.0
       -lpangocairo-1.0
     ]
+    on_macos do
+      flags << "-lgdk-quartz-2.0"
+      flags << "-lgtk-quartz-2.0"
+      flags << "-lintl"
+    end
+    on_linux do
+      flags << "-lgdk-x11-2.0"
+      flags << "-lgtk-x11-2.0"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end

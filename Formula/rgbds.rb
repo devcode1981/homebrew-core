@@ -1,36 +1,52 @@
 class Rgbds < Formula
   desc "Rednex GameBoy Development System"
-  homepage "https://github.com/rednex/rgbds"
-  url "https://github.com/rednex/rgbds/archive/v0.3.7.tar.gz"
-  sha256 "5ddd8b9d57e91c798f464e83fa723cdbab45376958a56a554fbfb3c417844bfc"
-  head "https://github.com/rednex/rgbds.git"
+  homepage "https://rgbds.gbdev.io"
+  url "https://github.com/gbdev/rgbds/archive/v0.5.1.tar.gz"
+  sha256 "1e5331b5638076c1f099a961f8663256e9f8be21135427277eb0000d3d6ee887"
+  license "MIT"
+  head "https://github.com/gbdev/rgbds.git"
 
-  bottle do
-    cellar :any
-    sha256 "b450ab98422628d5f2aef362abffce54907bff681d6ecb29bfce3cf94fea6f73" => :mojave
-    sha256 "814d8937cc9e989f7a69eb4df68a1b26e1863287ef45eaab40f4fb99717392f8" => :high_sierra
-    sha256 "f526669d5a58a35c04ee3eff2ddea03ab1af7b58ed1f035319ce0385280ab08b" => :sierra
-    sha256 "d7440703be2002305b713672f4bd5dacfdbcdc84ed5d7a06b9d579b9195055eb" => :el_capitan
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "44cca5083d32dfa42a6d7d120079eabff0c375ff432851de28a61a943725ceb8"
+    sha256 cellar: :any,                 big_sur:       "3f02c082066bc835f042a37ae3e972cb58a77a615634f299e33f301dab46b6c1"
+    sha256 cellar: :any,                 catalina:      "9927685009fa383bc393eb32e36cb44d1db0cce12f06640b323f44d6589ad50c"
+    sha256 cellar: :any,                 mojave:        "e778e85fdb6ea1b00d1d25648e6da9fbfe92c35779dd6be1ae62abc8eb459077"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "21221704428b141cc9ea34e5d69598791620a22a68022d98b39d4d78bbbbfa4d"
+  end
+
+  depends_on "bison" => :build
   depends_on "pkg-config" => :build
+  depends_on "rust" => :build
   depends_on "libpng"
+
+  resource "rgbobj" do
+    url "https://github.com/gbdev/rgbobj/archive/refs/tags/v0.1.0.tar.gz"
+    sha256 "359a3504dc5a5f7812dfee602a23aec80163d1d9ec13f713645b5495aeef2a9b"
+  end
 
   def install
     system "make", "install", "PREFIX=#{prefix}", "mandir=#{man}"
+    resource("rgbobj").stage do
+      system "cargo", "install", *std_cargo_args
+      man1.install "rgbobj.1"
+    end
+    zsh_completion.install Dir["contrib/zsh_compl/_*"]
   end
 
   test do
+    # Based on https://github.com/rednex/rgbds/blob/HEAD/test/asm/assert-const.asm
     (testpath/"source.asm").write <<~EOS
-      SECTION "Org $100",HOME[$100]
-      nop
-      jp begin
-      begin:
-        ld sp, $ffff
-        ld a, $1
-        ld b, a
-        add a, b
+      SECTION "rgbasm passing asserts", ROM0[0]
+      Label:
+        db 0
+        assert @
     EOS
-    system "#{bin}/rgbasm", "source.asm"
+    system "#{bin}/rgbasm", "-o", "output.o", "source.asm"
+    system "#{bin}/rgbobj", "-A", "-s", "data", "-p", "data", "output.o"
   end
 end

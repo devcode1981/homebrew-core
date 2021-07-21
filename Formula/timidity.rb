@@ -1,18 +1,26 @@
 class Timidity < Formula
   desc "Software synthesizer"
   homepage "https://timidity.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/timidity/TiMidity++/TiMidity++-2.14.0/TiMidity++-2.14.0.tar.bz2"
-  sha256 "f97fb643f049e9c2e5ef5b034ea9eeb582f0175dce37bc5df843cc85090f6476"
+  url "https://downloads.sourceforge.net/project/timidity/TiMidity++/TiMidity++-2.15.0/TiMidity++-2.15.0.tar.bz2"
+  sha256 "161fc0395af16b51f7117ad007c3e434c825a308fa29ad44b626ee8f9bb1c8f5"
+  revision 1
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/TiMidity%2B%2B[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    sha256 "04f54d77441e16992c34443e4e6b39a2f03c83e450edb4fa05ec9d9c87972bc0" => :mojave
-    sha256 "5db392f0e53371e29fdca1ebeee3fdad24043f038c943314e991a06765d102a5" => :high_sierra
-    sha256 "b45b1df69ab87563a77e1163114160f66679fde5548bac0ae81acb7fae86ab80" => :sierra
-    sha256 "0b26a98c3e8e3706f8ff1fb2e21c014ac7245c01510799172e7f3ebdc71602ac" => :el_capitan
-    sha256 "2bfaec5aaaacf7ed13148f437cbeba6bb793f9eacdab739b7202d151031253b4" => :yosemite
-    sha256 "9e56e31b91c1cab53ebd7830114520233b02f7766f69f2e761d005b8bcd2fb58" => :mavericks
-    sha256 "a6c27dd89a2a68505faa01a3be6b770d5c89ae79a9b4739a5f7f1d226bfedb2d" => :mountain_lion
+    rebuild 1
+    sha256 arm64_big_sur: "b6a5b9258ca86e58a8f535a3d7d2c8c51faf608df5bc119b37d99dccfb549142"
+    sha256 big_sur:       "513868c11a5ecbc1b8044eea517c19490858173d6b61f0245c54f9b061956237"
+    sha256 catalina:      "31a2aaefcf9e293bbfce210de4a0521bdf6df205f4fb5bb009f98ad1c01bd6f1"
+    sha256 mojave:        "9dec67aa3004c6ad228dd143eea25c2db9fc568269cae1f80320c00addc3c782"
   end
+
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "libtool" => :build
 
   depends_on "flac"
   depends_on "libao"
@@ -26,8 +34,8 @@ class Timidity < Formula
   end
 
   def install
-    system "./configure", "--disable-debug",
-                          "--disable-dependency-tracking",
+    system "./autogen.sh" if Hardware::CPU.arm?
+    system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
                           "--mandir=#{man}",
                           "--enable-audio=darwin,vorbis,flac,speex,ao"

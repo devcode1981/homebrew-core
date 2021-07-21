@@ -1,24 +1,40 @@
 class Grails < Formula
   desc "Web application framework for the Groovy language"
   homepage "https://grails.org"
-  url "https://github.com/grails/grails-core/releases/download/v3.3.9/grails-3.3.9.zip"
-  sha256 "d6c214642dadbb450db306a17fc6ff3a60fd9d1f515cc91b273f239a6a8adc76"
+  url "https://github.com/grails/grails-core/releases/download/v4.0.11/grails-4.0.11.zip"
+  sha256 "1c7a9439b48024f14833bce73a971074cf0be76481e35b54048442c5ac52f528"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
+
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "91ae9492204373e5180cd66da98f0699e734a886e5160c3e5a44faf1841d7b46"
+  end
+
+  depends_on "openjdk@11"
 
   def install
     rm_f Dir["bin/*.bat", "bin/cygrails", "*.bat"]
     libexec.install Dir["*"]
-    bin.install_symlink Dir["#{libexec}/bin/*"]
+    bin.install Dir["#{libexec}/bin/*"]
+    bin.env_script_all_files libexec/"bin", JAVA_HOME: "${JAVA_HOME:-#{Formula["openjdk@11"].opt_prefix}}"
   end
 
-  def caveats; <<~EOS
-    The GRAILS_HOME directory is:
-      #{opt_libexec}
-  EOS
+  def caveats
+    <<~EOS
+      The GRAILS_HOME directory is:
+        #{opt_libexec}
+    EOS
   end
 
   test do
+    system bin/"grails", "create-app", "brew-test"
+    assert_predicate testpath/"brew-test/gradle.properties", :exist?
+    assert_match "brew.test", File.read(testpath/"brew-test/build.gradle")
+
     assert_match "Grails Version: #{version}", shell_output("#{bin}/grails -v")
   end
 end

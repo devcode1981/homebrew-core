@@ -3,26 +3,25 @@ class Shyaml < Formula
 
   desc "Command-line YAML parser"
   homepage "https://github.com/0k/shyaml"
-  url "https://files.pythonhosted.org/packages/33/34/7ad4b645bdd5c6cd100748fc2429924b553439221aa9b9386f658e5a05f2/shyaml-0.5.2.tar.gz"
-  sha256 "80650ebfe6fa2e16083451d515207472d60990c1c15fc0fd607c27077790ac23"
-  revision 1
+  url "https://files.pythonhosted.org/packages/b9/59/7e6873fa73a476de053041d26d112b65d7e1e480b88a93b4baa77197bd04/shyaml-0.6.2.tar.gz"
+  sha256 "696e94f1c49d496efa58e09b49c099f5ebba7e24b5abe334f15e9759740b7fd0"
+  license "BSD-2-Clause"
   head "https://github.com/0k/shyaml.git"
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "1f553d4c50f311b1702c973a189e64a0bae519885d94af51b14fd09e82ade8e0" => :mojave
-    sha256 "ff016e9adec1fcde3aed838decd83cd643e1da3b4fdda4f3760edc706a96204e" => :high_sierra
-    sha256 "f56ae02770869a49ec55215d3444dfd07bdd2fb1788e4cc6f124bd63bfaf2769" => :sierra
-    sha256 "ff1078dcd1f6df8b14d7389704cec6ab3d60c79a926d741db4600af72ed87c55" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "ff1ab13915b1148905c77a4bac3ff65db4bc496d3b2fcdf031f30678f781c9f1"
+    sha256 cellar: :any,                 big_sur:       "bdfdbc881e2ef1cc0ae52ad5cafae3715bdfaf76a1ac905a6e3aa3a7fc1736a2"
+    sha256 cellar: :any,                 catalina:      "c95f616993a2fd70d3ed9fbb7556b582ef2aca26fbda97b36898bcfb9efbcee1"
+    sha256 cellar: :any,                 mojave:        "1f157591a67c0165af8492b3cb1b6049a7e151b0770aaed4c176c15fe3050f68"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6f3000c7847a03060e544f9eb06530071d2e38dbc561b817afc5ce3bf62bdb59"
   end
 
   depends_on "libyaml"
-  depends_on "python"
+  depends_on "python@3.9"
 
   resource "PyYAML" do
-    url "https://files.pythonhosted.org/packages/9e/a3/1d13970c3f36777c583f136c136f804d70f500168edc1edea6daa7200769/PyYAML-3.13.tar.gz"
-    sha256 "3ef3092145e9b70e3ddd2c7ad59bdd0252a94dfe3949721633e41344de00a6bf"
+    url "https://files.pythonhosted.org/packages/64/c2/b80047c7ac2478f9501676c988a5411ed5572f35d1beff9cae07d321512c/PyYAML-5.3.1.tar.gz"
+    sha256 "b8eac752c5e14d3eca0e6dd9199cd627518cb5ec06add0de9d32baeee6fe645d"
   end
 
   def install

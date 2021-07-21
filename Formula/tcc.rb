@@ -3,24 +3,28 @@ class Tcc < Formula
   homepage "https://bellard.org/tcc/"
   url "https://download.savannah.nongnu.org/releases/tinycc/tcc-0.9.27.tar.bz2"
   sha256 "de23af78fca90ce32dff2dd45b3432b2334740bb9bb7b05bf60fdbfc396ceb9c"
+  license "LGPL-2.0-or-later"
+  revision 1
 
-  bottle do
-    rebuild 1
-    sha256 "697164b3427d1993923e2e4c446b4ea87b55916d59cfe5ba64ad04ca3d54bddc" => :mojave
-    sha256 "45a2646746c8a9766aa106ba6aaac155e8b963c2c5ea3afac0b398b0b5501430" => :high_sierra
-    sha256 "f5ce8a5801502da6c214ad9f5e9df024109bbe0c4e5380de35112f0596a373fe" => :sierra
+  livecheck do
+    url "https://download.savannah.nongnu.org/releases/tinycc/"
+    regex(/href=.*?tcc[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  option "with-cross", "Build all cross compilers"
+  bottle do
+    sha256 catalina:    "68930891a8746b34b372ecfe43a6a042d0097414713c831353a095135d7b9569"
+    sha256 mojave:      "ca8cd4827e72201cd5f368b5b74b9dead8554e0188b7ea63f81926d775d704e9"
+    sha256 high_sierra: "1ad7de1b974ca3e16668dec9cbef2accb29ecedb8f3f5819c06a2f77c8f3f2d1"
+    sha256 sierra:      "c2949f3a99d1efb600137e4bb617ebd8a385697038f9cb8136c681033a7a636e"
+  end
 
   def install
     args = %W[
       --prefix=#{prefix}
       --source-path=#{buildpath}
       --sysincludepaths=/usr/local/include:#{MacOS.sdk_path}/usr/include:{B}/include
+      --enable-cross"
     ]
-
-    args << "--enable-cross" if build.with? "cross"
 
     ENV.deparallelize
     system "./configure", *args

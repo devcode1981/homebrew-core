@@ -1,15 +1,14 @@
 class Dungeon < Formula
-  desc "The classic text adventure"
+  desc "Classic text adventure game"
   homepage "https://github.com/GOFAI/dungeon"
-  url "https://github.com/GOFAI/dungeon/archive/4.0.tar.gz"
-  sha256 "be2217be9e23861f22c14c4395da272fca5fb08a1741f52fd393792908279bea"
-  revision 3
+  url "https://github.com/GOFAI/dungeon/archive/4.1.tar.gz"
+  sha256 "b88c49ef60e908e8611257fbb5a6a41860e1058760df2dfcb7eb141eb34e198b"
+  revision 2
 
   bottle do
-    sha256 "c05df30f6a33327dd4c47324625b0a8a51261914ce8cd2fda6acfa6e466e1f2f" => :mojave
-    sha256 "85f19d2f55617a90e061fce84224bbad7034045720241313713c9017ab427909" => :high_sierra
-    sha256 "7530638329eeba02b2d3099155524129f4b9d1e28c05206b283bbfdfac6c2353" => :sierra
-    sha256 "bad6d9bf2fc5b4343f3c5f3c677675552c7fef9facec15a7793f68c56bce4de8" => :el_capitan
+    sha256 cellar: :any, big_sur:  "23739a563a06cb0d42b43fd034b423cd9218ec99919c4ac1bb0869d71f1bf89a"
+    sha256 cellar: :any, catalina: "aa2177395fa3363eb9bc0de0de2da7d93ac3b78b5ce86c14daff6f19c69a9e4f"
+    sha256 cellar: :any, mojave:   "f5dd94642da0883ada9e1ac9f93e91a0c47b02b48226d2318be67028b97402f9"
   end
 
   depends_on "gcc" # for gfortran
@@ -19,8 +18,8 @@ class Dungeon < Formula
       # look for game files where homebrew installed them, not pwd
       inreplace "game.f" do |s|
         s.gsub! "FILE='dindx',STATUS='OLD',", "FILE='#{opt_pkgshare}/dindx',"
-        s.gsub! "1\tFORM='FORMATTED',ACCESS='SEQUENTIAL',ERR=1900)", "1\tSTATUS='OLD',FORM='FORMATTED',
-\t2\tACCESS='SEQUENTIAL',ERR=1900)"
+        s.gsub! "1\tFORM='FORMATTED',ACCESS='SEQUENTIAL',ERR=1900)", "1\tSTATUS='OLD',FORM='FORMATTED'," \
+                                                                     "\n\t2\tACCESS='SEQUENTIAL',ERR=1900)"
         s.gsub! "FILE='dtext',STATUS='OLD',", "FILE='#{opt_pkgshare}/dtext',"
         s.gsub! "1\tFORM='UNFORMATTED',ACCESS='DIRECT',", "1\tSTATUS='OLD',FORM='UNFORMATTED',ACCESS='DIRECT',"
       end

@@ -1,15 +1,22 @@
 class WireguardGo < Formula
   desc "Userspace Go implementation of WireGuard"
   homepage "https://www.wireguard.com/"
-  url "https://git.zx2c4.com/wireguard-go/snapshot/wireguard-go-0.0.20181018.tar.xz"
-  sha256 "6bedec38d12596d55cfba4b3f7dfa99d5c2555c2f0bf3b3c9a26feb7c6b073ff"
-  head "https://git.zx2c4.com/wireguard-go", :using => :git
+  url "https://git.zx2c4.com/wireguard-go/snapshot/wireguard-go-0.0.20210424.tar.xz"
+  sha256 "0f9a7c0657e6119d317a0bab453aeb5140111b186ae10f62cfa081eecf2f03ba"
+  license "MIT"
+  head "https://git.zx2c4.com/wireguard-go.git"
+
+  livecheck do
+    url :head
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "505cf5f7b28b296ed6137d6e3532c3a51a3074165824abd63ea1be14bd0562ae" => :mojave
-    sha256 "e8eba0f2b7ac40344d0720208382d8738f26d0f8a0a8ee21be8f809a52690d0f" => :high_sierra
-    sha256 "8156e45dab29bc6df4f2d9b23f8c3f9f03c709dc7254605480b9be32fb26484d" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "2b5cecc46c8cb3358a10768cd638fefab905dfb66f1ec151af64ce27d152f474"
+    sha256 cellar: :any_skip_relocation, big_sur:       "9f3812acc99aaf982518460b33d67930b824e8e86bfd00e9303dd0fb7e94cd74"
+    sha256 cellar: :any_skip_relocation, catalina:      "7067cc06c22612f886694f5471b1b7b7d196f9047c1939745f8140d5b1695f1f"
+    sha256 cellar: :any_skip_relocation, mojave:        "be446fceccc238dbfe68c3c23cb03feb1e911245934bba66007c263bfeb9114c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "93b2808f28f71bc2dca45268cd82a86db23b9f9264df87e0946eef577b62d984"
   end
 
   depends_on "go" => :build
@@ -21,6 +28,13 @@ class WireguardGo < Formula
   end
 
   test do
-    assert_match "be utun", pipe_output("WG_PROCESS_FOREGROUND=1 #{bin}/wireguard-go notrealutun")
+    prog = "#{bin}/wireguard-go -f notrealutun 2>&1"
+    on_macos do
+      assert_match "be utun", pipe_output(prog)
+    end
+
+    on_linux do
+      assert_match "Running wireguard-go is not required because this", pipe_output(prog)
+    end
   end
 end

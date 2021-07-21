@@ -1,57 +1,39 @@
 class Sslsplit < Formula
   desc "Man-in-the-middle attacks against SSL encrypted network connections"
   homepage "https://www.roe.ch/SSLsplit"
-  url "https://mirror.roe.ch/rel/sslsplit/sslsplit-0.5.3.tar.bz2"
-  sha256 "6c4cbc42cd7fb023fed75b82a436d8c1c4beaeb317a2ef41c00403684e0885dd"
-  head "https://github.com/droe/sslsplit.git", :branch => "develop"
+  url "https://github.com/droe/sslsplit/archive/0.5.5.tar.gz"
+  sha256 "3a6b9caa3552c9139ea5c9841d4bf24d47764f14b1b04b7aae7fa2697641080b"
+  license "BSD-2-Clause"
+  revision 1
+  head "https://github.com/droe/sslsplit.git", branch: "develop"
 
   bottle do
-    cellar :any
-    sha256 "71e977bcad186b97a787fee8a9eb1be8a9358436301ed4f3a2c815d99b58bc0c" => :mojave
-    sha256 "b91c12d10cf84faa52564da27a7cafa9d3daadfb0d957e10f45155e607322e1b" => :high_sierra
-    sha256 "f739a780837ce81ec5664a0fc83da5b8889b45e686f30eda81b22a279bb19022" => :sierra
-    sha256 "9ec2a8e64aace6cb71390916b05f49f8b94eab5c59df7f94a0e3b902c585cf55" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "ccfd4cc54565e58d41ce627ab1ee785de30c96fa29ca3637c3ee6e84320499dc"
+    sha256 cellar: :any,                 big_sur:       "4d2d0096b82dfb0104f014f69363a34c1242e2bc32ef585466dc938677c33d26"
+    sha256 cellar: :any,                 catalina:      "a533ccfc4c05e2affcfa4c697c38d995239abfd1fe4c383ffaa1a8ed42a933e6"
+    sha256 cellar: :any,                 mojave:        "10534d989706ca1d29b7f1cbffc59ef07b02d0d755cb8aec5bdf9430c52769bb"
+    sha256 cellar: :any,                 high_sierra:   "4f7a3cb7333641658889a55830a69d0ac64cf93dca8a6de32052d4080f477058"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d4d7b3870ce8a27f6040c4bd9ed85010a62d389c4ff08ab33ac1fa94adc49e79"
   end
 
   depends_on "check" => :build
   depends_on "pkg-config" => :build
   depends_on "libevent"
-  depends_on "openssl"
+  depends_on "libnet"
+  depends_on "libpcap"
+  depends_on "openssl@1.1"
 
   def install
-    unless build.head?
-      ENV.deparallelize
-      inreplace "GNUmakefile" do |s|
-        s.gsub! "-o $(BINUID) -g $(BINGID)", ""
-        s.gsub! "-o $(MANUID) -g $(MANGID)", ""
-      end
-    end
-    system "make", "test"
+    ENV["LIBNET_BASE"] = Formula["libnet"].opt_prefix
+    system "make"
     system "make", "install", "PREFIX=#{prefix}"
   end
 
   test do
-    pid_webrick = fork do
-      exec "ruby", "-rwebrick", "-e",
-           "s = WEBrick::HTTPServer.new(:Port => 8000); " \
-           's.mount_proc("/") {|_,res| res.body = "sslsplit test"}; ' \
-           "s.start"
-    end
-    pid_sslsplit = fork do
-      exec "#{bin}/sslsplit", "-P", "http", "127.0.0.1", "8080",
-                                            "127.0.0.1", "8000"
-    end
-    sleep 1
-    # Workaround to kill all processes from sslsplit
-    pid_sslsplit_child = `pgrep -P #{pid_sslsplit}`.to_i
+    port = free_port
 
-    begin
-      assert_equal "sslsplit test",
-                   shell_output("curl -s http://localhost:8080/test")
-    ensure
-      Process.kill 9, pid_sslsplit_child
-      Process.kill 9, pid_webrick
-      Process.wait pid_webrick
-    end
+    cmd = "#{bin}/sslsplit -D http 0.0.0.0 #{port} www.roe.ch 80"
+    output = pipe_output("(#{cmd} & PID=$! && sleep 3 ; kill $PID) 2>&1")
+    assert_match "Starting main event loop", output
   end
 end

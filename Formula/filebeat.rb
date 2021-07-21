@@ -1,54 +1,48 @@
 class Filebeat < Formula
   desc "File harvester to ship log files to Elasticsearch or Logstash"
   homepage "https://www.elastic.co/products/beats/filebeat"
-  # Pinned at 6.2.x because of a licencing issue
-  # See: https://github.com/Homebrew/homebrew-core/pull/28995
-  url "https://github.com/elastic/beats/archive/v6.2.4.tar.gz"
-  sha256 "87d863cf55863329ca80e76c3d813af2960492f4834d4fea919f1d4b49aaf699"
+  url "https://github.com/elastic/beats.git",
+      tag:      "v7.13.3",
+      revision: "3ddad4cee7394d1643023604f246cd5ab6d8cfbb"
+  # Outside of the "x-pack" folder, source code in a given file is licensed
+  # under the Apache License Version 2.0
+  license "Apache-2.0"
   head "https://github.com/elastic/beats.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "5c5f15117647492fb99f28916a00a5999348952e13f097d8c6bc7608df981af5" => :mojave
-    sha256 "6fb82adc6d41dff52ee5407211f14f3d6b8eaf2451dce045e04533f8200a16d5" => :high_sierra
-    sha256 "f8a9672cc5c88dfdb35a46b731f05d34d1b749f5a58f0b70393a854787eebc39" => :sierra
-    sha256 "86e8f72ae2e7404c3e8de74ddd154efbc003b26bb83ca5d28813a38d403b4a45" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "b15d2714733bd1e0d2c2d9c0fa31eb867ae71eaf91cf3c5d7c985fa793807397"
+    sha256 cellar: :any_skip_relocation, big_sur:       "27300bb0bbea7621542b3baf466ba2079094048c04930f5d364025047e86b39f"
+    sha256 cellar: :any_skip_relocation, catalina:      "1b78c58773c6201c8a623385fc08b25d700582b8e2870c5324bae6bdc23f0df5"
+    sha256 cellar: :any_skip_relocation, mojave:        "597df6366a5b6de3cd154e2bb0a644bba7ee43d9dca6c45113fc5084e500669c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "2a84950ae44fabffdcde560f764bcc8be8b6be0b1047da176da4d554898b85ff"
   end
 
   depends_on "go" => :build
-  depends_on "python@2" => :build
+  depends_on "mage" => :build
+  depends_on "python@3.9" => :build
 
-  resource "virtualenv" do
-    url "https://files.pythonhosted.org/packages/b1/72/2d70c5a1de409ceb3a27ff2ec007ecdd5cc52239e7c74990e32af57affe9/virtualenv-15.2.0.tar.gz"
-    sha256 "1d7e241b431e7afce47e77f8843a276f652699d1fa4f93b9d8ce0076fd7b0b54"
-  end
+  uses_from_macos "rsync" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/elastic/beats").install Dir["{*,.git,.gitignore}"]
+    # remove non open source files
+    rm_rf "x-pack"
 
-    ENV.prepend_create_path "PYTHONPATH", buildpath/"vendor/lib/python2.7/site-packages"
+    cd "filebeat" do
+      # don't build docs because it would fail creating the combined OSS/x-pack
+      # docs and we aren't installing them anyway
+      inreplace "magefile.go", "mg.SerialDeps(Fields, Dashboards, Config, includeList, fieldDocs,",
+                               "mg.SerialDeps(Fields, Dashboards, Config, includeList,"
 
-    resource("virtualenv").stage do
-      system "python", *Language::Python.setup_install_args(buildpath/"vendor")
-    end
-
-    ENV.prepend_path "PATH", buildpath/"vendor/bin"
-
-    cd "src/github.com/elastic/beats/filebeat" do
-      system "make"
       # prevent downloading binary wheels during python setup
-      system "make", "PIP_INSTALL_COMMANDS=--no-binary :all", "python-env"
-      system "make", "DEV_OS=darwin", "update"
-      system "make", "modules"
+      system "make", "PIP_INSTALL_PARAMS=--no-binary :all", "python-env"
+      system "mage", "-v", "build"
+      system "mage", "-v", "update"
 
       (etc/"filebeat").install Dir["filebeat.*", "fields.yml", "modules.d"]
-      (etc/"filebeat"/"module").install Dir["_meta/module.generated/*"]
+      (etc/"filebeat"/"module").install Dir["build/package/modules/*"]
       (libexec/"bin").install "filebeat"
-      prefix.install "_meta/kibana"
+      prefix.install "build/kibana"
     end
-
-    prefix.install_metafiles buildpath/"src/github.com/elastic/beats"
 
     (bin/"filebeat").write <<~EOS
       #!/bin/sh
@@ -61,23 +55,8 @@ class Filebeat < Formula
     EOS
   end
 
-  plist_options :manual => "filebeat"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN"
-    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>Program</key>
-        <string>#{opt_bin}/filebeat</string>
-        <key>RunAtLoad</key>
-        <true/>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run opt_bin/"filebeat"
   end
 
   test do
@@ -86,7 +65,7 @@ class Filebeat < Formula
 
     (testpath/"filebeat.yml").write <<~EOS
       filebeat:
-        prospectors:
+        inputs:
           -
             paths:
               - #{log_file}
@@ -99,7 +78,7 @@ class Filebeat < Formula
     (testpath/"log").mkpath
     (testpath/"data").mkpath
 
-    filebeat_pid = fork do
+    fork do
       exec "#{bin}/filebeat", "-c", "#{testpath}/filebeat.yml",
            "-path.config", "#{testpath}/filebeat",
            "-path.home=#{testpath}",
@@ -107,14 +86,10 @@ class Filebeat < Formula
            "-path.data", testpath
     end
 
-    begin
-      sleep 1
-      log_file.append_lines "foo bar baz"
-      sleep 5
+    sleep 1
+    log_file.append_lines "foo bar baz"
+    sleep 5
 
-      assert_predicate testpath/"filebeat", :exist?
-    ensure
-      Process.kill("TERM", filebeat_pid)
-    end
+    assert_predicate testpath/"filebeat", :exist?
   end
 end

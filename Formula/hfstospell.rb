@@ -1,39 +1,37 @@
 class Hfstospell < Formula
   desc "Helsinki Finite-State Technology ospell"
   homepage "https://hfst.github.io/"
-  url "https://github.com/hfst/hfst-ospell/releases/download/v0.5.0/hfstospell-0.5.0.tar.gz"
-  sha256 "0fd2ad367f8a694c60742deaee9fcf1225e4921dd75549ef0aceca671ddfe1cd"
-  revision 3
+  url "https://github.com/hfst/hfst-ospell/releases/download/v0.5.2/hfst-ospell-0.5.2.tar.bz2"
+  sha256 "ab9ccf3c2165c0efd8dd514e0bf9116e86a8a079d712c0ed6c2fabf0052e9aa4"
+  license "Apache-2.0"
+  revision 2
 
-  bottle do
-    cellar :any
-    sha256 "83198b2c45b82d445d6acd6ddac8de7c6e2fab365c3d6adb7a7d6cd7c9938851" => :mojave
-    sha256 "69927247be97c86e0802dc26cbd5528ee1723c100aac2b4b864e2bf4abd0081e" => :high_sierra
-    sha256 "2dab570b4bc6ae2569e344843b2e8010138ebbe6930e85944d8a9a3d956d1451" => :sierra
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "1a5437ebb7e8abeae096734d53edbbc8cf154f6635f8e15ac3a1cfa038782e85"
+    sha256 cellar: :any,                 big_sur:       "6fb2851153c12aa38ed01a7335781df78be3490380e6713b2a9c642f88e737d0"
+    sha256 cellar: :any,                 catalina:      "0651d2057fcf3c0242bcd277b0ddafb247c0f00fc78d2652e9eae9c82776f923"
+    sha256 cellar: :any,                 mojave:        "25a4f7bfe15fae7efd0ce6cf1ccedb150571935de5e0266cbf7fa472290bbf6d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "558374d12fffddfe01a121b42e9e4edaaceeea1afdd6fdb6283672488b70eb96"
+  end
+
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "libtool" => :build
   depends_on "pkg-config" => :build
   depends_on "icu4c"
   depends_on "libarchive"
-  depends_on "libxml++"
-
-  # Fix "error: no template named 'auto_ptr' in namespace 'std'"
-  # Upstream PR 20 Jun 2018 "C++14 (C++1y) should be the highest supported standard."
-  # See https://github.com/hfst/hfst-ospell/pull/41
-  patch do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/674a62d/hfstospell/no-cxx17.diff"
-    sha256 "0a3146e871ac0e3c71248b8671d09f6d8a8a69713b6f4857eab7bdb684709083"
-  end
-
-  needs :cxx11
 
   def install
-    # icu4c 61.1 compatability
-    ENV.append "CPPFLAGS", "-DU_USING_ICU_NAMESPACE=1"
-
     ENV.cxx11
+    system "autoreconf", "-fiv"
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
+                          "--without-libxmlpp",
                           "--prefix=#{prefix}"
     system "make", "install"
   end

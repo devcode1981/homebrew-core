@@ -1,15 +1,16 @@
 class Libjwt < Formula
   desc "JSON Web Token C library"
   homepage "https://github.com/benmcollins/libjwt"
-  url "https://github.com/benmcollins/libjwt/archive/v1.9.0.tar.gz"
-  sha256 "cc694dfc3abe17d1f5cde4bf6714e39dc17f7cbad352a85ffb0fe6418c584076"
+  url "https://github.com/benmcollins/libjwt/archive/v1.13.1.tar.gz"
+  sha256 "4df55ac89c6692adaf3badb43daf3241fd876612c9ab627e250dfc4bb59993d9"
+  license "MPL-2.0"
 
   bottle do
-    cellar :any
-    sha256 "3bd8cf7559a715e354fbdee0b0d745ca5073c03286358dcdb1ea96ca9de8c0aa" => :mojave
-    sha256 "5d399fa64d2fc9efc33da09ed09bc085ea57202fb32e7240d838f6c826ea926d" => :high_sierra
-    sha256 "38121827b73b037ba806a02f36f8b55f62eee9f317e2a56132f88c685e4f49f1" => :sierra
-    sha256 "3402448d7ec4deb8471c5e5517ba306f766916497f6d1923d4d80030c88e45fd" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "4d89729e216bebd3dcd95d7edca9050b125387a122e1525f2b647175074154aa"
+    sha256 cellar: :any,                 big_sur:       "6007f616df31c2f700524c3dab66d9f09f5b9bcca728ac7e1b848000aabece90"
+    sha256 cellar: :any,                 catalina:      "fb6e811d2e09405a322bccac174af800742fc0655a8e72a1220311eacec1b78a"
+    sha256 cellar: :any,                 mojave:        "97801be0001a6c9a180d425ffecc9cef4d51a2bd246c71ec4d60c7a0016ce490"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "2a0fc4895581847c58742ebe3d19b818f7a563265d83fec569e95f2a4f25436c"
   end
 
   depends_on "autoconf" => :build
@@ -17,7 +18,7 @@ class Libjwt < Formula
   depends_on "libtool" => :build
   depends_on "pkg-config" => :build
   depends_on "jansson"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
 
   def install
     system "autoreconf", "-fiv"

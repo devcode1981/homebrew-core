@@ -1,18 +1,21 @@
 class Diamond < Formula
   desc "Accelerated BLAST compatible local sequence aligner"
-  homepage "https://ab.inf.uni-tuebingen.de/software/diamond/"
-  url "https://github.com/bbuchfink/diamond/archive/v0.9.22.tar.gz"
-  sha256 "35e518cfa0ac2fbc57e422d380bdb5123c6335742dd7965b76c34c95f241b729"
+  homepage "https://www.wsi.uni-tuebingen.de/lehrstuehle/algorithms-in-bioinformatics/software/diamond/"
+  url "https://github.com/bbuchfink/diamond/archive/v2.0.11.tar.gz"
+  sha256 "41f3197aaafff9c42763fb7658b67f730ebc6dd3c0533c9c3d54bd3166e93f24"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "31c196b7b7d312e6e700650da58ca61e7154b442ff89d69800003821d164f3d3" => :mojave
-    sha256 "469c7756dc9eca0ed7ebd8a156af03da9352ac0358f2bcfd0eb3d346d00b6d51" => :high_sierra
-    sha256 "607d100998ea30e170cf8660efd0db2ada0cf2aff0fc01d753b8f562780f1066" => :sierra
-    sha256 "6b5c96a2c5847c0e6ecef931175082b90c4436d91fbcd7331cda92a9bb682bb5" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "90432e28bfcd7ba419923f19dc1f49cd3894e71abf9dee084d2b4a8980a3de48"
+    sha256 cellar: :any_skip_relocation, big_sur:       "746111bc7742376273e84d87c6cd4b09cc2855e4dcf80b7025b09359cdee9496"
+    sha256 cellar: :any_skip_relocation, catalina:      "32a3256fb14aebed74c553136929c656ebd4a9423dfa02524886648fd86ae8f7"
+    sha256 cellar: :any_skip_relocation, mojave:        "882151cea4d518d0d5f32b13a2eb495b0ea88c845aebbd2b99a8aef1cef8db3f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "ce393bc62d88cdb7f418fb7fae8603f5ae3790c9040261b182f1f69a6ead72c6"
   end
 
   depends_on "cmake" => :build
+
+  uses_from_macos "zlib"
 
   def install
     system "cmake", ".", *std_cmake_args
@@ -40,7 +43,7 @@ class Diamond < Formula
       ffetesrsvaqagvqwrdlgslqapppgftpfsclslpsswdyrrppprpanfcifsrdg
       vspcXpgwsrspdlvirpprppkvlglqaXatapg
     EOS
-    output = shell_output("#{bin}/diamond makedb --in nr.faa -d nr")
-    assert_match "Processed 6 sequences, 572 letters.", output
+    output = shell_output("#{bin}/diamond makedb --in nr.faa -d nr 2>&1")
+    assert_match "Database sequences  6\n  Database letters  572", output
   end
 end

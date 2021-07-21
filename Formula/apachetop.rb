@@ -1,31 +1,43 @@
 class Apachetop < Formula
   desc "Top-like display of Apache log"
   homepage "https://web.archive.org/web/20170809160553/freecode.com/projects/apachetop"
-  url "https://deb.debian.org/debian/pool/main/a/apachetop/apachetop_0.12.6.orig.tar.gz"
-  sha256 "850062414517055eab2440b788b503d45ebe9b290d4b2e027a5f887ad70f3f29"
+  url "https://deb.debian.org/debian/pool/main/a/apachetop/apachetop_0.19.7.orig.tar.gz"
+  sha256 "88abf58ee5d7882e4cc3fa2462865ebbf0e8f872fdcec5186abe16e7bff3d4a5"
+  license "BSD-3-Clause"
 
-  bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "f4520c12643b7b9d6afc80729217ecbe7f17298790dbe783e7909c436559ac30" => :mojave
-    sha256 "e41dce58ad184e880c1f198ae1d5c0d0d1f1fc9fd27f1296a02a1b23e33c09cb" => :high_sierra
-    sha256 "3a3f3b20db8183a8c642ce732d9ecc3eac68ea1c292cab0594c3d5000c181442" => :sierra
-    sha256 "f1dd6f8ac7cb973228227b4cb678ef0bb61f618c482dc8d7d3144acccfebcf5b" => :el_capitan
-    sha256 "1cfb399a8548e1ac48d7cb61374e23273aa1eb289e49ba452aa2c55641fe5bae" => :yosemite
-    sha256 "78aa56c9141cfc658120edfb27e795cf178067d54f66c79fc752536d8e0335ea" => :mavericks
-    sha256 "d2383e14241b9af39c197462339393463ae6f8161dae508f49b0753dff846287" => :mountain_lion
+  livecheck do
+    url "https://github.com/tessus/apachetop.git"
   end
 
-  # Freecode is officially static from this point forwards. Do not rely on it for up-to-date package information.
-  # Upstream hasn't had activity in years, patch from MacPorts
-  patch :p0, :DATA
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "b3795c0b43fb378f2293b0f267468fc57e15dd34410786b35dc37bf9fbd075c5"
+    sha256 cellar: :any,                 big_sur:       "23a71292dbcbdee0619bab39a416257fc0226c4ca5c942e23d373c13c0c237c1"
+    sha256 cellar: :any,                 catalina:      "da48ab193d519f9a3ce1f90d1f6b4f4b9adee43a6a57435329d7a04e2a27e154"
+    sha256 cellar: :any,                 mojave:        "a71dffc1d92dad7331f5e935395a20bb3ba953889f5083e92bcd7e4388a71ab5"
+    sha256 cellar: :any,                 high_sierra:   "1bab24050249ddcf4f69b48b6568cf8e0464722d1a91cf3c1b6a21da0fdf4462"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "180b03f3d6507d52737f6a4490e9cbd870b10526bd1924191263c3785bbbb9ca"
+  end
+
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "pkg-config" => :build
+  depends_on "adns"
+  depends_on "ncurses"
+  depends_on "pcre"
+
+  on_linux do
+    depends_on "readline"
+  end
 
   def install
+    system "./autogen.sh"
     system "./configure", "--prefix=#{prefix}",
                           "--mandir=#{man}",
                           "--disable-debug",
                           "--disable-dependency-tracking",
-                          "--with-logfile=/var/log/apache2/access_log"
+                          "--with-logfile=/var/log/apache2/access_log",
+                          "--with-adns=#{Formula["adns"].opt_prefix}",
+                          "--with-pcre=#{Formula["pcre"].opt_prefix}"
     system "make", "install"
   end
 
@@ -34,17 +46,3 @@ class Apachetop < Formula
     assert_match "ApacheTop v#{version}", output
   end
 end
-
-__END__
---- src/resolver.h    2005-10-15 18:10:01.000000000 +0200
-+++ src/resolver.h        2007-02-17 11:24:37.000000000
-0100
-@@ -10,8 +10,8 @@
- class Resolver
- {
- 	public:
--	Resolver::Resolver(void);
--	Resolver::~Resolver(void);
-+	Resolver(void);
-+	~Resolver(void);
- 	int add_request(char *request, enum resolver_action act);

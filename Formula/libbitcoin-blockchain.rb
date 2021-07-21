@@ -1,14 +1,17 @@
 class LibbitcoinBlockchain < Formula
   desc "Bitcoin Blockchain Library"
   homepage "https://github.com/libbitcoin/libbitcoin-blockchain"
-  url "https://github.com/libbitcoin/libbitcoin-blockchain/archive/v3.5.0.tar.gz"
-  sha256 "03b8362c9172edbeb1e5970c996405cd2738e8274ba459e9b85359d6b838de20"
-  revision 2
+  url "https://github.com/libbitcoin/libbitcoin-blockchain/archive/v3.6.0.tar.gz"
+  sha256 "18c52ebda4148ab9e6dec62ee8c2d7826b60868f82710f21e40ff0131bc659e0"
+  license "AGPL-3.0"
+  revision 1
 
   bottle do
-    sha256 "13d5adb31936d5aef918c27e15c482bce6219e2a7ba78b8866c1867b06caeb77" => :mojave
-    sha256 "9d300f4136435b9331943acc70cab877bd9db1ccc24be1c71a6a23908748ee90" => :high_sierra
-    sha256 "ef052aa668a26246c2d8dae460b56e91d7bc1467c0f8b7b61f5eca23f7e6d97c" => :sierra
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "b6c7eba40fc345969eda3c9c0aee34b4f2b460cece3e9c1110a9cc9d3ed4ad72"
+    sha256 cellar: :any, big_sur:       "d68b78c0430f3610f43395bcf12633ab7fc037f3bc874b83fd456fa6a3cb38a6"
+    sha256 cellar: :any, catalina:      "40ef8e8935d75f1c894852305b586fc922425467b6955813c2327d0ac901005f"
+    sha256 cellar: :any, mojave:        "ce1a34b80aa5d9c404c27c2282bf1e654b48999e74e4facc4dff70bf8087a514"
   end
 
   depends_on "autoconf" => :build
@@ -24,7 +27,8 @@ class LibbitcoinBlockchain < Formula
     system "./autogen.sh"
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
-                          "--prefix=#{prefix}"
+                          "--prefix=#{prefix}",
+                          "--with-boost-libdir=#{Formula["boost"].opt_lib}"
     system "make", "install"
   end
 

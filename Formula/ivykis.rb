@@ -1,15 +1,22 @@
 class Ivykis < Formula
   desc "Async I/O-assisting library"
-  homepage "https://sourceforge.net/projects/libivykis"
-  url "https://downloads.sourceforge.net/project/libivykis/0.42.3/ivykis-0.42.3.tar.gz"
-  sha256 "c9b025d55cefe9c58958d1012f36d63aa0a5caf22075617fff648751ea940aec"
+  homepage "https://sourceforge.net/projects/libivykis/"
+  url "https://github.com/buytenh/ivykis/archive/v0.42.4-trunk.tar.gz"
+  sha256 "b724516d6734f4d5c5f86ad80bde8fc7213c5a70ce2d46b9a2d86e8d150402b5"
+  license "LGPL-2.1"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)(?:[._-]trunk)?$/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "9f0368672a79bc905773347bdc45432c4d16edcf84ae7f977141b12723d36d59" => :mojave
-    sha256 "a72955a0edfc33235875b785ab262a049a12c46d7b937e382148c62ed191fd1f" => :high_sierra
-    sha256 "94e0e10045e3c8cd76b930250f877f9c62e6110e68c074251601174ada0c72e5" => :sierra
-    sha256 "83e68479a554c2ca649ce1cd69206d896fa71b9fa81c37835e00cdafa6ecbedd" => :el_capitan
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "cd87cff2d6552030ba5b277853bf4f386bc28411ca0c9283e1ed90981f0ba6aa"
+    sha256 cellar: :any, big_sur:       "b3a788209e93dab2e5056bacbe24b7efe5554131d9b26ace853ca68f42e9d23c"
+    sha256 cellar: :any, catalina:      "5da36891f20e60db1a94b7eafeaf35605a0a4b18e833721aec01ab68399653a3"
+    sha256 cellar: :any, mojave:        "dd4fa86f2988dd4c913fc443131ce519ebf034ff492b4760f323ca663fb1744c"
+    sha256 cellar: :any, high_sierra:   "1409aa60298ac27959cf5370b70d158843524e5f5638e28e9607ac7e8783b11e"
   end
 
   depends_on "autoconf" => :build
@@ -19,6 +26,8 @@ class Ivykis < Formula
   def install
     system "autoreconf", "-i"
     system "./configure", "--prefix=#{prefix}"
+    system "make"
+    system "make", "check"
     system "make", "install"
   end
 

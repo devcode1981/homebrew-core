@@ -1,45 +1,26 @@
 class Wsk < Formula
   desc "OpenWhisk Command-Line Interface (CLI)"
   homepage "https://openwhisk.apache.org/"
-  url "https://github.com/apache/incubator-openwhisk-cli/archive/0.9.0-incubating.tar.gz"
-  version "0.9.0-incubating"
-  sha256 "76ec64d1a505c88f7d13df898b07cdea7b13b9799747d432e0bde55f7dc2c8b9"
+  url "https://github.com/apache/openwhisk-cli/archive/1.2.0.tar.gz"
+  sha256 "cafc57b2f2e29f204c00842541691038abcc4e639dd78485f9c042c93335f286"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "01efb1cc64b33be3d77aa477638179d75b159be1d956f95a84d04b7586175214" => :mojave
-    sha256 "3a0e83ba6602152b582acc334c71a7aaf375dcc46730bc66aad3212fd840a348" => :high_sierra
-    sha256 "f80044426ee56b6e70bb9eb8f63c95772e3d60f9aa579572e17bbf168ea91eca" => :sierra
-    sha256 "12b2a1282a36a66f9abc148dcc6dd93cce4e34e381088d0f3b519132776a43e8" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "67b2725953f3e57cc34a264d08038690152cdebead514185f2727eda86e339d0"
+    sha256 cellar: :any_skip_relocation, big_sur:       "e84a614165531b5d1d4d6ec04eaaa1231c1b829b8c32e64c57ed670c8ccbee29"
+    sha256 cellar: :any_skip_relocation, catalina:      "0018d1080479df041f52d6bb92388048cdb6539864f686b8fd92107626a33227"
+    sha256 cellar: :any_skip_relocation, mojave:        "ef1a2d5b366f2d0fef71e5f9a56cf764c8aff282677046de639efe254d1fc9d8"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "7425098df98b8d73d3aa6f4d205fd0327c01a7f5e76fabe4cefe46a940f52deb"
   end
 
   depends_on "go" => :build
   depends_on "go-bindata" => :build
-  depends_on "govendor" => :build
-
-  # Add govendor support. Remove both of these on next release.
-  patch do
-    url "https://github.com/apache/incubator-openwhisk-cli/pull/362.patch?full_index=1"
-    sha256 "5f8dba945cc6684846f77a2c628ca295755b97231e5ae4a7d3d870e8a2933ad6"
-  end
-
-  patch do
-    url "https://github.com/apache/incubator-openwhisk-cli/pull/363.patch?full_index=1"
-    sha256 "eef2bc85a8a8581baba590284c47eee6c033e53e0e93d1a65608f9faad9ba0d2"
-  end
 
   def install
-    ENV["GOPATH"] = buildpath
-    dir = buildpath/"src/github.com/apache/incubator-openwhisk-cli"
-    dir.install buildpath.children
-    cd dir do
-      system "go-bindata", "-pkg", "wski18n", "-o",
-                           "wski18n/i18n_resources.go", "wski18n/resources"
-      system "govendor", "sync"
+    system "go-bindata", "-pkg", "wski18n", "-o",
+                          "wski18n/i18n_resources.go", "wski18n/resources"
 
-      system "go", "build", "-o", bin/"wsk"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args
   end
 
   test do

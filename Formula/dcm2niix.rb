@@ -1,15 +1,23 @@
 class Dcm2niix < Formula
   desc "DICOM to NIfTI converter"
   homepage "https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage"
-  url "https://github.com/rordenlab/dcm2niix/archive/v1.0.20181125.tar.gz"
-  sha256 "7b17a1333423b383deb2235685390fb0f30495262eb7d0aed293c32cf669936c"
+  url "https://github.com/rordenlab/dcm2niix/archive/v1.0.20210317.tar.gz"
+  sha256 "42fb22458ebfe44036c3d6145dacc6c1dc577ebbb067bedc190ed06f546ee05a"
+  license "BSD-3-Clause"
+  version_scheme 1
   head "https://github.com/rordenlab/dcm2niix.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "88007ff3d589db9d0d1bf279fdd5b4615832fb4705658d64ec75ba8392253276" => :mojave
-    sha256 "abacf45887c15b756f296ae821978290ec707a76982a8ea3be0088e2147ea0a1" => :high_sierra
-    sha256 "5a3b32eeef358216b95b6606dbd270f6393f3762372f185d3d5a778ad3e9d98d" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e3dbe411fc4732bd4a022d67b31476f49880ddc946a6fab1b39466b2c013d54d"
+    sha256 cellar: :any_skip_relocation, big_sur:       "084829fb99291a81c2d1980c4bbfb1c22a43956ac912f4a47a1db23b1dff90b6"
+    sha256 cellar: :any_skip_relocation, catalina:      "2583d8380bc1c50f2868cb490ce80505b297ef4258ff9256f892999a0b0b6b85"
+    sha256 cellar: :any_skip_relocation, mojave:        "eab67d24efc13b483a7b9e988bf44efd49aa3e40e12c4deb682832ceae9b7286"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "ecc2a14a090a22072454dd9cb8003a723fee867fe6ef524cfb2e7741888a26f9"
   end
 
   depends_on "cmake" => :build

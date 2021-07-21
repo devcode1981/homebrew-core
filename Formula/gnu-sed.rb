@@ -1,60 +1,69 @@
 class GnuSed < Formula
   desc "GNU implementation of the famous stream editor"
   homepage "https://www.gnu.org/software/sed/"
-  url "https://ftp.gnu.org/gnu/sed/sed-4.5.tar.xz"
-  mirror "https://ftpmirror.gnu.org/sed/sed-4.5.tar.xz"
-  sha256 "7aad73c8839c2bdadca9476f884d2953cdace9567ecd0d90f9959f229d146b40"
+  url "https://ftp.gnu.org/gnu/sed/sed-4.8.tar.xz"
+  mirror "https://ftpmirror.gnu.org/sed/sed-4.8.tar.xz"
+  sha256 "f79b0cfea71b37a8eeec8490db6c5f7ae7719c35587f21edb0617f370eeff633"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "16bb9d9e40f9be04ec58a032adae5253587b44baa9f52f2f01ae639a783ff35c" => :mojave
-    sha256 "c90da39dbe361289afdee0ae58c4051fefb1b06be98fe45706def032dd845a9e" => :high_sierra
-    sha256 "d72b58ec90566fdc5504b0de2d63cf0963eecd5e1d9cfe1f35408ac5ab5df79d" => :sierra
-    sha256 "adc343fd5375908e69fe8c770588128f3e8459b8997aaf62933e0a2229c626d4" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "72bc2b8cf7c7e18d106d79c7db382f7160408aafa8fb765b084cbe965e92db9b"
+    sha256 cellar: :any_skip_relocation, big_sur:       "3846b361699dd0260a616085b2a1678c874a2fcce8ce70e704a018dce3b4a882"
+    sha256 cellar: :any_skip_relocation, catalina:      "726be75d6d7155820b408a10e5c1a5ba1406374a7fc167af62524a4f4bbbc099"
+    sha256 cellar: :any_skip_relocation, mojave:        "093f16752e7dfb115c055f20aed090108b94edd47c40f5e50878d961359251b2"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "865abe618c67037a4a419a05e0df2c6814fb3abdd6f631ea546aeba0aaf8eb78"
+    sha256                               x86_64_linux:  "35d0116b6abaa8fe7e51fc955d4f940a3d4ee0fbb0155c3759e3af35cd38bfe2"
   end
 
-  option "with-default-names", "Do not prepend 'g' to the binary"
-
-  deprecated_option "default-names" => "with-default-names"
-
-  conflicts_with "ssed", :because => "both install share/info/sed.info"
+  conflicts_with "ssed", because: "both install share/info/sed.info"
 
   def install
-    args = ["--prefix=#{prefix}", "--disable-dependency-tracking"]
-    args << "--program-prefix=g" if build.without? "default-names"
+    args = %W[
+      --prefix=#{prefix}
+      --disable-dependency-tracking
+    ]
 
+    on_macos do
+      args << "--program-prefix=g"
+    end
+    on_linux do
+      args << "--without-selinux"
+    end
     system "./configure", *args
     system "make", "install"
 
-    if build.without? "default-names"
+    on_macos do
       (libexec/"gnubin").install_symlink bin/"gsed" =>"sed"
       (libexec/"gnuman/man1").install_symlink man1/"gsed.1" => "sed.1"
     end
+
+    libexec.install_symlink "gnuman" => "man"
   end
 
   def caveats
-    if build.without? "default-names" then <<~EOS
-      The command has been installed with the prefix "g".
-      If you do not want the prefix, install using the "with-default-names" option.
+    on_macos do
+      <<~EOS
+        GNU "sed" has been installed as "gsed".
+        If you need to use it as "sed", you can add a "gnubin" directory
+        to your PATH from your bashrc like:
 
-      If you need to use these commands with their normal names, you
-      can add a "gnubin" directory to your PATH from your bashrc like:
-        PATH="#{opt_libexec}/gnubin:$PATH"
-
-      Additionally, you can access their man pages with normal names if you add
-      the "gnuman" directory to your MANPATH from your bashrc as well:
-        MANPATH="#{opt_libexec}/gnuman:$MANPATH"
-    EOS
+            PATH="#{opt_libexec}/gnubin:$PATH"
+      EOS
     end
   end
 
   test do
     (testpath/"test.txt").write "Hello world!"
-    if build.with? "default-names"
-      system "#{bin}/sed", "-i", "s/world/World/g", "test.txt"
-    else
+    on_macos do
       system "#{bin}/gsed", "-i", "s/world/World/g", "test.txt"
+      assert_match "Hello World!", File.read("test.txt")
+
+      system "#{opt_libexec}/gnubin/sed", "-i", "s/world/World/g", "test.txt"
+      assert_match "Hello World!", File.read("test.txt")
     end
-    assert_match /Hello World!/, File.read("test.txt")
+    on_linux do
+      system "#{bin}/sed", "-i", "s/world/World/g", "test.txt"
+      assert_match "Hello World!", File.read("test.txt")
+    end
   end
 end

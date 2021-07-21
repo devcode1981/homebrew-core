@@ -3,33 +3,30 @@ require "language/node"
 class ImageoptimCli < Formula
   desc "CLI for ImageOptim, ImageAlpha and JPEGmini"
   homepage "https://jamiemason.github.io/ImageOptim-CLI/"
-  url "https://github.com/JamieMason/ImageOptim-CLI/archive/2.0.4.tar.gz"
-  sha256 "c26ba12425f100ab16e992f607e6d69527a6572b55cf287f5321a62ee61af390"
+  url "https://github.com/JamieMason/ImageOptim-CLI/archive/3.0.2.tar.gz"
+  sha256 "957261d38fa85e0ec377efb2eceae695e3d87b621bae64853f9f5163efd3594b"
+  license "MIT"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "40bfe00ed46ac2364895249f42003e3e862e737c80fe7a4ed9c6264ba96989e3" => :mojave
-    sha256 "22d4d21459a4cc8754d11b0acc953c816256d6510db2bf61b53d945bfd4557dd" => :high_sierra
-    sha256 "bffc58868deab95f726d08ceba4060549a8d631a38f7c7978f7373a33fa84532" => :sierra
+    sha256 cellar: :any_skip_relocation, big_sur:     "fd8ea02974a34708556c132b2258c12d68e379abfd1f0e591d193f97489d03fb"
+    sha256 cellar: :any_skip_relocation, catalina:    "56a9b2dba8f47850a26c335311f8c436b683c0b92ef5ab0b83e91688cf64ec7a"
+    sha256 cellar: :any_skip_relocation, mojave:      "b7b1923ed31ab32540a5dffcf798675401ca48249fae54f49d67bc6c78feede9"
+    sha256 cellar: :any_skip_relocation, high_sierra: "6f1aa4b2e4de3e7a1502f1f8747283589697e5f0f0506f4d24acd53381311706"
   end
 
-  depends_on "node" => :build
-
-  resource "node" do
-    url "https://nodejs.org/dist/v10.9.0/node-v10.9.0.tar.xz"
-    sha256 "d17ef8eb72d6a31f50a663d554beb9bcb55aa2ce57cf189abfc9b1ba20530d02"
-  end
+  depends_on "node@10" => :build
+  depends_on "yarn" => :build
 
   def install
-    # build node from source instead of downloading precompiled nexe node binary
-    resource("node").stage buildpath/".brew_home/.nexe"
-    inreplace "package.json", "\"build:bin\": \"nexe --target 'mac-x64-10.0.0' --input",
-      "\"build:bin\": \"nexe --build --target 'mac-x64-#{resource("node").version}' --loglevel=verbose --input"
-
-    system "npm", "ci", *Language::Node.local_npm_install_args
-    system "npm", "run-script", "build"
-    libexec.install "dist", "osascript"
-    bin.install_symlink libexec/"dist/imageoptim"
+    system "yarn"
+    system "npm", "run", "build"
+    system "npm", "install", *Language::Node.std_npm_install_args(libexec)
+    bin.install_symlink Dir["#{libexec}/bin/*"]
   end
 
   test do

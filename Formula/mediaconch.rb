@@ -2,21 +2,31 @@ class Mediaconch < Formula
   desc "Conformance checker and technical metadata reporter"
   homepage "https://mediaarea.net/MediaConch"
   url "https://mediaarea.net/download/binary/mediaconch/18.03.2/MediaConch_CLI_18.03.2_GNU_FromSource.tar.bz2"
-  version "18.03.2"
   sha256 "8f8f31f1c3eb55449799ebb2031ef373934a0a9826ce6c2b2bdd32dacbf5ec4c"
+  revision 1
+
+  livecheck do
+    url "https://mediaarea.net/MediaConch/Download/Source"
+    regex(/href=.*?MediaConch[._-]CLI[._-]v?(\d+(?:\.\d+)+)[._-]GNU[._-]FromSource\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "8828246691975f172635147cf5f89ce679397112288276d3fcde40252edc637f" => :mojave
-    sha256 "d888f17d7347095c3516e1a51238fe01636578c1a2cf1d3e0162bd05e027ed5e" => :high_sierra
-    sha256 "07b38dfc6333a72b2333562fc017ccb175a91de98d21c4046c445b62e7dbeb6a" => :sierra
-    sha256 "b110435077f1d4164238760baa2bfaaa5e63b3a49a9600a86d710cfefc594e89" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "2bc516280f29cda43dcda638a0a5dd586a34fc52beb724bd97f382825d347d7a"
+    sha256 cellar: :any,                 big_sur:       "1ab9e887a8787b4b3655df4f9b01214da00ef466da186db7dca1ae646bb09b3d"
+    sha256 cellar: :any,                 catalina:      "41a49bbafbffc220f140d8e466f1507757cbe552f8de4ca306217affbf1e6dd5"
+    sha256 cellar: :any,                 mojave:        "9d59b85fecc5d5caba622fe57358caab23c8ea904954a137b99e66dd4f7fedec"
+    sha256 cellar: :any,                 high_sierra:   "d59cfb9ac07ffb7eacc4c7970c38676a3909f0966481b99c745735bf87db7b8e"
+    sha256 cellar: :any,                 sierra:        "fdb3934174a68121357c21d4f0800e8bbbaa6a296f3386ab52e5298fde96a6b6"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "87ccb6aac84590c501a35ea7ce511f21d1f902a7d37dbdcef722a7c6149dee0f"
   end
 
   depends_on "pkg-config" => :build
   depends_on "jansson"
   depends_on "libevent"
   depends_on "sqlite"
+
+  uses_from_macos "curl"
+  uses_from_macos "libxslt"
 
   def install
     cd "ZenLib/Project/GNU/Library" do

@@ -1,28 +1,28 @@
-require "language/haskell"
-
 class Cgrep < Formula
-  include Language::Haskell::Cabal
-
   desc "Context-aware grep for source code"
   homepage "https://github.com/awgn/cgrep"
-  url "https://github.com/awgn/cgrep/archive/v6.6.27.tar.gz"
-  sha256 "1c623478e1b93a43eb1f151d20fa1096439a84b6ce7024bb9856f10c6ffeca59"
+  url "https://github.com/awgn/cgrep/archive/v6.6.33.tar.gz"
+  sha256 "f0d7114e9c26dc3ff3515711cce63864f3995ac06ed3743acf2560fc5a1eb78e"
+  license "GPL-2.0-or-later"
   head "https://github.com/awgn/cgrep.git"
 
   bottle do
-    cellar :any
-    sha256 "a5a9e0f032374564c3c4636c2aef31dc41c5a0b441a69356bfdc4db27d30e934" => :mojave
-    sha256 "d5c98ba9f21a7946ca53394fc66f7145593a8d33427e4d0867b73f2342dbe5af" => :high_sierra
-    sha256 "8fc2929f882103c18dae410dcf66f667d4c32dae6dd13a9c7b0ae0c87c980ef9" => :sierra
-    sha256 "a3570fdcf951b804efe6994162af327c2984650e3d1fe4a1a54e3a473af8630a" => :el_capitan
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "fad4cc03f990a4aa7488d89f306766e5a496adc92431c5b5de80e0f8c4d33a73"
+    sha256 cellar: :any,                 big_sur:       "cdb29911007db234f2480b8f4d7958a024f14d33c219b9de134fcc335d39357a"
+    sha256 cellar: :any,                 catalina:      "75e4aa890057e43801be25ca61531c74b22b8685a3ada1032c270b740e9a9cda"
+    sha256 cellar: :any,                 mojave:        "83e3c982a030617bc8d4b2dd329170e2c8ad7d77d40f715ecb83f7bdcba86135"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f3b1169d4c9e8643d7b613bb7f9b16e7d773d65de726fbac7dc85323580b2f06"
   end
 
   depends_on "cabal-install" => :build
   depends_on "ghc" => :build
+  depends_on "pkg-config" => :build
   depends_on "pcre"
 
   def install
-    install_cabal_package
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args
   end
 
   test do

@@ -1,14 +1,15 @@
 class Feedgnuplot < Formula
   desc "Tool to plot realtime and stored data from the command-line"
   homepage "https://github.com/dkogan/feedgnuplot"
-  url "https://github.com/dkogan/feedgnuplot/archive/v1.51.tar.gz"
-  sha256 "fac4ab7716985c3e2a13ab2dc43cc8521e756925d3149c430cef2d79d34eb7e6"
+  url "https://github.com/dkogan/feedgnuplot/archive/v1.58.tar.gz"
+  sha256 "b365c5180c74146cae648b22aa56513fbe36e2360879c5e31d0a55786532a236"
+  license any_of: ["GPL-1.0-or-later", "Artistic-1.0"]
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "672b773f3fc4ab3aa1447ceadcc14cd394944e3b7ee7b932839a98e318d0d8af" => :mojave
-    sha256 "59415efda86bb2c5474ba8539108813a2970c5863a1a9eb9f634cbd911a2a41d" => :high_sierra
-    sha256 "5f60ed2583d232fb65f6900f23ab1ecb99ffd1812948b288d87836f221da3e08" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "95ac4f81cea6de374480e12c5405f91bff82b273cf3bb36e11573bc216cef391"
+    sha256 cellar: :any_skip_relocation, big_sur:       "714fbc8eac16cda3975072b8143de591fc2bb8b75b06eb2a5335243c3d11e1a2"
+    sha256 cellar: :any_skip_relocation, catalina:      "3a8fd0e2f1c53e42d244094d34bb0ef8bcb81dad65e53a59d847accd2b8486fb"
+    sha256 cellar: :any_skip_relocation, mojave:        "e7ac7f355080a99693da97468e9dd84274b1b23d2b5574eb291d3996bc21375b"
   end
 
   depends_on "gnuplot"
@@ -17,6 +18,10 @@ class Feedgnuplot < Formula
     system "perl", "Makefile.PL", "prefix=#{prefix}"
     system "make"
     system "make", "install"
+    prefix.install Dir[prefix/"local/*"]
+
+    bash_completion.install "completions/bash/feedgnuplot"
+    zsh_completion.install "completions/zsh/_feedgnuplot"
   end
 
   test do

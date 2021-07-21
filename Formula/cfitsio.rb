@@ -1,24 +1,26 @@
 class Cfitsio < Formula
   desc "C access to FITS data files with optional Fortran wrappers"
   homepage "https://heasarc.gsfc.nasa.gov/docs/software/fitsio/fitsio.html"
-  url "https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio3450.tar.gz"
-  version "3.450"
-  sha256 "bf6012dbe668ecb22c399c4b7b2814557ee282c74a7d5dc704eb17c30d9fb92e"
+  url "https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio-3.49.tar.gz"
+  version "3.490"
+  sha256 "5b65a20d5c53494ec8f638267fca4a629836b7ac8dd0ef0266834eab270ed4b3"
 
-  bottle do
-    cellar :any
-    sha256 "d2f30916f14efa1e721e39374778cae8dd7b3e7a032846657816036c022aad12" => :mojave
-    sha256 "a74d1db66c52504a7b9e0f72f06ea8c2a96eb988b9882473139447a2db865830" => :high_sierra
-    sha256 "e916758becbd9c480f685c44343d99f2d0d01329bf1687f4f2b711dc51782612" => :sierra
-    sha256 "f5e9a01028f38a17ddd05488dd261eb235c34512b0ef6bade5c875525644ea54" => :el_capitan
+  livecheck do
+    url :homepage
+    regex(/Download the latest v?(\d+(?:\.\d+)+) version of CFITSIO/i)
   end
 
-  option "with-reentrant", "Build with support for concurrency"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "e5e1b4c2c73622ff9302547e5bafc7e80a5b98ae2e46522efeeaab0c6531b80b"
+    sha256 cellar: :any,                 big_sur:       "95b7f8301997e3b9c7111b8dc395b917800121a5e98edfdd0efc0f3d9adebbd9"
+    sha256 cellar: :any,                 catalina:      "2abc3263aed574298efd50d60dd5fa07e69c5a39ed87772e3edaa727a293506a"
+    sha256 cellar: :any,                 mojave:        "07c4d1610f3e5d90cbedb238939f588f09150edfe006f41c5072d2fb4e01980a"
+    sha256 cellar: :any,                 high_sierra:   "ec8feab397612c13da91dd9c8e2c91289973ec1e7e10bf07f17023cf5db26745"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "2a4cf2b6058098fb6ed7a7f346aaa92e4cd3336d19b08c743fac516e5421bc7d"
+  end
 
   def install
-    args = ["--prefix=#{prefix}"]
-    args << "--enable-reentrant" if build.with? "reentrant"
-    system "./configure", *args
+    system "./configure", "--prefix=#{prefix}", "--enable-reentrant"
     system "make", "shared"
     system "make", "install"
     (pkgshare/"testprog").install Dir["testprog*"]

@@ -1,19 +1,26 @@
 class Passwdqc < Formula
   desc "Password/passphrase strength checking and enforcement toolset"
   homepage "https://www.openwall.com/passwdqc/"
-  url "https://www.openwall.com/passwdqc/passwdqc-1.3.1.tar.gz"
-  sha256 "d1fedeaf759e8a0f32d28b5811ef11b5a5365154849190f4b7fab670a70ffb14"
+  url "https://www.openwall.com/passwdqc/passwdqc-2.0.2.tar.gz"
+  sha256 "ff1f505764c020f6a4484b1e0cc4fdbf2e3f71b522926d90b4709104ca0604ab"
+  license "0BSD"
+
+  livecheck do
+    url :homepage
+    regex(/href=["']?passwdqc[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "e0f9450b595fb6935ed0cba174755cda95a7ff2fc7f9cc0e9e9027f69e5c1b6c" => :mojave
-    sha256 "f3225da4795b1f3c89e25aac62101021f533faebe52fda91101a497da156f797" => :high_sierra
-    sha256 "e63d866e12db3c5b031b33681a8a6b5163908cbbedde6d33e72e2543a4a75ef2" => :sierra
-    sha256 "607a5adfb33eca79f847569357c77d643b9be4b17ba73c915575990ad676bddd" => :el_capitan
-    sha256 "6aac1b96be6144cdb889af5cbcccc3c6779593f3544abdc186d17c61cc4acf34" => :yosemite
+    sha256 cellar: :any, arm64_big_sur: "ed3dc06aa375b5fe7a83f55c5cbdb37deb2e5dea63662fbd00fb5869486821ef"
+    sha256 cellar: :any, big_sur:       "2aabe92682e07ffa405d348e7d2f263c79f92e1dbb972fec4729a5e7254cc0bc"
+    sha256 cellar: :any, catalina:      "2b9fe24f7b39be287229ef32275cc7f6609e3c7fcbb8f53f2180ca1506e880b1"
+    sha256 cellar: :any, mojave:        "e5f0c3879c811e178aed95c5541ea0f3b8967865d75a425bc3ac1b102a9b1014"
   end
 
   def install
+    # https://github.com/openwall/passwdqc/issues/15
+    inreplace "passwdqc_filter.h", "<endian.h>", "<machine/endian.h>"
+
     args = %W[
       BINDIR=#{bin}
       CC=#{ENV.cc}

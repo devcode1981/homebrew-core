@@ -1,29 +1,28 @@
 class Shellz < Formula
   desc "Small utility to track and control custom shellz"
   homepage "https://github.com/evilsocket/shellz"
-  url "https://github.com/evilsocket/shellz/archive/v1.4.0.tar.gz"
-  sha256 "d5d2d33cf5c6898be97eb20c08ea7053cc5ee7449542afe9d1a06b14a57c0312"
+  url "https://github.com/evilsocket/shellz/archive/v1.5.1.tar.gz"
+  sha256 "ff7d5838fd0f8385a700bd882eab9f6e5da023899458c9215e36e2244cc11bfd"
+  license "GPL-3.0-only"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "494dc447302a25f84d9a5164f92138ce9ae8b366cf33dd00b71e3e6429e60dd4" => :mojave
-    sha256 "e346665aad2c792f1e4f95ee5c35837c86dd43d433da8b475def3174357934e9" => :high_sierra
-    sha256 "9dcc0ebb77ba4c79f48158f86584db1b5d00b13ee40bd1d49f3601d1a9d5c2e4" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "4e891a0581c95cdbe2b0736a921e97fef50b702fcd445dc9c2c26d6acd529ccd"
+    sha256 cellar: :any_skip_relocation, big_sur:       "85f5058492ebd2e7d64347418f3a66267da72800ba6ff94682fbcd23d1c1614e"
+    sha256 cellar: :any_skip_relocation, catalina:      "5f0e41d34454419df76d6a4bd7213b4c20297bf0a6732bddbebce8fbfbc2ba5a"
+    sha256 cellar: :any_skip_relocation, mojave:        "3200f4361fc2d855b7417d48bf853f16346c14d0745fc831758120a427f81cef"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c4e845e86d9676386c8afe312c324b8d6f3576e8303bdee84f86f893b822103e"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
 
-  def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/evilsocket/shellz").install buildpath.children
+  # remove in next release
+  patch do
+    url "https://github.com/chenrui333/shellz/commit/10bd430.patch?full_index=1"
+    sha256 "c23d375e7ea2b20e3c2c0fec39adda384a0ce34482c7d97f8aa63c1526bf80f3"
+  end
 
-    cd "src/github.com/evilsocket/shellz" do
-      system "dep", "ensure", "-vendor-only"
-      system "make", "build"
-      bin.install "shellz"
-      prefix.install_metafiles
-    end
+  def install
+    system "go", "build", *std_go_args(ldflags: "-s -w"), "./cmd/shellz"
   end
 
   test do

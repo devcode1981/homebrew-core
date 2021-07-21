@@ -1,18 +1,41 @@
 class Apr < Formula
   desc "Apache Portable Runtime library"
   homepage "https://apr.apache.org/"
-  url "https://www.apache.org/dyn/closer.cgi?path=apr/apr-1.6.5.tar.bz2"
-  sha256 "a67ca9fcf9c4ff59bce7f428a323c8b5e18667fdea7b0ebad47d194371b0a105"
+  url "https://www.apache.org/dyn/closer.lua?path=apr/apr-1.7.0.tar.bz2"
+  mirror "https://archive.apache.org/dist/apr/apr-1.7.0.tar.bz2"
+  sha256 "e2e148f0b2e99b8e5c6caa09f6d4fb4dd3e83f744aa72a952f94f5a14436f7ea"
+  license "Apache-2.0"
+  revision 2
 
   bottle do
-    cellar :any
-    sha256 "0111bfb48f0a020292bd503c2c8e1b374f9ea844c3cc32a0b35a670234adc055" => :mojave
-    sha256 "314c8ebd08304a0f7dcebe3ca7fe5cc6b1c283b744f12d19d0931b91fac4fe20" => :high_sierra
-    sha256 "71cb98918a64daac38641bf4bbfb9457693ffd4109c023f0c3a50bfa029141f7" => :sierra
-    sha256 "a3e0d0b44862e575f529d9b6fdf467b507dced4bfcf9afc30d06d3ddc5e51a0e" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "d8adb33071a6a845ff928b6166377dea6de5b642b412042002386416354932b9"
+    sha256 cellar: :any,                 big_sur:       "d9a9554a726ec60e124055a55747e6e7f4cff6310955d6340be340ac053ac097"
+    sha256 cellar: :any,                 catalina:      "3f5c1fa8f17715291ce9f66cf4eb4f518ac1aa856c485f0157036459ad63792c"
+    sha256 cellar: :any,                 mojave:        "4627416a5d9c651d2d4fbb7faa639d6f7a89c7c0558576eeac1f17a81a17f3bd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "fc3b583e8e0773016a5749e947939f895043a1155968fdbab795d3fba9fe801c"
   end
 
-  keg_only :provided_by_macos, "Apple's CLT package contains apr"
+  keg_only :provided_by_macos, "Apple's CLT provides apr"
+
+  depends_on "autoconf@2.69" => :build
+
+  on_linux do
+    depends_on "util-linux"
+  end
+
+  # Apply r1871981 which fixes a compile error on macOS 11.0.
+  # Remove with the next release, along with the autoconf call & dependency.
+  patch :p0 do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/7e2246542543bbd3111a4ec29f801e6e4d538f88/apr/r1871981-macos11.patch"
+    sha256 "8754b8089d0eb53a7c4fd435c9a9300560b675a8ff2c32315a5e9303408447fe"
+  end
+
+  # Apply r1882980+1882981 to fix implicit exit() declaration
+  # Remove with the next release, along with the autoconf call & dependency.
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/fa29e2e398c638ece1a72e7a4764de108bd09617/apr/r1882980%2B1882981-configure.patch"
+    sha256 "24189d95ab1e9523d481694859b277c60ca29bfec1300508011794a78dfed127"
+  end
 
   def install
     ENV["SED"] = "sed" # prevent libtool from hardcoding sed path from superenv
@@ -21,18 +44,37 @@ class Apr < Formula
     # The internal libtool throws an enormous strop if we don't do...
     ENV.deparallelize
 
-    # Stick it in libexec otherwise it pollutes lib with a .exp file.
-    system "./configure", "--prefix=#{libexec}"
-    system "make", "install"
-    bin.install_symlink Dir["#{libexec}/bin/*"]
+    # Needed to apply the patch.
+    system "autoconf"
 
-    rm Dir[libexec/"lib/*.la"]
+    system "./configure", *std_configure_args
+    system "make", "install"
+
+    # Install symlinks so that linkage doesn't break for reverse dependencies.
+    (libexec/"lib").install_symlink Dir["#{lib}/#{shared_library("*")}"]
+
+    rm Dir["#{lib}/*.{la,exp}"]
 
     # No need for this to point to the versioned path.
-    inreplace libexec/"bin/apr-1-config", libexec, opt_libexec
+    inreplace bin/"apr-#{version.major}-config", prefix, opt_prefix
+
+    on_linux do
+      # Avoid references to the Homebrew shims directory
+      inreplace prefix/"build-#{version.major}/libtool", HOMEBREW_SHIMS_PATH/"linux/super/", "/usr/bin/"
+    end
   end
 
   test do
-    assert_match opt_libexec.to_s, shell_output("#{bin}/apr-1-config --prefix")
+    assert_match opt_prefix.to_s, shell_output("#{bin}/apr-#{version.major}-config --prefix")
+    (testpath/"test.c").write <<~EOS
+      #include <stdio.h>
+      #include <apr-#{version.major}/apr_version.h>
+      int main() {
+        printf("%s", apr_version_string());
+        return 0;
+      }
+    EOS
+    system ENV.cc, "test.c", "-I#{include}", "-L#{lib}", "-lapr-#{version.major}", "-o", "test"
+    assert_equal version.to_s, shell_output("./test")
   end
 end

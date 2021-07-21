@@ -1,48 +1,43 @@
 class S3cmd < Formula
+  include Language::Python::Virtualenv
+
   desc "Command-line tool for the Amazon S3 service"
   homepage "https://s3tools.org/s3cmd"
-  url "https://downloads.sourceforge.net/project/s3tools/s3cmd/2.0.2/s3cmd-2.0.2.tar.gz"
-  sha256 "9f244c0c10d58d0ccacbba3aa977463e32491bdd9d95109e27b67e4d46c5bd52"
-  revision 1
+  url "https://files.pythonhosted.org/packages/c7/eb/5143fe1884af2303cb7b23f453e5c9f337af46c2281581fc40ab5322dee4/s3cmd-2.1.0.tar.gz"
+  sha256 "966b0a494a916fc3b4324de38f089c86c70ee90e8e1cae6d59102103a4c0cc03"
+  license "GPL-2.0-or-later"
+  revision 3
   head "https://github.com/s3tools/s3cmd.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "189112abb6e81acbbbd4977a3d573cf090dd7c85fee032642c5a9164ccb03046" => :mojave
-    sha256 "182902e2ea25497262b58393a95b34a0961a1d83dc2702d357c5f3d06d1baecf" => :high_sierra
-    sha256 "182902e2ea25497262b58393a95b34a0961a1d83dc2702d357c5f3d06d1baecf" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "f4629ce0910520b758907fb6e34ba11d541682518dcfdbc170f99892b86bfcd3"
+    sha256 cellar: :any_skip_relocation, big_sur:       "1b8cacde3f02b35d2b7fbc0996fa66c6423b566a7d1165a630c7b3826518c4cf"
+    sha256 cellar: :any_skip_relocation, catalina:      "5f553edd6ee20fe32966ef171dc21ac741c3ed466e9d4df1c6f787f161d0b71d"
+    sha256 cellar: :any_skip_relocation, mojave:        "f1ef823594cb909fb04b0902b8d02bd1f372ea2f13d0094207e8139b0f2f439a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f1ae3afd06194131ef14b5d4ce0c2f7234dcbb0214454cbf47f0923a6c04f563"
   end
 
-  depends_on "python"
+  # s3cmd version 2.1.0 is not compatible with Python 3.9, know issues are:
+  # - https://github.com/s3tools/s3cmd/issues/1146
+  # - https://github.com/s3tools/s3cmd/pull/1144
+  # - https://github.com/s3tools/s3cmd/pull/1137
+  # Do not bump Python version until these issues are fixed, probably when version 2.2.0 is released.
+  depends_on "python@3.8"
+  depends_on "six"
 
   resource "python-dateutil" do
-    url "https://files.pythonhosted.org/packages/a0/b0/a4e3241d2dee665fea11baec21389aec6886655cd4db7647ddf96c3fad15/python-dateutil-2.7.3.tar.gz"
-    sha256 "e27001de32f627c22380a688bcc43ce83504a7bc5da472209b4c70f02829f0b8"
+    url "https://files.pythonhosted.org/packages/be/ed/5bbc91f03fa4c839c4c7360375da77f9659af5f7086b7a7bdda65771c8e0/python-dateutil-2.8.1.tar.gz"
+    sha256 "73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"
   end
 
   resource "python-magic" do
-    url "https://files.pythonhosted.org/packages/84/30/80932401906eaf787f2e9bd86dc458f1d2e75b064b4c187341f29516945c/python-magic-0.4.15.tar.gz"
-    sha256 "f3765c0f582d2dfc72c15f3b5a82aecfae9498bd29ca840d72f37d7bd38bfcd5"
-  end
-
-  resource "six" do
-    url "https://files.pythonhosted.org/packages/16/d8/bc6316cf98419719bd59c91742194c111b6f2e85abac88e496adefaf7afe/six-1.11.0.tar.gz"
-    sha256 "70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9"
+    url "https://files.pythonhosted.org/packages/26/60/6d45e0e7043f5a7bf15238ca451256a78d3c5fe02cd372f0ed6d888a16d5/python-magic-0.4.22.tar.gz"
+    sha256 "ca884349f2c92ce830e3f498c5b7c7051fe2942c3ee4332f65213b8ebff15a62"
   end
 
   def install
-    xy = Language::Python.major_minor_version "python3"
-    ENV.prepend_create_path "PYTHONPATH", libexec/"vendor/lib/python#{xy}/site-packages"
-    resources.each do |r|
-      r.stage { system "python3", *Language::Python.setup_install_args(libexec/"vendor") }
-    end
-
-    ENV.prepend_create_path "PYTHONPATH", libexec/"lib/python#{xy}/site-packages"
-    system "python3", *Language::Python.setup_install_args(libexec)
-
-    bin.install Dir[libexec/"bin/*"]
-    bin.env_script_all_files(libexec/"bin", :PYTHONPATH => ENV["PYTHONPATH"])
-    man1.install Dir[libexec/"share/man/man1/*"]
+    ENV["S3CMD_INSTPATH_MAN"] = man
+    virtualenv_install_with_resources
   end
 
   test do

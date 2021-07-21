@@ -1,13 +1,21 @@
 class Icdiff < Formula
+  include Language::Python::Shebang
+
   desc "Improved colored diff"
   homepage "https://github.com/jeffkaufman/icdiff"
-  url "https://github.com/jeffkaufman/icdiff/archive/release-1.9.4.tar.gz"
-  sha256 "dabceff1986d45f1e0e6a396ed71836586acfb99092a91303f14052b879ca59a"
+  url "https://github.com/jeffkaufman/icdiff/archive/release-2.0.0.tar.gz"
+  sha256 "bce07ff4995aafe9de274ca0a322e56275dc264948b125457d2cc73dd7e9eee2"
+  license "PSF-2.0"
   head "https://github.com/jeffkaufman/icdiff.git"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "6527bb074c26002e16e014b6e887549a9303dad523ffee000229907360130e43"
+  end
+
+  depends_on "python@3.9"
 
   def install
+    rewrite_shebang detected_python_shebang, "icdiff"
     bin.install "icdiff", "git-icdiff"
   end
 

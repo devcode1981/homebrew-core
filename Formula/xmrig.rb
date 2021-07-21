@@ -1,25 +1,33 @@
 class Xmrig < Formula
   desc "Monero (XMR) CPU miner"
   homepage "https://github.com/xmrig/xmrig"
-  url "https://github.com/xmrig/xmrig/archive/v2.8.3.tar.gz"
-  sha256 "ddf0c273fcf71889989c971c2a27b81a05aa2352a4bc03481730576583de4696"
+  url "https://github.com/xmrig/xmrig/archive/v6.13.1.tar.gz"
+  sha256 "c444e53f8692ad10e0daa73df57892cf9a066d20fe25db377022cd481b1440ad"
+  license "GPL-3.0-or-later"
+  head "https://github.com/xmrig/xmrig.git"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any
-    sha256 "e70f6f9e32b7be3cf7785024086965a9075f8a4151dfb096205b97b0feb8c4a7" => :mojave
-    sha256 "c9f0cbbb7c761cdedca58ab34aef55b40351da79165583cb068071a3e35b9411" => :high_sierra
-    sha256 "294fbd5986b573c9246102aa25f4c5f9b28c91a94c7182be4d65a8221519109c" => :sierra
+    sha256                               arm64_big_sur: "c3d9971946ac0346d29381a2fbfc31846f473cb26f839a1fc75aa4326ff8a984"
+    sha256                               big_sur:       "84d5705044bb8b8bc0a9f4463d198f5117fd9b80d26611aab14cead60a18d689"
+    sha256                               catalina:      "1eb2e3714a808de28fccd084ba8e0382b0797cb0b24033023df54453a309c5c6"
+    sha256                               mojave:        "d1baf3fbcef11492379125df6d5300a0d16b28d34b0956e182a3c0c911c98cc4"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5c940f158762a4013d9c983e5c975b92f823f978c72a3b36d0e0890d06bede7e"
   end
 
   depends_on "cmake" => :build
+  depends_on "hwloc"
   depends_on "libmicrohttpd"
   depends_on "libuv"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
 
   def install
     mkdir "build" do
-      system "cmake", "..", "-DUV_LIBRARY=#{Formula["libuv"].opt_lib}/libuv.dylib",
-                            *std_cmake_args
+      system "cmake", "..", "-DWITH_CN_GPU=OFF", *std_cmake_args
       system "make"
       bin.install "xmrig"
     end
@@ -27,19 +35,19 @@ class Xmrig < Formula
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/xmrig -V", 2)
+    assert_match version.to_s, shell_output("#{bin}/xmrig -V")
     test_server="donotexist.localhost:65535"
     timeout=10
     begin
       read, write = IO.pipe
       pid = fork do
         exec "#{bin}/xmrig", "--no-color", "--max-cpu-usage=1", "--print-time=1",
-             "--threads=1", "--retries=1", "--url=#{test_server}", :out => write
+             "--threads=1", "--retries=1", "--url=#{test_server}", out: write
       end
       start_time=Time.now
       loop do
         assert (Time.now - start_time <= timeout), "No server connect after timeout"
-        break if read.gets.include? "\] \[#{test_server}\] DNS error: \"unknown node or service\""
+        break if read.gets.include? "#{test_server} DNS error: \"unknown node or service\""
       end
     ensure
       Process.kill("SIGINT", pid)

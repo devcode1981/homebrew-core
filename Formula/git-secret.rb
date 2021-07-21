@@ -1,31 +1,24 @@
 class GitSecret < Formula
   desc "Bash-tool to store the private data inside a git repo"
-  homepage "https://sobolevn.github.io/git-secret/"
+  homepage "https://git-secret.io"
+  license "MIT"
   head "https://github.com/sobolevn/git-secret.git"
 
   stable do
-    url "https://github.com/sobolevn/git-secret/archive/v0.2.4.tar.gz"
-    sha256 "dd9962935f242a94bb00af6a31171de0fdba357171a6c626efc2635751d52bc4"
-
-    # Remove for > 0.2.4
-    # Upstream PR from 12 Jun 2018 "Revert 'migrate from bats to bats-core'"
-    patch do
-      url "https://github.com/sobolevn/git-secret/pull/203.patch?full_index=1"
-      sha256 "ee4e263b9725aee59f8b52196d4749a09791dbb4c745a9e81da523d27fcf3f09"
-    end
+    url "https://github.com/sobolevn/git-secret/archive/v0.4.0.tar.gz"
+    sha256 "ae17bfda88eb77e8f07c5f16d833792a3a14adc9c5d2bbc840f28538c62f08ba"
   end
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "0fb8db338cf111c40a9ddd2a4d02dcb7779c2f50c88364b118d7cb9442bdfb22" => :mojave
-    sha256 "d7a78350338c3f42505215eb1c4d7e48309bf8e5495d1bb91b8517c05ba6398c" => :high_sierra
-    sha256 "d7a78350338c3f42505215eb1c4d7e48309bf8e5495d1bb91b8517c05ba6398c" => :sierra
-    sha256 "d7a78350338c3f42505215eb1c4d7e48309bf8e5495d1bb91b8517c05ba6398c" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "8b19c1a419d844931e68bc21b0097c2d9c17275f66de939cafe6a13df91dafb3"
+    sha256 cellar: :any_skip_relocation, big_sur:       "2bd6c524c359601a854696aa0b7fed558e6c5dc45791feced47f33e06103dafe"
+    sha256 cellar: :any_skip_relocation, catalina:      "2bd6c524c359601a854696aa0b7fed558e6c5dc45791feced47f33e06103dafe"
+    sha256 cellar: :any_skip_relocation, mojave:        "2bd6c524c359601a854696aa0b7fed558e6c5dc45791feced47f33e06103dafe"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "28cf4e740681f14e15661f2d954c042cb78ba80e0f36c0eae8c9096915977f7a"
   end
 
   depends_on "gawk"
-  depends_on "gnupg" => :recommended
+  depends_on "gnupg"
 
   def install
     system "make", "build"

@@ -1,16 +1,24 @@
 class Libpng < Formula
   desc "Library for manipulating PNG images"
   homepage "http://www.libpng.org/pub/png/libpng.html"
-  url "https://downloads.sourceforge.net/libpng/libpng-1.6.35.tar.xz"
-  mirror "https://sourceforge.mirrorservice.org/l/li/libpng/libpng16/1.6.35/libpng-1.6.35.tar.xz"
-  sha256 "23912ec8c9584917ed9b09c5023465d71709dce089be503c7867fec68a93bcd7"
+  url "https://downloads.sourceforge.net/project/libpng/libpng16/1.6.37/libpng-1.6.37.tar.xz"
+  mirror "https://sourceforge.mirrorservice.org/l/li/libpng/libpng16/1.6.37/libpng-1.6.37.tar.xz"
+  sha256 "505e70834d35383537b6491e7ae8641f1a4bed1876dbfe361201fc80868d88ca"
+  license "libpng-2.0"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/libpng[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "8a76a432c62a531b61f7229ce23977ff4accb2b8ee7c65cef886184c36500558" => :mojave
-    sha256 "6d87a8bac8290bef728e8faf1d39a963e0602d9ef89e465b05e463c62a64ad88" => :high_sierra
-    sha256 "a0adbf626e9f20ac0895a9fe27a2ed68e1b63421f15d8b1018d7071037d5c48a" => :sierra
-    sha256 "dd8d9907825e0398f96fd8482455654f805985e5eb6d0a319b421f64f3c81db1" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "766a7136ee626b411fb63da0c7e5bc1e848afb6e224622f25ea305b2d1a4a0f1"
+    sha256 cellar: :any,                 big_sur:       "a8f1c35f9f004c4f7878c30027e35a9fb9551782df963f88deebd3dc29d94d51"
+    sha256 cellar: :any,                 catalina:      "c8e74da602c21f978cd7ee3d489979b4fc6681e71f678a1d99012943ee3a909f"
+    sha256 cellar: :any,                 mojave:        "53bbd14cc27c86c16605e256e7646a1b5656c253abca084958c5d80a2961cb01"
+    sha256 cellar: :any,                 high_sierra:   "bbdd94bdd5954bc50c096391486e67265dce5631efb913dcffe4469806a242b6"
+    sha256 cellar: :any,                 sierra:        "e66797079a9a8134f91bd36b58054c6c32f6a9cd161c1bd19f0192319edb80aa"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "aeb238f8b62e3e8923a032caf88152e287a4435ab4afd663fa98b4a57495d116"
   end
 
   head do
@@ -20,6 +28,8 @@ class Libpng < Formula
     depends_on "automake" => :build
     depends_on "libtool" => :build
   end
+
+  uses_from_macos "zlib"
 
   def install
     system "./configure", "--disable-dependency-tracking",

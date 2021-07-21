@@ -1,30 +1,31 @@
 class Libdazzle < Formula
   desc "GNOME companion library to GObject and Gtk+"
   homepage "https://gitlab.gnome.org/GNOME/libdazzle"
-  url "https://download.gnome.org/sources/libdazzle/3.30/libdazzle-3.30.1.tar.xz"
-  sha256 "dcc96520e76692aa442206c2bb5971fa28f1279290b7e520e4078ba603d41fb3"
+  url "https://download.gnome.org/sources/libdazzle/3.40/libdazzle-3.40.0.tar.xz"
+  sha256 "dba99a7e65fa6662c012b306e5d0f99ff3b466a46059ea7aa0104aaf65ce4ba5"
+  license "GPL-3.0-or-later"
 
   bottle do
-    sha256 "21821ca106c5ea71ef85048fd515571c290dd3e25079469589f57dc9248a9d2f" => :mojave
-    sha256 "3f89b36910978c4256dac35ded6c74560db29844aeea484bbd0c0ab2a302c4d1" => :high_sierra
-    sha256 "aeb14f028c4a682ee2b8712dab294d67291dc6a4e19cbec2705fb4c72d76bd28" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "bd3d5fe0c3f40cc3046d824af353bd7c8a333a88fb28893df41854a7c9b551d5"
+    sha256 cellar: :any,                 big_sur:       "05b5ef35b6edbae5dee76b55549de030b1876e75a7d2caa3d5f877a6c64c26c8"
+    sha256 cellar: :any,                 catalina:      "28328021ecdcf4eeabc6146a73a4c61652ea214036705a6b0441fabc81c5196b"
+    sha256 cellar: :any,                 mojave:        "0a9f674293a1df2ef75d633392309cd759654f39e973600bc19276763c1290d5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d3d3ab5671c26fd3f58d81efd7cb75eb2e484f5e74c875ba6d8ac3c17edace88"
   end
 
   depends_on "gobject-introspection" => :build
-  depends_on "meson-internal" => :build
+  depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
+  depends_on "vala" => :build
   depends_on "glib"
   depends_on "gtk+3"
 
   def install
-    ENV.refurbish_args
-
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", "-Dwith_vapi=false", ".."
-      system "ninja"
-      system "ninja", "install"
+      system "meson", *std_meson_args, "-Dwith_vapi=true", ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
     end
   end
 
@@ -91,12 +92,14 @@ class Libdazzle < Formula
       -lglib-2.0
       -lgobject-2.0
       -lgtk-3
-      -lintl
       -lpango-1.0
       -lpangocairo-1.0
-      -Wl,-framework
-      -Wl,CoreFoundation
     ]
+    on_macos do
+      flags << "-lintl"
+      flags << "-Wl,-framework"
+      flags << "-Wl,CoreFoundation"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end

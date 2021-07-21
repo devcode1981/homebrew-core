@@ -1,26 +1,36 @@
 class Pick < Formula
   desc "Utility to choose one option from a set of choices"
-  homepage "https://github.com/calleerlandsson/pick"
-  url "https://github.com/calleerlandsson/pick/releases/download/v2.0.2/pick-2.0.2.tar.gz"
-  sha256 "f2b43aaa540ad3ff05a256a531c2f47d3d95145b82c1d1b0d62dfb40d793d385"
+  homepage "https://github.com/mptre/pick"
+  url "https://github.com/mptre/pick/releases/download/v4.0.0/pick-4.0.0.tar.gz"
+  sha256 "de768fd566fd4c7f7b630144c8120b779a61a8cd35898f0db42ba8af5131edca"
+  license "MIT"
+  head "https://github.com/mptre/pick.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d30bca053dccb474b04c013c9c1bcdc171b4f2aaee2522e58eb00e2064ad72ea" => :mojave
-    sha256 "4390712366447f8cdba5dcf58467fc352dbebb3be360c1e885103552afb688f2" => :high_sierra
-    sha256 "f2e70f7e7f304b3df2d342646bd8e990aeda284ee25b83d8796dd97b01684083" => :sierra
-    sha256 "17a0dd7c4317fda933bbfb311a49a4d2672a45ef35244af543c7d6ef4ac7849a" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "032d06aa754000e281f773bb857266efc79e1762e8f689617778a19e17505688"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c8da7b41b502c8c72b90fd41bf1570e840198fa6678cc5efca8a1c26a8d5557f"
+    sha256 cellar: :any_skip_relocation, catalina:      "754879e53b48743051bb1571bb4b6180a415ac36af8deaf335f5c193326d232f"
+    sha256 cellar: :any_skip_relocation, mojave:        "55596e8ab28fd4fc36d064f6395c38ce51314bcc0d2f2f3862515a683bc92182"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "0fc521881c760d4f9e4f8625795716e0e1c0e1ed1522ccb5efd055313b2729bc"
   end
 
+  uses_from_macos "ncurses"
+
   def install
-    system "./configure", "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--prefix=#{prefix}"
-    system "make", "check"
+    ENV["PREFIX"] = prefix
+    ENV["MANDIR"] = man
+    system "./configure"
     system "make", "install"
   end
 
   test do
-    system "#{bin}/pick", "-v"
+    require "pty"
+    ENV["TERM"] = "xterm"
+    PTY.spawn(bin/"pick") do |r, w, _pid|
+      w.write "foo\nbar\nbaz\n\x04"
+      sleep 1
+      w.write "\n"
+      assert_match(/foo\r\nbar\r\nbaz\r\n\^D.*foo\r\n\z/, r.read)
+    end
   end
 end

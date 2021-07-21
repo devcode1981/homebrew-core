@@ -1,66 +1,85 @@
 class Ser2net < Formula
   desc "Allow network connections to serial ports"
   homepage "https://ser2net.sourceforge.io"
-  url "https://downloads.sourceforge.net/project/ser2net/ser2net/ser2net-3.5.tar.gz"
-  sha256 "ba9e1d60a89fd7ed075553b4a2074352902203f7fbd9b65b15048c05f0e3f3be"
+  url "https://downloads.sourceforge.net/project/ser2net/ser2net/ser2net-4.2.3.tar.gz"
+  sha256 "d63448d10064419f1783fbb04d0a95461d54d6b17cf50c9d33a63cbf0c732f37"
+  license "GPL-2.0-only"
 
-  bottle do
-    sha256 "36da05b58e05873eec72b04da6bb5e719d26814d8820927bc8684ac680f67587" => :mojave
-    sha256 "4533ef4f7200f9fe786332af987740b6db93e9e24b298b32909d9387eb168b3a" => :high_sierra
-    sha256 "e14422b545c872c363edc5618c61a2d5772838c54d521c3b2688ac88ed2596d0" => :sierra
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/ser2net[._-]v?(\d+(?:\.\d+)+)\.t}i)
   end
 
-  depends_on :macos => :sierra # needs clock_gettime
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "61d93dbd74a72555d27f9f24e567f5c8a586e63ff348f429573d9f1246f02c63"
+    sha256 cellar: :any,                 big_sur:       "daff205c7e62f7a0ad6ce064b5005f80f4e8362b17a2cb3ad87676174d683ba7"
+    sha256 cellar: :any,                 catalina:      "3477841d573b2612fff98a0dd1fa8ac46e3d43fdc110ddfd3767f6b433b344a4"
+    sha256 cellar: :any,                 mojave:        "822c56bfd75eccbdcc8a447236c996ca146e5efe324eea471dbbc212611dc0be"
+    sha256 cellar: :any,                 high_sierra:   "b11cef34c33d9f40ac677c034ff1557444d69735f3d5c88e8eaaffd135237d7d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "55cdacd7322af3a66bbd3f80d9bd3358b51e54c9e839a2b4423e0ef430a31df0"
+  end
+
+  depends_on "libyaml"
+
+  resource "gensio" do
+    url "https://downloads.sourceforge.net/project/ser2net/ser2net/gensio-2.1.4.tar.gz"
+    sha256 "1f5a29aabfb35886893cfda5cd78192db67e96de796dbf9758dbecd4077a3fd8"
+  end
 
   def install
-    # values.h doesn't exist on macOS
-    # https://github.com/cminyard/ser2net/pull/4
-    inreplace "readconfig.c", "#include <values.h>", ""
+    resource("gensio").stage do
+      system "./configure", "--with-python=no",
+                            "--disable-dependency-tracking",
+                            "--prefix=#{libexec}/gensio"
+      system "make", "install"
+    end
 
-    # Fix etc location
-    inreplace ["ser2net.c", "ser2net.8"], "/etc/ser2net.conf", "#{etc}/ser2net.conf"
+    ENV.append_path "PKG_CONFIG_PATH", "#{libexec}/gensio/lib/pkgconfig"
+    ENV.append_path "CFLAGS", "-I#{libexec}/gensio/include"
+    ENV.append_path "LDFLAGS", "-L#{libexec}/gensio/lib"
 
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
                           "--mandir=#{man}"
 
-    # LIBS is set to "-lpthread -lrt" but librt doesn't exist on macOS
-    # https://github.com/cminyard/ser2net/issues/3
-    system "make", "install", "LIBS=-lpthread"
+    system "make", "install"
 
-    etc.install "ser2net.conf"
+    (etc/"ser2net").install "ser2net.yaml"
   end
 
-  def caveats; <<~EOS
-    To configure ser2net, edit the example configuration in #{etc}/ser2net.conf
-  EOS
+  def caveats
+    <<~EOS
+      To configure ser2net, edit the example configuration in #{etc}/ser2net/ser2net.yaml
+    EOS
   end
 
-  plist_options :manual => "ser2net -p 12345"
+  plist_options manual: "ser2net -p 12345"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>KeepAlive</key>
-        <true/>
-        <key>ProgramArguments</key>
-        <array>
-            <string>#{opt_sbin}/ser2net</string>
-            <string>-p</string>
-            <string>12345</string>
-        </array>
-        <key>WorkingDirectory</key>
-        <string>#{HOMEBREW_PREFIX}</string>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>KeepAlive</key>
+          <true/>
+          <key>ProgramArguments</key>
+          <array>
+              <string>#{opt_sbin}/ser2net</string>
+              <string>-p</string>
+              <string>12345</string>
+          </array>
+          <key>WorkingDirectory</key>
+          <string>#{HOMEBREW_PREFIX}</string>
+        </dict>
+      </plist>
+    EOS
   end
+
   test do
     assert_match version.to_s, shell_output("#{sbin}/ser2net -v")
   end

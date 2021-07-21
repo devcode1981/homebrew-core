@@ -1,27 +1,36 @@
 class Shfmt < Formula
   desc "Autoformat shell script source code"
   homepage "https://github.com/mvdan/sh"
-  url "https://github.com/mvdan/sh/archive/v2.6.1.tar.gz"
-  sha256 "faa1a40964744508b737a2c536f01e74e96162f30ac12f967656fa272d292c53"
+  url "https://github.com/mvdan/sh/archive/v3.3.0.tar.gz"
+  sha256 "9bcdbbfd2f6afc4e885838683396483edcd87ef7eb80faa7def6ff0a10e3be4a"
+  license "BSD-3-Clause"
   head "https://github.com/mvdan/sh.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "9b99e24282e65da9ad2221e2d07f42ed64bef0b2ad5b5fc7b9ed7124b8acf238" => :mojave
-    sha256 "381a97ded56d0bc6122961f66a4dfa830d4a27e953e2ff885be0750a4a4d94ef" => :high_sierra
-    sha256 "85787eb5a48f99283bd1afdb82daaca4d021aa0d47055e65a8846e1f83417040" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "37df770767ede3c8bb6ff43006e029250c5c78038aba6f234b237052a1cd1722"
+    sha256 cellar: :any_skip_relocation, big_sur:       "789f53db9def4a6002efc5f37d0919a5c1e0deb104fdb29583d13392e36e5824"
+    sha256 cellar: :any_skip_relocation, catalina:      "ba4a63cdc920a07874901d86abeccbcbb3d4bcb834ed550a02732c0ed878a05d"
+    sha256 cellar: :any_skip_relocation, mojave:        "cbf100be8e2deb0e57781495075d4527e251ecc9972bc2e8c6ecd39237f89988"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "899a8f7485b889baad745b9fc656f6f08896209565f0409b6715ff715faeb72a"
   end
 
   depends_on "go" => :build
+  depends_on "scdoc" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
+    ENV["CGO_ENABLED"] = "0"
     (buildpath/"src/mvdan.cc").mkpath
     ln_sf buildpath, buildpath/"src/mvdan.cc/sh"
-    system "go", "build", "-a", "-tags", "production brew", "-o", "#{bin}/shfmt", "mvdan.cc/sh/cmd/shfmt"
+    system "go", "build", "-a", "-tags", "production brew", "-ldflags",
+                          "-w -s -extldflags '-static' -X main.version=#{version}",
+                          "-o", "#{bin}/shfmt", "./cmd/shfmt"
+    man1.mkpath
+    system "scdoc < ./cmd/shfmt/shfmt.1.scd > #{man1}/shfmt.1"
   end
 
   test do
+    assert_match version.to_s, shell_output("#{bin}/shfmt  --version")
+
     (testpath/"test").write "\t\techo foo"
     system "#{bin}/shfmt", testpath/"test"
   end

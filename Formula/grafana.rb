@@ -1,45 +1,50 @@
 class Grafana < Formula
   desc "Gorgeous metric visualizations and dashboards for timeseries databases"
   homepage "https://grafana.com"
-  url "https://github.com/grafana/grafana/archive/v5.4.0.tar.gz"
-  sha256 "389c718741c4f052cc463ad8d0625c46463bea43fd702dfda7045c8eac67d867"
+  url "https://github.com/grafana/grafana/archive/v8.0.6.tar.gz"
+  sha256 "c4e430acc186a641f9829535ea0f9ed35544e157d75a1af9d0b4740db859a362"
+  license "AGPL-3.0-only"
   head "https://github.com/grafana/grafana.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1e0f2aa00893b1f8e6686c97f56e3187058671ac117669b888bb9806536752be" => :mojave
-    sha256 "fdfc7672803b11ebeea10f6ed6f6d1d3704fae1d618eba0c471c2fc9bed84214" => :high_sierra
-    sha256 "2a0f365158c748441dd110bf27313bb1fb8356bc927a90fbe14244e8df19156b" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "6ef867f0ec93ac5b08d680c6fd0ab4f7fdccc73b428145f0e31aa21f67a3aa17"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c25f7fd117736e749b571091ba5a3e16b8e10bf48254babe9e3ac21a6769f03b"
+    sha256 cellar: :any_skip_relocation, catalina:      "990a19ff1fbc3a5dc808e19ba7683c31dc392ae45717418519f28372b83afc72"
+    sha256 cellar: :any_skip_relocation, mojave:        "40dca77e44db09acfec58d47e59f495c6989e26d7d4d05e2790ade8f15eeb79e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "47520e575c0374794865f7588b130d89b112ada8b00c2508384f28073bdc98c5"
   end
 
   depends_on "go" => :build
   depends_on "node" => :build
   depends_on "yarn" => :build
 
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "fontconfig"
+    depends_on "freetype"
+  end
+
   def install
-    ENV["GOPATH"] = buildpath
-    grafana_path = buildpath/"src/github.com/grafana/grafana"
-    grafana_path.install buildpath.children
+    system "go", "run", "build.go", "build"
 
-    cd grafana_path do
-      system "go", "run", "build.go", "build"
+    system "yarn", "install", "--ignore-engines", "--network-concurrency", "1"
 
-      system "yarn", "install", "--ignore-engines"
+    system "node_modules/webpack/bin/webpack.js", "--config", "scripts/webpack/webpack.prod.js"
 
-      args = ["build"]
-      # Avoid PhantomJS error "unrecognized selector sent to instance"
-      args << "--force" unless build.bottle?
-      system "node_modules/grunt-cli/bin/grunt", *args
-
-      bin.install "bin/darwin-amd64/grafana-cli"
-      bin.install "bin/darwin-amd64/grafana-server"
-      (etc/"grafana").mkpath
-      cp("conf/sample.ini", "conf/grafana.ini.example")
-      etc.install "conf/sample.ini" => "grafana/grafana.ini"
-      etc.install "conf/grafana.ini.example" => "grafana/grafana.ini.example"
-      pkgshare.install "conf", "public", "tools", "vendor"
-      prefix.install_metafiles
+    on_macos do
+      bin.install Dir["bin/darwin-*/grafana-cli"]
+      bin.install Dir["bin/darwin-*/grafana-server"]
     end
+    on_linux do
+      bin.install "bin/linux-amd64/grafana-cli"
+      bin.install "bin/linux-amd64/grafana-server"
+    end
+    (etc/"grafana").mkpath
+    cp("conf/sample.ini", "conf/grafana.ini.example")
+    etc.install "conf/sample.ini" => "grafana/grafana.ini"
+    etc.install "conf/grafana.ini.example" => "grafana/grafana.ini.example"
+    pkgshare.install "conf", "public", "tools"
   end
 
   def post_install
@@ -47,47 +52,18 @@ class Grafana < Formula
     (var/"lib/grafana/plugins").mkpath
   end
 
-  plist_options :manual => "grafana-server --config=#{HOMEBREW_PREFIX}/etc/grafana/grafana.ini --homepath #{HOMEBREW_PREFIX}/share/grafana cfg:default.paths.logs=#{HOMEBREW_PREFIX}/var/log/grafana cfg:default.paths.data=#{HOMEBREW_PREFIX}/var/lib/grafana cfg:default.paths.plugins=#{HOMEBREW_PREFIX}/var/lib/grafana/plugins"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>KeepAlive</key>
-        <dict>
-          <key>SuccessfulExit</key>
-          <false/>
-        </dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/grafana-server</string>
-          <string>--config</string>
-          <string>#{etc}/grafana/grafana.ini</string>
-          <string>--homepath</string>
-          <string>#{opt_pkgshare}</string>
-          <string>cfg:default.paths.logs=#{var}/log/grafana</string>
-          <string>cfg:default.paths.data=#{var}/lib/grafana</string>
-          <string>cfg:default.paths.plugins=#{var}/lib/grafana/plugins</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>WorkingDirectory</key>
-        <string>#{var}/lib/grafana</string>
-        <key>StandardErrorPath</key>
-        <string>#{var}/log/grafana/grafana-stderr.log</string>
-        <key>StandardOutPath</key>
-        <string>#{var}/log/grafana/grafana-stdout.log</string>
-        <key>SoftResourceLimits</key>
-        <dict>
-          <key>NumberOfFiles</key>
-          <integer>10240</integer>
-        </dict>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_bin/"grafana-server",
+         "--config", etc/"grafana/grafana.ini",
+         "--homepath", opt_pkgshare,
+         "--packaging=brew",
+         "cfg:default.paths.logs=#{var}/log/grafana",
+         "cfg:default.paths.data=#{var}/lib/grafana",
+         "cfg:default.paths.plugins=#{var}/lib/grafana/plugins"]
+    keep_alive true
+    error_log_path var/"log/grafana-stderr.log"
+    log_path var/"log/grafana-stdout.log"
+    working_dir var/"lib/grafana"
   end
 
   test do
@@ -117,10 +93,10 @@ class Grafana < Formula
     w = res[1]
     pid = res[2]
 
-    listening = Timeout.timeout(5) do
+    listening = Timeout.timeout(10) do
       li = false
       r.each do |l|
-        if l =~ /Initializing HTTPServer/
+        if /HTTP Server Listen/.match?(l)
           li = true
           break
         end

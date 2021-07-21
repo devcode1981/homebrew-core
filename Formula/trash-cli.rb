@@ -3,21 +3,28 @@ class TrashCli < Formula
 
   desc "Command-line interface to the freedesktop.org trashcan"
   homepage "https://github.com/andreafrancia/trash-cli"
-  url "https://github.com/andreafrancia/trash-cli/archive/0.17.1.14.tar.gz"
-  sha256 "8fdd20e5e9c55ea4e24677e602a06a94a93f1155f9970c55b25dede5e037b974"
-  revision 1
+  url "https://files.pythonhosted.org/packages/e9/e8/eb829a1c90173041540b7554616eaa176b09d655f8881e28097ccce9abf4/trash-cli-0.21.6.30.tar.gz"
+  sha256 "f36ef8be33fe6972a943f9baff6434f336aa3851e9c73a836fd63b09fec5aad5"
+  license "GPL-2.0-or-later"
   head "https://github.com/andreafrancia/trash-cli.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "63895ceb716e9cd3b45bc9dd676afbb973c49f82cf11445aca89ef3cc1e3da69" => :mojave
-    sha256 "c4d324ed98f547cad585e0eaa348c7e8b26e9036c77ab7bbfcc856d76c1ddeb4" => :high_sierra
-    sha256 "5cb6346603e9ba432c92d46bc20f8612dad0dfa4e32e1996e2c0cc1aaab87990" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "f67830940753ba946de47afcff2dd0a2a6bd5b4c665cbbf4fe25264b89022efb"
+    sha256 cellar: :any_skip_relocation, big_sur:       "16ffdf6c7f458ea55eb8139dc67c5f65116bb4d76b4f40f68705525d6e8c0ded"
+    sha256 cellar: :any_skip_relocation, catalina:      "c6d062d4f298bab84722d8365eb428d4bd4f0fe6c317a9e6c13a7fcbf0ae08bc"
+    sha256 cellar: :any_skip_relocation, mojave:        "c6767dea374173883c805b91c53c103b694bacca19b7b5452a95d851ed1b87c2"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e631a6f59594c8d8718d39c34f85ee95bc6a0de702136c07ec26306c53731f79"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
-  conflicts_with "trash", :because => "both install a `trash` binary"
+  conflicts_with "macos-trash", because: "both install a `trash` binary"
+  conflicts_with "trash", because: "both install a `trash` binary"
+
+  resource "psutil" do
+    url "https://files.pythonhosted.org/packages/e1/b0/7276de53321c12981717490516b7e612364f2cb372ee8901bd4a66a000d7/psutil-5.8.0.tar.gz"
+    sha256 "0c9ccb99ab76025f2f0bbecf341d4656e9c1351db8cc8a03ccd62e318ab4b5c6"
+  end
 
   def install
     virtualenv_install_with_resources

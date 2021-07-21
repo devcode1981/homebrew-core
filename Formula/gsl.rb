@@ -1,19 +1,21 @@
 class Gsl < Formula
   desc "Numerical library for C and C++"
   homepage "https://www.gnu.org/software/gsl/"
-  url "https://ftp.gnu.org/gnu/gsl/gsl-2.5.tar.gz"
-  mirror "https://ftpmirror.gnu.org/gsl/gsl-2.5.tar.gz"
-  sha256 "0460ad7c2542caaddc6729762952d345374784100223995eb14d614861f2258d"
+  url "https://ftp.gnu.org/gnu/gsl/gsl-2.7.tar.gz"
+  mirror "https://ftpmirror.gnu.org/gsl/gsl-2.7.tar.gz"
+  sha256 "efbbf3785da0e53038be7907500628b466152dbc3c173a87de1b5eba2e23602b"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "2b76f0bb640a36340efb3bc44a9df6e8b1694cc251637f95eca02c541add53ff" => :mojave
-    sha256 "a11e16ee61294794105faf42908ae1547617c822b19edca88a627917feb87f28" => :high_sierra
-    sha256 "79ad420d6c495d16a7a3ed57c5a5000dcd4f77cb98af27b3eb6c21e1a748a451" => :sierra
-    sha256 "af4c116bf27bc4880d85d1a50c62ba435e2a9bfae0b6a7f2a09f974791a91408" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "440a395f89375c90f383f84681dd5472463bee84319996c58fe58af0d75f5909"
+    sha256 cellar: :any,                 big_sur:       "ea2a8b743f1a4825c5f8991a0f7bc16e805b846c0c5c8f35995ca3a730d7ad3a"
+    sha256 cellar: :any,                 catalina:      "ed733561136f1dd07e3ce164a3c0e0d7857c98158349ca6481bee4bd71f422b7"
+    sha256 cellar: :any,                 mojave:        "6bc76e54e0a4db8d8993605bf7662f1076e46ade1ee6c59424a44248b0c72a87"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "0b83d664557598a1bbf7bfdde1fd93ea17a5d199af45fef4a1cfeb0e3102a594"
   end
 
   def install
+    ENV.deparallelize
     system "./configure", "--disable-dependency-tracking", "--prefix=#{prefix}"
     system "make" # A GNU tool which doesn't support just make install! Shameful!
     system "make", "install"

@@ -1,22 +1,26 @@
 class Argon2 < Formula
   desc "Password hashing library and CLI utility"
   homepage "https://github.com/P-H-C/phc-winner-argon2"
-  url "https://github.com/P-H-C/phc-winner-argon2/archive/20171227.tar.gz"
-  sha256 "eaea0172c1f4ee4550d1b6c9ce01aab8d1ab66b4207776aa67991eb5872fdcd8"
+  url "https://github.com/P-H-C/phc-winner-argon2/archive/20190702.tar.gz"
+  sha256 "daf972a89577f8772602bf2eb38b6a3dd3d922bf5724d45e7f9589b5e830442c"
+  license "Apache-2.0"
+  revision 1
   head "https://github.com/P-H-C/phc-winner-argon2.git"
 
   bottle do
-    cellar :any
-    sha256 "0b01daa08f731fa6d107aa26fbc52a5ef8cd8c9bc78e700409aa47d070b92cf9" => :mojave
-    sha256 "139741b1c18f60d815ef22066fcfdd3803d688e01cf7f0c004ac5636e811e3ca" => :high_sierra
-    sha256 "e48789086ce519c82973ba6b92f28aa2effd558cdf2740ecaf1a10318a3fc40a" => :sierra
-    sha256 "cb15f70ccb45ddcfe5b267ab003ffcc07a47a5526b40da3b35135c21a64fb3d2" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "192f3381abe337df8af214cf4dccef2cbfaa9c88df489b5cf9276cea9f8c6080"
+    sha256 cellar: :any,                 big_sur:       "a9dd363964a2a633ace13aff04e4c5eac7e720d44faf377456de55396647ff13"
+    sha256 cellar: :any,                 catalina:      "f8e550c8597728bb9edc5a548497fd7b1219203932cd0f93ecc97a4fbf0bdad8"
+    sha256 cellar: :any,                 mojave:        "a76192a41826619fc399e7f6de5e6cb1c8a5fbe6bea4f2c1554daa830fa0e296"
+    sha256 cellar: :any,                 high_sierra:   "830016982e60870f50b3f6fc9a215d8cc4bda6061595f4883f7c11ab19ecba39"
+    sha256 cellar: :any,                 sierra:        "21889ac6ed40c792f1b372b5aa0d6b3be1be86577a4c1b06b08569124d2d0da2"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "58b4014f120e135a991f1023f210366ef3e9175a37a05a3fffb06a9fe3c23ff4"
   end
 
   def install
-    system "make"
+    system "make", "PREFIX=#{prefix}", "ARGON2_VERSION=#{version}", "LIBRARY_REL=lib"
     system "make", "test"
-    system "make", "install", "PREFIX=#{prefix}"
+    system "make", "install", "PREFIX=#{prefix}", "ARGON2_VERSION=#{version}", "LIBRARY_REL=lib"
     doc.install "argon2-specs.pdf"
   end
 

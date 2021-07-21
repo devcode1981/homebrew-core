@@ -1,20 +1,34 @@
 class Igv < Formula
   desc "Interactive Genomics Viewer"
   homepage "https://www.broadinstitute.org/software/igv"
-  url "https://data.broadinstitute.org/igv/projects/downloads/2.4/IGV_2.4.14.zip"
-  sha256 "0c6e466736ac08b2aba28f1ffa4c9f136b3948dcbb61b04a89afcdcf0298307d"
+  url "https://data.broadinstitute.org/igv/projects/downloads/2.10/IGV_2.10.0.zip"
+  sha256 "df9494eaaa71c1ce6d9cf4c4f2e52cd19c905995e6c8d36efecd688c9dd138db"
+  license "MIT"
 
-  bottle :unneeded
+  livecheck do
+    url "https://software.broadinstitute.org/software/igv/download"
+    regex(/href=.*?IGV[._-]v?(\d+(?:\.\d+)+)\.zip/i)
+  end
 
-  depends_on :java => "1.8"
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "7ff9cd7fee1aa0f349021a6f742512f4ec89686fdb868a2ecdaca4ce145b0a38"
+  end
+
+  depends_on "openjdk"
 
   def install
-    inreplace "igv.sh", /^prefix=.*/, "prefix=#{libexec}"
-    libexec.install "igv.sh", "lib"
-    (bin/"igv").write_env_script libexec/"igv.sh", Language::Java.java_home_env("1.8")
+    inreplace ["igv.sh", "igvtools"], /^prefix=.*/, "prefix=#{libexec}"
+    bin.install "igv.sh" => "igv"
+    bin.install "igvtools"
+    libexec.install "igv.args", "lib"
+    bin.env_script_all_files libexec, Language::Java.overridable_java_home_env
   end
 
   test do
+    assert_match "Usage:", shell_output("#{bin}/igvtools")
+    assert_match "org/broad/igv/ui/IGV.class", shell_output("#{Formula["openjdk"].bin}/jar tf #{libexec}/lib/igv.jar")
+
+    ENV.append "_JAVA_OPTIONS", "-Duser.home=#{testpath}"
     (testpath/"script").write "exit"
     assert_match "Version", shell_output("#{bin}/igv -b script")
   end

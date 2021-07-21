@@ -1,7 +1,8 @@
 class HasteClient < Formula
   desc "CLI client for haste-server"
   homepage "https://hastebin.com/"
-  revision 4
+  license "MIT"
+  revision 5
   head "https://github.com/seejohnrun/haste-client.git"
 
   stable do
@@ -17,10 +18,12 @@ class HasteClient < Formula
   end
 
   bottle do
-    cellar :any
-    sha256 "a5605502dfd72b22841550fef044eebddf2f2116138a3610e01ae09ca4e24d72" => :mojave
-    sha256 "568dda1e5ae9b24b906e688f190f60c17588ae194f191107b6a8f0edd7de951b" => :high_sierra
-    sha256 "875bd8989b57cf3f6c5e034e3c900fee06a4d5e162e1e27576fb0b315a81e684" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "46460dfe45de7b60b0d9c164f605983e912a42e6bb9278b7e278c1774a041b78"
+    sha256 cellar: :any_skip_relocation, big_sur:       "cc90f925bb8d3c217849d04d57ba540cfd1859a555ae78fb89a3d500c61c5e4a"
+    sha256 cellar: :any_skip_relocation, catalina:      "d7b5efc8934cbfb2534db7db7b8418142472f980b8f4165c317ab51cc4f14824"
+    sha256 cellar: :any_skip_relocation, mojave:        "c38551ce841f7a3cd825e1ae20b774836aba13fe6e129c1539eadde9b9e64a02"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "a97b7aaf38ec730bffa45ffc073ccf4921b4e5714069a21bf63e682a9d21527e"
+    sha256 cellar: :any_skip_relocation, sierra:        "746af59be7c010e6e13b67d1f98766c0237061eabca601e5f0cad935e1c648bf"
   end
 
   depends_on "ruby" if MacOS.version <= :sierra
@@ -45,14 +48,14 @@ class HasteClient < Formula
   def install
     ENV["GEM_HOME"] = libexec
     resources.each do |r|
-      r.verify_download_integrity(r.fetch)
+      r.fetch
       system "gem", "install", r.cached_download, "--no-document",
              "--install-dir", libexec
     end
     system "gem", "build", "haste.gemspec"
     system "gem", "install", "--ignore-dependencies", "haste-#{version}.gem"
     bin.install libexec/"bin/haste"
-    bin.env_script_all_files(libexec/"bin", :GEM_HOME => ENV["GEM_HOME"])
+    bin.env_script_all_files(libexec/"bin", GEM_HOME: ENV["GEM_HOME"])
   end
 
   test do

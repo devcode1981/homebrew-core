@@ -1,23 +1,36 @@
 class Oniguruma < Formula
   desc "Regular expressions library"
   homepage "https://github.com/kkos/oniguruma/"
-  url "https://github.com/kkos/oniguruma/releases/download/v6.9.0/onig-6.9.0.tar.gz"
-  sha256 "91bfb25e050ce3c301483204dd3f0d03a7c05472e20d48fe227a383d4534e7c9"
+  url "https://github.com/kkos/oniguruma/releases/download/v6.9.7.1/onig-6.9.7.1.tar.gz"
+  sha256 "6444204b9c34e6eb6c0b23021ce89a0370dad2b2f5c00cd44c342753e0b204d9"
+  license "BSD-2-Clause"
+  head "https://github.com/kkos/oniguruma.git"
 
-  bottle do
-    cellar :any
-    sha256 "1900fb3001309e4392a7bed63fa29d25329a6e8bc1a073a83c3a949378aa6af6" => :mojave
-    sha256 "37e3e84d9f8d23f9f23b3c6694efd46c070b6e63ffb32c9449d5be3f52ffd355" => :high_sierra
-    sha256 "b62eccf926d9a287225db42f8523b72e634f675742058f88fcae0e9fbca5820e" => :sierra
-    sha256 "2ca4ffcd1bc50c7b442514e04443f59ce86a873013eb657df897e4ff3aee7edd" => :el_capitan
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+(?:[._-](?:mark|rev)\d+)?)$/i)
   end
 
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "ba81edc5b1d7b345bd219cd41e526bd3cfea09d793d4bfba7737da138a307387"
+    sha256 cellar: :any,                 big_sur:       "8154799c44b09d3283fab1d9e5c2a59c8026f8bf6358f94f99343cb0a9d84847"
+    sha256 cellar: :any,                 catalina:      "fcb2b0c651e23b91ca63bf821b84bb1fb41d05dfcfdb601542228d0803db6384"
+    sha256 cellar: :any,                 mojave:        "a09a31d8e1cf76b4c6025a4578259bb0b82a6b56733155afb2f363cc1ae5adbf"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "3e2e811137edfec09dbce2a38168740b1b77b20105841dc126f0262039a0738a"
+  end
+
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "libtool" => :build
+
   def install
+    system "autoreconf", "-vfi"
     system "./configure", "--disable-dependency-tracking", "--prefix=#{prefix}"
+    system "make"
     system "make", "install"
   end
 
   test do
-    assert_match /#{prefix}/, shell_output("#{bin}/onig-config --prefix")
+    assert_match(/#{prefix}/, shell_output("#{bin}/onig-config --prefix"))
   end
 end

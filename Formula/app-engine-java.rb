@@ -1,12 +1,18 @@
 class AppEngineJava < Formula
   desc "Google App Engine for Java"
   homepage "https://cloud.google.com/appengine/docs/java/"
-  url "https://storage.googleapis.com/appengine-sdks/featured/appengine-java-sdk-1.9.68.zip"
-  sha256 "29674e10002202ec87d70e750773835e3be2231d30fa90d4c7955bdfbb239022"
+  url "https://storage.googleapis.com/appengine-sdks/featured/appengine-java-sdk-1.9.83.zip"
+  sha256 "1d585a36303c14f4fa44790bba97d5d8b75a889ad48ffce8187333488511e43e"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any, all: "6c906b7bc3896476230775f5b32b4864576768a2a3d5e3b160db0fd7b31ce346"
+  end
 
-  depends_on :java => "1.8"
+  # https://cloud.google.com/appengine/docs/standard/java/sdk-gcloud-migration
+  deprecate! date: "2019-07-30", because: :deprecated_upstream
+
+  depends_on arch: :x86_64 # openjdk@8 doesn't support ARM
+  depends_on "openjdk@8"
 
   def install
     rm Dir["bin/*.cmd"]
@@ -16,15 +22,18 @@ class AppEngineJava < Formula
       bin.install libexec/"bin/#{f}"
     end
 
-    bin.env_script_all_files(libexec/"bin", Language::Java.java_home_env("1.8"))
+    bin.env_script_all_files(libexec/"bin", JAVA_HOME: Formula["openjdk@8"].opt_prefix)
   end
 
   test do
     (testpath/"WEB-INF/web.xml").write "<web-app/>"
-    (testpath/"WEB-INF/appengine-web.xml").write "<appengine-web-app><threadsafe>true</threadsafe></appengine-web-app>"
+    (testpath/"WEB-INF/appengine-web.xml").write \
+      "<appengine-web-app><threadsafe>true</threadsafe></appengine-web-app>"
     Process.setsid
     IO.popen("#{bin}/dev_appserver.sh . 2>&1") do |io|
-      assert_not_nil(io.gets, "Dev App Server terminated prematurely") until $LAST_READ_LINE == "INFO: Dev App Server is now running\n"
+      until $LAST_READ_LINE == "INFO: Dev App Server is now running\n"
+        refute_nil io.gets, "Dev App Server terminated prematurely"
+      end
       Signal.trap "INT", "IGNORE"
       Process.kill "INT", 0
     end

@@ -2,19 +2,23 @@ require "language/node"
 
 class Bit < Formula
   desc "Distributed Code Component Manager"
-  homepage "https://www.bitsrc.io"
-  url "https://registry.npmjs.org/bit-bin/-/bit-bin-13.0.4.tgz"
-  sha256 "52bea96e4ac78e82473a0dd1c5356df22fc8790762e696f5094bf30b43f5039c"
+  homepage "https://bit.dev"
+  url "https://registry.npmjs.org/bit-bin/-/bit-bin-14.8.8.tgz"
+  sha256 "25d899bacd06d77fad41026a9b19cbe94c8fb986f5fe59ead7ccec9f60fd0ef9"
+  license "Apache-2.0"
   head "https://github.com/teambit/bit.git"
 
   bottle do
-    sha256 "3d286af287aa77ac157fcc4e976719ed402cfa9244b6ae210ab05ee1db30a74f" => :mojave
-    sha256 "1eb42224719407cbf0e1f2f75d13744eb0f2a1fc4c60c4671d4412bf83837048" => :high_sierra
-    sha256 "069d3f199917d5c83492728ca8208ab23abcd3871bffb5522d2a4764bf830c2e" => :sierra
-    sha256 "8fdc4600be1890b2912fa026e8af8e8ec6b8257832de11740ad01d99ebe8fe25" => :el_capitan
+    sha256 arm64_big_sur: "616bf52a2d9e825320d9aab1af3603ee79e43f6d1455abd09576691049b70f0e"
+    sha256 big_sur:       "9d6e88c37d303bd76cc3bc62691dade7ce1343995163c2849061a88e91ab5ef1"
+    sha256 catalina:      "bc1b85c6100f4c5166eda34de5a92b66d73f45336536ed08921926dbb90ef6d8"
+    sha256 mojave:        "c9fe18470becb44f6580e36bd3e9bc52219a1d4f111d271382942304c435cd86"
+    sha256 high_sierra:   "2e2f871d7759adb7d2772a8ec319c3762c3e54e58625172f4ad44132cbdf3b2b"
   end
 
   depends_on "node"
+
+  conflicts_with "bit-git", because: "both install `bit` binaries"
 
   def install
     system "npm", "install", *Language::Node.std_npm_install_args(libexec)

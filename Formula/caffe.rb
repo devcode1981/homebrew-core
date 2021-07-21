@@ -3,12 +3,19 @@ class Caffe < Formula
   homepage "https://caffe.berkeleyvision.org/"
   url "https://github.com/BVLC/caffe/archive/1.0.tar.gz"
   sha256 "71d3c9eb8a183150f965a465824d01fe82826c22505f7aa314f700ace03fa77f"
-  revision 6
+  license "BSD-2-Clause"
+  revision 33
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    sha256 "b5d7cf48f58c2c56e5c3447f940d7cc7f3409c357d7c15b3e17f510799bb2367" => :mojave
-    sha256 "e7c0610cae95b1f39504a322237ecd61e5ce45d8115902cb802cf02d422f978f" => :high_sierra
-    sha256 "608f9769aba56d956edb4feb3540365bc4b329b03bed019c6fac0778ddefa2cb" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "22169addf9ac9ae8a7b3477716499799fd85a4aeccb732a0c580a87d1b171e59"
+    sha256 cellar: :any, big_sur:       "b7f91af462268b50722ce6f993232034c297e01765ea9016cc46543c9d50a2dd"
+    sha256 cellar: :any, catalina:      "691fb884f9a4a8db955e318ea71a2a6c6908feb3f3fa1271fd3a6ec56e641571"
+    sha256 cellar: :any, mojave:        "5f1c675912742ac91bf9bddb0360509b6f307a122bc8329d5c02be23df6c420c"
   end
 
   depends_on "cmake" => :build
@@ -23,12 +30,17 @@ class Caffe < Formula
   depends_on "snappy"
   depends_on "szip"
 
-  resource "test_model_weights" do
-    url "http://dl.caffe.berkeleyvision.org/bvlc_reference_caffenet.caffemodel"
-    sha256 "472d4a06035497b180636d8a82667129960371375bd10fcb6df5c6c7631f25e0"
+  resource "test_model" do
+    url "https://github.com/nandahkrishna/CaffeMNIST/archive/2483b0ba9b04728041f7d75a3b3cf428cb8edb12.tar.gz"
+    sha256 "2d4683899e9de0949eaf89daeb09167591c060db2187383639c34d7cb5f46b31"
   end
 
-  needs :cxx11
+  # Fix compilation with OpenCV 4
+  # https://github.com/BVLC/caffe/issues/6652
+  patch do
+    url "https://github.com/BVLC/caffe/commit/0a04cc2ccd37ba36843c18fea2d5cbae6e7dd2b5.patch?full_index=1"
+    sha256 "f79349200c46fc1228ab1e1c135a389a6d0c709024ab98700017f5f66b373b39"
+  end
 
   def install
     ENV.cxx11
@@ -54,13 +66,10 @@ class Caffe < Formula
   end
 
   test do
-    model = "bvlc_reference_caffenet"
-    m_path = "#{pkgshare}/models/#{model}"
-    resource("test_model_weights").stage do
+    resource("test_model").stage do
       system "#{bin}/caffe", "test",
-             "-model", "#{m_path}/deploy.prototxt",
-             "-solver", "#{m_path}/solver.prototxt",
-             "-weights", "#{model}.caffemodel"
+             "-model", "lenet_train_test.prototxt",
+             "-weights", "lenet_iter_10000.caffemodel"
     end
   end
 end

@@ -1,19 +1,18 @@
 class Unicorn < Formula
   desc "Lightweight multi-architecture CPU emulation framework"
   homepage "https://www.unicorn-engine.org/"
-  url "https://github.com/unicorn-engine/unicorn/archive/1.0.1.tar.gz"
-  sha256 "3a6a4f2b8c405ab009040ca43af8e4aa10ebe44d9c8b336aa36dc35df955017c"
+  url "https://github.com/unicorn-engine/unicorn/archive/1.0.3.tar.gz"
+  sha256 "64fba177dec64baf3f11c046fbb70e91483e029793ec6a3e43b028ef14dc0d65"
   head "https://github.com/unicorn-engine/unicorn.git"
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "78a5143347e18c673a63dc4b171f610499eb728836f20626bd77bc886374b853" => :mojave
-    sha256 "c44cbb02b8073ca0e70f13cf16272964ab52a8b19a20da07dcfd76c6f15585dd" => :high_sierra
-    sha256 "8c134f4b88d63da3908d419dd29118d6ada4489091cd53e81cc9a72f28a9760b" => :sierra
+    sha256 cellar: :any, big_sur:  "6b4ac1a8bd225fdc4c495b446d42eea4dee7135120083202661fc04193fa57a3"
+    sha256 cellar: :any, catalina: "d621ffb19b4445c3bbedd344cf7e0e1f1f90f63ccfdb2f3b048aff0405724f22"
+    sha256 cellar: :any, mojave:   "034f10f2367e64a0ec7a36951ad03ae4c122c326d3a48add23654bbff4343ecc"
   end
 
   depends_on "pkg-config" => :build
+  depends_on "python@3.9" => [:build, :test]
 
   def install
     ENV["PREFIX"] = prefix
@@ -24,7 +23,7 @@ class Unicorn < Formula
     system "make", "install"
 
     cd "bindings/python" do
-      system "python", *Language::Python.setup_install_args(prefix)
+      system Formula["python@3.9"].opt_bin/"python3", *Language::Python.setup_install_args(prefix)
     end
   end
 
@@ -76,6 +75,6 @@ class Unicorn < Formula
       "-lpthread", "-lm", "-L#{lib}", "-lunicorn"
     system testpath/"test1"
 
-    system "python", "-c", "import unicorn; print(unicorn.__version__)"
+    system Formula["python@3.9"].opt_bin/"python3", "-c", "import unicorn; print(unicorn.__version__)"
   end
 end

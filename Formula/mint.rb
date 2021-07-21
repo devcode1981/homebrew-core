@@ -1,17 +1,17 @@
 class Mint < Formula
   desc "Dependency manager that installs and runs Swift command-line tool packages"
   homepage "https://github.com/yonaskolb/Mint"
-  url "https://github.com/yonaskolb/Mint/archive/0.11.2.tar.gz"
-  sha256 "9090af8dfb6b0334e961bcd373950bf1a33fc54fad064723afd4774df8871504"
+  url "https://github.com/yonaskolb/Mint/archive/0.16.0.tar.gz"
+  sha256 "bbd258ba5e79da579b0d0526c55c5141382df638a1fb139e02fa92a66b608be4"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "6de176459dc60f0e7e9ccc8152243f4507b6f55ddd3bfdf44bb330df6066891d" => :mojave
-    sha256 "aef9ebf4d33822af63de9f640914abb04ba5624ef209f664681a87b5b122ec7f" => :high_sierra
-    sha256 "84fbf229c3562f68a413630ab112bf8859f3cd171ccf78e3e4aaa1429141eab6" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "eaf4c91e17438d0968ff29a6429c55f93c0aa02614f2c3f7a1a4b106375dd085"
+    sha256 cellar: :any_skip_relocation, big_sur:       "599c2482d15b729dc72ffa23d38599d551a42b70b81079b9a573cd91bc78d8d0"
+    sha256 cellar: :any_skip_relocation, catalina:      "376d67667e9003d503368e39d89a2592dd91daec615310bb2fad3d9ee971d8a8"
   end
 
-  depends_on :xcode => ["9.2", :build]
+  depends_on xcode: ["12.0", :build]
 
   def install
     system "make", "install", "PREFIX=#{prefix}"
@@ -19,7 +19,7 @@ class Mint < Formula
 
   test do
     # Test by showing the help scree
-    system "#{bin}/mint", "--help"
+    system "#{bin}/mint", "help"
     # Test showing list of installed tools
     system "#{bin}/mint", "list"
   end

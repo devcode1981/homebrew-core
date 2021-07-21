@@ -1,32 +1,29 @@
 class Dosbox < Formula
   desc "DOS Emulator"
   homepage "https://www.dosbox.com/"
-  url "https://downloads.sourceforge.net/project/dosbox/dosbox/0.74-2/dosbox-0.74-2.tar.gz"
-  sha256 "7077303595bedd7cd0bb94227fa9a6b5609e7c90a3e6523af11bc4afcb0a57cf"
+  url "https://downloads.sourceforge.net/project/dosbox/dosbox/0.74-3/dosbox-0.74-3.tar.gz"
+  sha256 "c0d13dd7ed2ed363b68de615475781e891cd582e8162b5c3669137502222260a"
+  license "GPL-2.0"
 
   bottle do
-    cellar :any
-    sha256 "77002281feccd4fcf02b6f8c0c2e8cb5c2e2ef7b51b1dd22ee2e0e990e893ab3" => :mojave
-    sha256 "5e224efd3dd3ee4891158e340b3974c762cfd293250d0008fd652386603433cc" => :high_sierra
-    sha256 "f15fa16434d0cd2784aa1eb3d540ef0c964b438857642f450e96542fc2377493" => :sierra
-    sha256 "bf86acc4d071649e227b724fc2c16515fce3e780e8c7d3900ee16c8bda497398" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "999bf1d034d6cd7eae80c5439fc07bd5681ccc315edd872872050adcf76dffc7"
+    sha256 cellar: :any, big_sur:       "7adbfaa213d56b44eb98645794f954e298dda776f37d5106e40c563704f1a7ab"
+    sha256 cellar: :any, catalina:      "b204c9a07dce5bf4f476c9912f177481a69e8843045ab19d01f3e016d875dceb"
+    sha256 cellar: :any, mojave:        "de46ee6c3c638829ba3b9dc3ee009811d26a19359d10804b9ff93706df2a6863"
+    sha256 cellar: :any, high_sierra:   "66b1b073b1ae7db629c64f66249254aefcb8fb6585c065c858a364bd258785d4"
+    sha256 cellar: :any, sierra:        "3bd2c41c7f76e214c0964acec02723d2a2a611eca92cf5edb93c029333a78adf"
   end
 
   head do
-    url "http://svn.code.sf.net/p/dosbox/code-0/dosbox/trunk"
+    url "https://svn.code.sf.net/p/dosbox/code-0/dosbox/trunk"
     depends_on "autoconf" => :build
     depends_on "automake" => :build
   end
 
-  option "with-debugger", "Enable internal debugger"
-
   depends_on "libpng"
-  depends_on "ncurses" if build.with?("debugger")
   depends_on "sdl"
   depends_on "sdl_net"
   depends_on "sdl_sound"
-
-  conflicts_with "dosbox-x", :because => "both install `dosbox` binaries"
 
   def install
     args = %W[
@@ -35,7 +32,6 @@ class Dosbox < Formula
       --disable-sdltest
       --enable-core-inline
     ]
-    args << "--enable-debug" if build.with? "debugger"
 
     system "./autogen.sh" if build.head?
     system "./configure", *args

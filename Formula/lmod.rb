@@ -1,36 +1,40 @@
 class Lmod < Formula
   desc "Lua-based environment modules system to modify PATH variable"
-  homepage "https://www.tacc.utexas.edu/research-development/tacc-projects/lmod"
-  url "https://github.com/TACC/Lmod/archive/7.8.11.tar.gz"
-  sha256 "08bede8c7920a5ebfeb2625b54d4488f68eeaf895151eee3d3ee5e3df040c142"
+  homepage "https://lmod.readthedocs.io"
+  url "https://github.com/TACC/Lmod/archive/8.5.9.tar.gz"
+  sha256 "972f99221ed7717150bd591d4f96de1230125e675658f3fe2ba10197168bd296"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b39b0ba02842d2f86568f8e7d9f030745b4f29326545369a4c436f103b6f15c4" => :mojave
-    sha256 "c16003161ca3cbdebe5cb6b3ab20c951403a3804612173da0955b73529007838" => :high_sierra
-    sha256 "4e8ee4c5c5732fdc716ff7fb75a7fdb9b7494370cb239169d3e54edfae622e11" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "62851ef16a1d409779391c3f051970b25fe3846661627fa7116df92050158f14"
+    sha256 cellar: :any_skip_relocation, big_sur:       "4116f33ddd467d6e5373b31275dfda43a98bb6c81474a7b646acb782c5f4c70e"
+    sha256 cellar: :any_skip_relocation, catalina:      "20993ed4be626b68b96aa84748574ae251a0c7315042492f9b82fd5212933826"
+    sha256 cellar: :any_skip_relocation, mojave:        "552df64fcf5411cb1723012725e32e3d387878baa5e67c3736cd9def62e8dca6"
   end
 
   depends_on "luarocks" => :build
   depends_on "pkg-config" => :build
   depends_on "lua"
 
+  uses_from_macos "tcl-tk"
+
   resource "luafilesystem" do
-    url "https://github.com/keplerproject/luafilesystem/archive/v1_7_0_2.tar.gz"
-    sha256 "23b4883aeb4fb90b2d0f338659f33a631f9df7a7e67c54115775a77d4ac3cc59"
+    url "https://github.com/keplerproject/luafilesystem/archive/v1_8_0.tar.gz"
+    sha256 "16d17c788b8093f2047325343f5e9b74cccb1ea96001e45914a58bbae8932495"
   end
 
   resource "luaposix" do
-    url "https://github.com/luaposix/luaposix/archive/v34.0.4.tar.gz"
-    sha256 "eb6e7322da3013bdb3d524f68df4f5510a2efd805c06bf7cc27be6611eab7483"
+    url "https://github.com/luaposix/luaposix/archive/v35.0.tar.gz"
+    sha256 "a4edf2f715feff65acb009e8d1689e57ec665eb79bc36a6649fae55eafd56809"
   end
 
   def install
+    luaversion = Formula["lua"].version.major_minor
     luapath = libexec/"vendor"
     ENV["LUA_PATH"] = "?.lua;" \
-                      "#{luapath}/share/lua/5.3/?.lua;" \
-                      "#{luapath}/share/lua/5.3/?/init.lua"
-    ENV["LUA_CPATH"] = "#{luapath}/lib/lua/5.3/?.so"
+                      "#{luapath}/share/lua/#{luaversion}/?.lua;" \
+                      "#{luapath}/share/lua/#{luaversion}/?/init.lua"
+    ENV["LUA_CPATH"] = "#{luapath}/lib/lua/#{luaversion}/?.so"
 
     resources.each do |r|
       r.stage do
@@ -55,7 +59,17 @@ class Lmod < Formula
   end
 
   test do
-    system "#{prefix}/init/sh"
+    sh_init = "#{prefix}/init/sh"
+
+    (testpath/"lmodtest.sh").write <<~EOS
+      #!/bin/sh
+      source #{sh_init}
+      module list
+    EOS
+
+    assert_match "No modules loaded", shell_output("sh #{testpath}/lmodtest.sh 2>&1")
+
+    system sh_init
     output = shell_output("#{prefix}/libexec/spider #{prefix}/modulefiles/Core/")
     assert_match "lmod", output
     assert_match "settarg", output

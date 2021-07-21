@@ -3,16 +3,24 @@ class GitCrypt < Formula
   homepage "https://www.agwa.name/projects/git-crypt/"
   url "https://www.agwa.name/projects/git-crypt/downloads/git-crypt-0.6.0.tar.gz"
   sha256 "6d30fcd99442d50f4b3c8d554067ff1d980cdf9f3120ee774131172dba98fd6f"
+  revision 1
 
-  bottle do
-    cellar :any
-    sha256 "97efb22a9788ddec6ca90a6587be40681ffeac38702defe635ea40110b049b1b" => :mojave
-    sha256 "03bde5159a767e33afba44e6d14f937e0a1864a50035280ac59784da0738e712" => :high_sierra
-    sha256 "b89552d865cfd7f2473f681a669ae63a0ee980c5cdee6d97a3d8189a3eac6ddd" => :sierra
-    sha256 "e456ffd793629abea8debdcb761ff73ff2dcfe60493a298f763d238822add437" => :el_capitan
+  livecheck do
+    url :homepage
+    regex(/href=.*?git-crypt[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  depends_on "openssl"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "b30c2ac4ab305cc72b8be7253b7bf3dcca3487a579ebf00e21da793d4afc8bd4"
+    sha256 cellar: :any,                 big_sur:       "7567932a504ce3c08a087f9d3d020f5ca8307f41fe2a16a843e7df862120abc9"
+    sha256 cellar: :any,                 catalina:      "f38bb645c3eff62cfb43802199370d85e4785fcf10c063e4d7453e032788bcba"
+    sha256 cellar: :any,                 mojave:        "89d2058a4dd5afc565696707c8e93621fd644f9ab303fe378727ae999783d156"
+    sha256 cellar: :any,                 high_sierra:   "0d2cf3c93ab2ca4059163f8da8a3ab845b566b13debf5e1b43a734dc86138a18"
+    sha256 cellar: :any,                 sierra:        "6b2c2773e5c327282d461f5d49600928ae97d432e5f4d8b7acfcaaa6e6d1ef68"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "13febdb36a936377e0ff5f78883dbaba43f70cb9f91ec7fee833d3057f92d85d"
+  end
+
+  depends_on "openssl@1.1"
 
   def install
     system "make"

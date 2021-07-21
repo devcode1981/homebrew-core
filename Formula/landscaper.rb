@@ -2,27 +2,31 @@ class Landscaper < Formula
   desc "Manage the application landscape in a Kubernetes cluster"
   homepage "https://github.com/Eneco/landscaper"
   url "https://github.com/Eneco/landscaper.git",
-      :tag      => "v1.0.21",
-      :revision => "df2a7d6a7db7a552576899b9fe8c85fdcc0af973"
+      tag:      "v1.0.24",
+      revision: "1199b098bcabc729c885007d868f38b2cf8d2370"
+  license "Apache-2.0"
+  revision 1
   head "https://github.com/Eneco/landscaper.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "11265aaba50abe95269919c30b04a4684dc25d1ccf50823a20b7950963608e80" => :mojave
-    sha256 "7c701bb9a5082cd20d7e32d75f7eb8c0d527de13381e0a92ffd9a632ef672b0a" => :high_sierra
-    sha256 "5e01053b264faed028ad4fbea43019187f68f25b6350d4fc5cbd80c202ecb7ad" => :sierra
+    sha256 cellar: :any_skip_relocation, big_sur:     "bad7cf082826c5d92dd8c09a79b682e1582fcfc3f4e471dde4112393ec7095ce"
+    sha256 cellar: :any_skip_relocation, catalina:    "74decffaf180e0e0dd9bfa2312877da01443a3418afe0f485c1b655c4af1da41"
+    sha256 cellar: :any_skip_relocation, mojave:      "ff82cdb7be6329f9a4a5ce34bcbb04bc9356ab46fa3ecd30b830cf35df268529"
+    sha256 cellar: :any_skip_relocation, high_sierra: "68302c1748fe4eb063855df24420a8681a54b8ce484f2e030616bd4c4a812d52"
   end
+
+  # also depends on helm@2 (which failed to build)
+  deprecate! date: "2020-04-22", because: :repo_archived
 
   depends_on "dep" => :build
   depends_on "go" => :build
+  depends_on "helm@2"
   depends_on "kubernetes-cli"
-  depends_on "kubernetes-helm"
 
   def install
     ENV["GOPATH"] = buildpath
     ENV.prepend_create_path "PATH", buildpath/"bin"
-    arch = MacOS.prefer_64_bit? ? "amd64" : "x86"
-    ENV["TARGETS"] = "darwin/#{arch}"
+    ENV["TARGETS"] = "darwin/amd64"
     dir = buildpath/"src/github.com/eneco/landscaper"
     dir.install buildpath.children - [buildpath/".brew_home"]
 
@@ -30,11 +34,14 @@ class Landscaper < Formula
       system "make", "bootstrap"
       system "make", "build"
       bin.install "build/landscaper"
+      bin.env_script_all_files(libexec/"bin", PATH: "#{Formula["helm@2"].opt_bin}:$PATH")
       prefix.install_metafiles
     end
   end
 
   test do
-    assert_match "This is Landscaper v#{version}", pipe_output("#{bin}/landscaper apply 2>&1")
+    output = shell_output("#{bin}/landscaper apply --dry-run 2>&1", 1)
+    assert_match "This is Landscaper v#{version}", output
+    assert_match "dryRun=true", output
   end
 end

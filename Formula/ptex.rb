@@ -1,22 +1,42 @@
 class Ptex < Formula
   desc "Texture mapping system"
-  homepage "http://ptex.us"
-  url "https://github.com/wdas/ptex/archive/v2.1.33.tar.gz"
-  sha256 "7c437de43fbfd45b8355f528b0276650e6f6a82357591a8540ca4b7e2012a327"
+  homepage "https://ptex.us/"
+  url "https://github.com/wdas/ptex.git",
+      tag:      "v2.4.0",
+      revision: "5fa7d84337f072f8a842403c63e6a6a44b66e898"
+  license "BSD-3-Clause"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "d7c01bb272e283de0f1bba6f923f42a63513b419fbd2c02f512ad3dbd35b9a9c" => :mojave
-    sha256 "4da50057c397b08a7dabbc621947f607b98cfbc887cd43f0bfa41960b36c6466" => :high_sierra
-    sha256 "227c2b01f8398714d38c494061a630385dfd630e1b30bf5a651c14667c9f0621" => :sierra
-    sha256 "12d030b336d928a80776188daa86fe4de608e5bc4516b8382d52a508a5a4091f" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "6bc413bd95a1879fa2daba0856f1465c0d552b90f44c8a3a687ee636f472bfed"
+    sha256 cellar: :any, big_sur:       "24e834b17833b7a914fcdf930563b88e8c7dc014a80cb0bb46b993df0e4bf9d0"
+    sha256 cellar: :any, catalina:      "a5b92d4df049d129184563a0a2e8573a06ba3ac986f619e171cd92d95df911f7"
+    sha256 cellar: :any, mojave:        "d4b13f11d4056ea7fe95a4de42850a03ca26bb78fea17633cdf3c429e4e38467"
   end
 
   depends_on "cmake" => :build
+  depends_on "pkg-config" => :build
+
+  uses_from_macos "zlib"
+
+  resource "wtest" do
+    url "https://raw.githubusercontent.com/wdas/ptex/v2.4.0/src/tests/wtest.cpp"
+    sha256 "95c78f97421eac034401b579037b7ba4536a96f4b356f8f1bb1e87b9db752444"
+  end
 
   def install
     system "make", "prefix=#{prefix}"
-    system "make", "test"
     system "make", "install"
+  end
+
+  test do
+    resource("wtest").stage testpath
+    system ENV.cxx, "wtest.cpp", "-o", "wtest", "-L#{opt_lib}", "-lptex"
+    system "./wtest"
+    system "#{bin}/ptxinfo", "-c", "test.ptx"
   end
 end

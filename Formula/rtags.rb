@@ -2,31 +2,38 @@ class Rtags < Formula
   desc "Source code cross-referencer like ctags with a clang frontend"
   homepage "https://github.com/Andersbakken/rtags"
   url "https://github.com/Andersbakken/rtags.git",
-      :tag      => "v2.21",
-      :revision => "1249950963e494fbd66a4138cef639ffe6e05cd2"
+      tag:      "v2.38",
+      revision: "9687ccdb9e539981e7934e768ea5c84464a61139"
+  license "GPL-3.0-or-later"
+  revision 1
   head "https://github.com/Andersbakken/rtags.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    sha256 "f909a10f9d06d2043ce2bd26ae65e337377143902ab49d0f4b000b6285f11b3b" => :mojave
-    sha256 "6920e417d70b0344dffa96f3c715bf26dd72b3e0bc365d8b030e9bf51f9544c3" => :high_sierra
-    sha256 "16da2bd02482eed66132a7eed1db4408a1bcf31107efe1fbd2919b6814628efd" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "841f0e639cd56b510b2f2571276c7bcbe3fc86269127222f605c605ec5a074aa"
+    sha256 cellar: :any, big_sur:       "78858c44b0a41a2437f5b553069b14a9c612fd77b717e95dbaf1949f8629184a"
+    sha256 cellar: :any, catalina:      "a421a220b9d412b03d094fc5ce869813534daf3df87271bc16b0fbf01b3cb305"
+    sha256 cellar: :any, mojave:        "84995048fe27191b02332d264e02f7c51178fd5ae5b1f16e6f7be7849adbabcb"
+    sha256               x86_64_linux:  "4eafc513cdf548a06aa5756b0c70e5229d21f4d6a777ae9e327e423cc8deb5c4"
   end
 
   depends_on "cmake" => :build
   depends_on "emacs"
   depends_on "llvm"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
+
+  on_linux do
+    depends_on "gcc"
+  end
+
+  fails_with gcc: "5"
 
   def install
-    # Homebrew llvm libc++.dylib doesn't correctly reexport libc++abi
-    ENV.append("LDFLAGS", "-lc++abi")
-
     args = std_cmake_args << "-DRTAGS_NO_BUILD_CLANG=ON"
-
-    if MacOS.version == "10.11" && MacOS::Xcode.installed? && MacOS::Xcode.version >= "8.0"
-      args << "-DHAVE_CLOCK_MONOTONIC_RAW:INTERNAL=0"
-      args << "-DHAVE_CLOCK_MONOTONIC:INTERNAL=0"
-    end
 
     mkdir "build" do
       system "cmake", "..", *args
@@ -35,34 +42,35 @@ class Rtags < Formula
     end
   end
 
-  plist_options :manual => "#{HOMEBREW_PREFIX}/bin/rdm --verbose --inactivity-timeout=300 --log-file=#{HOMEBREW_PREFIX}/var/log/rtags.log"
+  plist_options manual: "#{HOMEBREW_PREFIX}/bin/rdm --verbose --inactivity-timeout=300 --log-file=#{HOMEBREW_PREFIX}/var/log/rtags.log"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{bin}/rdm</string>
-        <string>--verbose</string>
-        <string>--launchd</string>
-        <string>--inactivity-timeout=300</string>
-        <string>--log-file=#{var}/log/rtags.log</string>
-      </array>
-      <key>Sockets</key>
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
       <dict>
-        <key>Listener</key>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{bin}/rdm</string>
+          <string>--verbose</string>
+          <string>--launchd</string>
+          <string>--inactivity-timeout=300</string>
+          <string>--log-file=#{var}/log/rtags.log</string>
+        </array>
+        <key>Sockets</key>
         <dict>
-          <key>SockPathName</key>
-          <string>#{ENV["HOME"]}/.rdm</string>
+          <key>Listener</key>
+          <dict>
+            <key>SockPathName</key>
+            <string>#{ENV["HOME"]}/.rdm</string>
+          </dict>
         </dict>
       </dict>
-    </dict>
-    </plist>
-  EOS
+      </plist>
+    EOS
   end
 
   test do

@@ -1,36 +1,48 @@
 class VowpalWabbit < Formula
   desc "Online learning algorithm"
-  homepage "https://github.com/JohnLangford/vowpal_wabbit"
-  url "https://github.com/JohnLangford/vowpal_wabbit/archive/8.6.1.tar.gz"
-  sha256 "452c3e83b73fd67f5e9cfae8bfbaf398cda73dc688186b376e6106c376ec5eb1"
+  homepage "https://github.com/VowpalWabbit/vowpal_wabbit"
+  # pull from git tag to get submodules
+  url "https://github.com/VowpalWabbit/vowpal_wabbit.git",
+      tag:      "8.11.0",
+      revision: "96ed8316de4391b77f4f29af69f885552a644769"
+  license "BSD-3-Clause"
+  head "https://github.com/VowpalWabbit/vowpal_wabbit.git"
 
   bottle do
-    cellar :any
-    sha256 "de51b144ef201d85cb2ff3edc21e4903186a5acf890fbe2032c1ae405cd61e18" => :mojave
-    sha256 "48a939d6399a4ad1ed2f3f0babd8d7a9edc5a6e801683b5b06f12b5f0daf5d55" => :high_sierra
-    sha256 "18283653fa6b9fdfafdf1361a86b43bf1f56a609934499e0f31634b960b69862" => :sierra
-    sha256 "23598d455b5a62bdf8f65df7b266b07be980738cfe69f664e5f1cb110ec72cf1" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "eed7c4185db5a634bb326b85ee88379efbf33802505c8692d15c70ee401a2bb1"
+    sha256 cellar: :any,                 big_sur:       "94dc4151d4fe21f8f6c1e57214812ba3b5d3aa219e0dd41930ee3c257015a566"
+    sha256 cellar: :any,                 catalina:      "4ff893bdf11e44be76c70adf46dbaaa6823c40134c5fb98328211fb30d293dc9"
+    sha256 cellar: :any,                 mojave:        "d0f2c7e3de9c1a3ae3cc8c590a8b94b4d887c77cd477893c16a6c4ec53904f03"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "3192c3cbdf21eeb508a72bc49a16b3e9814bb652182a710061a2ef5acbb5df61"
   end
 
-  depends_on "autoconf" => :build
-  depends_on "automake" => :build
-  depends_on "libtool" => :build
+  depends_on "cmake" => :build
+  depends_on "flatbuffers" => :build
+  depends_on "rapidjson" => :build
+  depends_on "spdlog" => :build
   depends_on "boost"
-
-  needs :cxx11
+  depends_on "fmt"
+  depends_on "zlib"
 
   def install
     ENV.cxx11
-    ENV["AC_PATH"] = "#{HOMEBREW_PREFIX}/share"
-    system "./autogen.sh", "--prefix=#{prefix}",
-                           "--with-boost=#{Formula["boost"].opt_prefix}"
-    system "make"
-    system "make", "install"
+    # The project provides a Makefile, but it is a basic wrapper around cmake
+    # that does not accept *std_cmake_args.
+    # The following should be equivalent, while supporting Homebrew's standard args.
+    mkdir "build" do
+      system "cmake", "..", *std_cmake_args,
+                            "-DBUILD_TESTS=OFF",
+                            "-DRAPIDJSON_SYS_DEP=ON",
+                            "-DFMT_SYS_DEP=ON",
+                            "-DSPDLOG_SYS_DEP=ON",
+                            "-DBUILD_FLATBUFFERS=ON"
+      system "make", "install"
+    end
     bin.install Dir["utl/*"]
     rm bin/"active_interactor.py"
-    rm bin/"new_version"
     rm bin/"vw-validate.html"
-    rm bin/"release.ps1"
+    rm bin/"clang-format"
+    rm_r bin/"flatbuffer"
   end
 
   test do
@@ -39,7 +51,8 @@ class VowpalWabbit < Formula
       1 2 'second_house | price:.18 sqft:.15 age:.35 1976
       0 1 0.5 'third_house | price:.53 sqft:.32 age:.87 1924
     EOS
-    system bin/"vw", "house_dataset", "-l", "10", "-c", "--passes", "25", "--holdout_off", "--audit", "-f", "house.model", "--nn", "5"
+    system bin/"vw", "house_dataset", "-l", "10", "-c", "--passes", "25", "--holdout_off",
+                     "--audit", "-f", "house.model", "--nn", "5"
     system bin/"vw", "-t", "-i", "house.model", "-d", "house_dataset", "-p", "house.predict"
 
     (testpath/"csoaa.dat").write <<~EOS

@@ -1,27 +1,28 @@
 class Sccache < Formula
   desc "Used as a compiler wrapper and avoids compilation when possible"
   homepage "https://github.com/mozilla/sccache"
-  url "https://github.com/mozilla/sccache/archive/0.2.7.tar.gz"
-  sha256 "0f7e3ad60a93759a35623aa954633c94154fd00d17fe29f9413933e1c5545a52"
+  url "https://github.com/mozilla/sccache/archive/v0.2.15.tar.gz"
+  sha256 "7dbe71012f9b0b57d8475de6b36a9a3b4802e44a135e886f32c5ad1b0eb506e0"
+  license "Apache-2.0"
   head "https://github.com/mozilla/sccache.git"
 
   bottle do
-    sha256 "232e1af12684c02a086f8a937caae4140488153ff3d5be6ab2e30cd6aafdc3b4" => :mojave
-    sha256 "5142c49377699e069a1332b4fb681fef05fff6ad406ea1e0596786fd4f192e76" => :high_sierra
-    sha256 "e3687eef1ca2b74c95b48c2e3df2cc4d985afaf7fd454b9eab6b4837c1e9e24e" => :sierra
-    sha256 "ea3758d1bfefaf31d085b8196b10d20248e5b7f2bada51457adf6efcf6411729" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e7674f3df1e319c5829551d64b4f2e25486ce7c68e2af84be9d13c496c296fbe"
+    sha256 cellar: :any_skip_relocation, big_sur:       "76080d09cb0b9bf50e7ef37609dc3e797b97b3c0f9deb4d71213b91524d67ab9"
+    sha256 cellar: :any_skip_relocation, catalina:      "d79d0f596f68b457b821a2d16444a53a93faa198049e4810b1a9016ef39fc7fe"
+    sha256 cellar: :any_skip_relocation, mojave:        "76a1c87457acd3fbdd5f6352726911d2d0a524afce4639617f7559e80b6ae849"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "3af380852b2e95b2831efd6ac43320e57a64c1d396ba2d64c1fb62eee95040ec"
   end
 
   depends_on "rust" => :build
-  depends_on "openssl"
+  depends_on "openssl@1.1"
 
   def install
     # Ensure that the `openssl` crate picks up the intended library.
     # https://crates.io/crates/openssl#manual-configuration
-    ENV["OPENSSL_DIR"] = Formula["openssl"].opt_prefix
+    ENV["OPENSSL_DIR"] = Formula["openssl@1.1"].opt_prefix
 
-    system "cargo", "install", "--root", prefix, "--path", ".",
-                               "--features", "all"
+    system "cargo", "install", "--features", "all", *std_cargo_args
   end
 
   test do

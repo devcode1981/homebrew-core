@@ -1,30 +1,26 @@
 class Automake < Formula
   desc "Tool for generating GNU Standards-compliant Makefiles"
   homepage "https://www.gnu.org/software/automake/"
-  url "https://ftp.gnu.org/gnu/automake/automake-1.16.1.tar.xz"
-  mirror "https://ftpmirror.gnu.org/automake/automake-1.16.1.tar.xz"
-  sha256 "5d05bb38a23fd3312b10aea93840feec685bdf4a41146e78882848165d3ae921"
+  url "https://ftp.gnu.org/gnu/automake/automake-1.16.3.tar.xz"
+  mirror "https://ftpmirror.gnu.org/automake/automake-1.16.3.tar.xz"
+  sha256 "ff2bf7656c4d1c6fdda3b8bebb21f09153a736bcba169aaf65eab25fa113bf3a"
+  license "GPL-2.0-or-later"
   revision 1
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "0a359c2385d0673ce1ab3cdaf39dd22af191f7b74732105ca5751e08a334e061" => :mojave
-    sha256 "fb32c065aaf91661380af32ed301edcf209ba453635c79ca945353b67e54af10" => :high_sierra
-    sha256 "fb32c065aaf91661380af32ed301edcf209ba453635c79ca945353b67e54af10" => :sierra
-    sha256 "d552844779f0dc4062f27203f7facfbd74c9d1780724ac76a86791e401aa73bd" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "91656222dff012c7434026ff250fcd92fd5746e60a383ef27547559b6bbfe4f5"
+    sha256 cellar: :any_skip_relocation, big_sur:       "11f09c63a49b30078f91bd00b8bed2408422100764cb7b039e8f96941aec3dfc"
+    sha256 cellar: :any_skip_relocation, catalina:      "5f83d4723ee9f33c4a90d62c4bce9d200c4c74cc32d207e4f4d2bdaaede9fb7f"
+    sha256 cellar: :any_skip_relocation, mojave:        "52796a1b6c737797964b119a5cf170a24fc55e32a43841e4690cce1cc24fed1a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "32cfaaad01d5f24626f9180b4d0292df2a254278825e502308c99d4ae6c4e606"
   end
 
   depends_on "autoconf"
 
-  # https://lists.gnu.org/archive/html/bug-automake/2018-04/msg00002.html
-  # Remove this when applying any future 1.16.2 update.
-  patch do
-    url "https://git.savannah.gnu.org/cgit/automake.git/patch/?id=a348d830659fffd2cfc42994524783b07e69b4b5"
-    sha256 "7a57ca2b91f7f3c0b168cf5ffbc8a1b2168f3886bcadcc15412281472dace3ce"
-  end
-
   def install
-    ENV["PERL"] = "/usr/bin/perl"
+    on_macos do
+      ENV["PERL"] = "/usr/bin/perl"
+    end
 
     system "./configure", "--prefix=#{prefix}"
     system "make", "install"

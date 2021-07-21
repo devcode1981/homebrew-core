@@ -3,94 +3,95 @@ class Sceptre < Formula
 
   desc "Build better AWS infrastructure"
   homepage "https://sceptre.cloudreach.com"
-  url "https://github.com/cloudreach/sceptre/archive/v1.4.2.tar.gz"
-  sha256 "0253ef680c1fe2ff589851f979fbcd28f81dd437cdbe9047ec7d3daac6600bf4"
+  url "https://files.pythonhosted.org/packages/54/0d/f48f7a7c1e5a49ead5e531e3087674bcbec050bce262bb4486e7c03d3a33/sceptre-2.5.0.tar.gz"
+  sha256 "40f4ceae1a4d66cbea94cbff04411e20f14c85be2547197de744f1fb09e986d9"
+  license "Apache-2.0"
+  revision 1
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d4131d8a7b10cf672f29b00b941c97443533beaa1f62e77e0afcc83364d63c43" => :mojave
-    sha256 "03b9fde6a7b11bed545aec7d2b53be3b8f97e138dd2205e9f780d71f7e4ecd39" => :high_sierra
-    sha256 "14868dbdfa54d121abf968542c4aabbd9cb616ecdb08070959405413c0430abe" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "f29a291f075c15bbaba3d724d54297fc0e05f5381893392fba9d1c905758d0d9"
+    sha256 cellar: :any_skip_relocation, big_sur:       "f1fab4d3b3a1cb26b74c789c3d455293475737524fa466d6c8b87cd329f64764"
+    sha256 cellar: :any_skip_relocation, catalina:      "b67b5d8825e9b965a387142edd92b87b4c71f2593b1fa7fce76065bd27aeaffe"
+    sha256 cellar: :any_skip_relocation, mojave:        "6682173f333a2737013ad52d426c8519593a71112f8cde087b24a29e6d9ffadf"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d79115df70342d7d581527dbffd6ae01877f4b9130266a9b8bfd170e9a43d662"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
+  depends_on "six"
 
   resource "boto3" do
-    url "https://files.pythonhosted.org/packages/18/89/fb6dec1de25c1e446bc11da7d43dab967d8b948bda734140a6b3fb7dcc4a/boto3-1.9.42.tar.gz"
-    sha256 "02e5c1b85a8b22a92f612daf2d1eea305818076b24ce02878b85e92d9ae0082e"
+    url "https://files.pythonhosted.org/packages/40/5b/a25eb36bd333f246ab47705bf4ce3a3512c62612470cc8956e0b214deca7/boto3-1.17.67.tar.gz"
+    sha256 "61fe8cbb2d4bf1c9a69a73b3f2c68464e0ab587c9367b35f0ef691f372d5ce67"
   end
 
   resource "botocore" do
-    url "https://files.pythonhosted.org/packages/80/ac/518d1fa4b0ec896cc564742e5ce4e4b4d8ce1f8d3f9b6bb29409d1db97ca/botocore-1.12.42.tar.gz"
-    sha256 "0e495bcf2e474b82da7938b35ad2f71e28384c246b47ca131779f736621da504"
+    url "https://files.pythonhosted.org/packages/af/70/4fb7c31c7dc3a43aa716a3b1dca4f0b37c71998af7c74c40dba844c919bc/botocore-1.20.67.tar.gz"
+    sha256 "4666fb5bdf7d78c51d465bac7d9eb1d31c34be46990cd1ad2d1b338bbec8c049"
   end
 
-  # click version was fixed to 6.7 for sceptre 1.4.2
   resource "click" do
-    url "https://files.pythonhosted.org/packages/95/d9/c3336b6b5711c3ab9d1d3a80f1a3e2afeb9d8c02a7166462f6cc96570897/click-6.7.tar.gz"
-    sha256 "f15516df478d5a56180fbf80e68f206010e6d160fc39fa508b65e035fd75130b"
+    url "https://files.pythonhosted.org/packages/27/6f/be940c8b1f1d69daceeb0032fee6c34d7bd70e3e649ccac0951500b4720e/click-7.1.2.tar.gz"
+    sha256 "d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a"
   end
 
-  # colorama version was fixed to 0.3.7 for sceptre 1.4.2
   resource "colorama" do
-    url "https://files.pythonhosted.org/packages/f0/d0/21c6449df0ca9da74859edc40208b3a57df9aca7323118c913e58d442030/colorama-0.3.7.tar.gz"
-    sha256 "e043c8d32527607223652021ff648fbb394d5e19cba9f1a698670b338c9d782b"
+    url "https://files.pythonhosted.org/packages/1f/bb/5d3246097ab77fa083a61bd8d3d527b7ae063c7d8e8671b1cf8c4ec10cbe/colorama-0.4.4.tar.gz"
+    sha256 "5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"
   end
 
-  resource "docutils" do
-    url "https://files.pythonhosted.org/packages/84/f4/5771e41fdf52aabebbadecc9381d11dea0fa34e4759b4071244fa094804c/docutils-0.14.tar.gz"
-    sha256 "51e64ef2ebfb29cae1faa133b3710143496eca21c530f3f71424d77687764274"
+  resource "decorator" do
+    url "https://files.pythonhosted.org/packages/da/93/84fa12f2dc341f8cf5f022ee09e109961055749df2d0c75c5f98746cfe6c/decorator-4.4.2.tar.gz"
+    sha256 "e3a62f0520172440ca0dcc823749319382e377f37f140a0b99ef45fecb84bfe7"
   end
 
   resource "Jinja2" do
-    url "https://files.pythonhosted.org/packages/56/e6/332789f295cf22308386cf5bbd1f4e00ed11484299c5d7383378cf48ba47/Jinja2-2.10.tar.gz"
-    sha256 "f84be1bb0040caca4cea721fcbbbbd61f9be9464ca236387158b0feea01914a4"
+    url "https://files.pythonhosted.org/packages/4f/e7/65300e6b32e69768ded990494809106f87da1d436418d5f1367ed3966fd7/Jinja2-2.11.3.tar.gz"
+    sha256 "a6d58433de0ae800347cab1fa3043cebbabe8baa9d29e668f1c768cb87a333c6"
   end
 
   resource "jmespath" do
-    url "https://files.pythonhosted.org/packages/e5/21/795b7549397735e911b032f255cff5fb0de58f96da794274660bca4f58ef/jmespath-0.9.3.tar.gz"
-    sha256 "6a81d4c9aa62caf061cb517b4d9ad1dd300374cd4706997aff9cd6aedd61fc64"
+    url "https://files.pythonhosted.org/packages/3c/56/3f325b1eef9791759784aa5046a8f6a1aff8f7c898a2e34506771d3b99d8/jmespath-0.10.0.tar.gz"
+    sha256 "b85d0567b8666149a93172712e68920734333c0ce7e89b78b3e987f71e5ed4f9"
   end
 
   resource "MarkupSafe" do
-    url "https://files.pythonhosted.org/packages/ac/7e/1b4c2e05809a4414ebce0892fe1e32c14ace86ca7d50c70f00979ca9b3a3/MarkupSafe-1.1.0.tar.gz"
-    sha256 "4e97332c9ce444b0c2c38dd22ddc61c743eb208d916e4265a2a3b575bdccb1d3"
+    url "https://files.pythonhosted.org/packages/b9/2e/64db92e53b86efccfaea71321f597fa2e1b2bd3853d8ce658568f7a13094/MarkupSafe-1.1.1.tar.gz"
+    sha256 "29872e92839765e546828bb7754a68c418d927cd064fd4708fab9fe9c8bb116b"
   end
 
-  # packaging was fixed to version 16.8 for sceptre 1.4.2
+  resource "networkx" do
+    url "https://files.pythonhosted.org/packages/b0/21/adfbf6168631e28577e4af9eb9f26d75fe72b2bb1d33762a5f2c425e6c2a/networkx-2.5.1.tar.gz"
+    sha256 "109cd585cac41297f71103c3c42ac6ef7379f29788eb54cb751be5a663bb235a"
+  end
+
   resource "packaging" do
     url "https://files.pythonhosted.org/packages/c6/70/bb32913de251017e266c5114d0a645f262fb10ebc9bf6de894966d124e35/packaging-16.8.tar.gz"
     sha256 "5d50835fdf0a7edf0b55e311b7c887786504efea1177abd7e69329a8e5ea619e"
   end
 
   resource "pyparsing" do
-    url "https://files.pythonhosted.org/packages/d0/09/3e6a5eeb6e04467b737d55f8bba15247ac0876f98fae659e58cd744430c6/pyparsing-2.3.0.tar.gz"
-    sha256 "f353aab21fd474459d97b709e527b5571314ee5f067441dc9f88e33eecd96592"
+    url "https://files.pythonhosted.org/packages/c1/47/dfc9c342c9842bbe0036c7f763d2d6686bcf5eb1808ba3e170afdb282210/pyparsing-2.4.7.tar.gz"
+    sha256 "c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"
   end
 
   resource "python-dateutil" do
-    url "https://files.pythonhosted.org/packages/0e/01/68747933e8d12263d41ce08119620d9a7e5eb72c876a3442257f74490da0/python-dateutil-2.7.5.tar.gz"
-    sha256 "88f9287c0174266bb0d8cedd395cfba9c58e87e5ad86b2ce58859bc11be3cf02"
+    url "https://files.pythonhosted.org/packages/be/ed/5bbc91f03fa4c839c4c7360375da77f9659af5f7086b7a7bdda65771c8e0/python-dateutil-2.8.1.tar.gz"
+    sha256 "73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"
   end
 
   resource "PyYAML" do
-    url "https://files.pythonhosted.org/packages/9e/a3/1d13970c3f36777c583f136c136f804d70f500168edc1edea6daa7200769/PyYAML-3.13.tar.gz"
-    sha256 "3ef3092145e9b70e3ddd2c7ad59bdd0252a94dfe3949721633e41344de00a6bf"
+    url "https://files.pythonhosted.org/packages/a0/a4/d63f2d7597e1a4b55aa3b4d6c5b029991d3b824b5bd331af8d4ab1ed687d/PyYAML-5.4.1.tar.gz"
+    sha256 "607774cbba28732bfa802b54baa7484215f530991055bb562efbed5b2f20a45e"
   end
 
   resource "s3transfer" do
-    url "https://files.pythonhosted.org/packages/9a/66/c6a5ae4dbbaf253bd662921b805e4972451a6d214d0dc9fb3300cb642320/s3transfer-0.1.13.tar.gz"
-    sha256 "90dc18e028989c609146e241ea153250be451e05ecc0c2832565231dacdf59c1"
-  end
-
-  resource "six" do
-    url "https://files.pythonhosted.org/packages/16/d8/bc6316cf98419719bd59c91742194c111b6f2e85abac88e496adefaf7afe/six-1.11.0.tar.gz"
-    sha256 "70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9"
+    url "https://files.pythonhosted.org/packages/27/90/f467e516a845cf378d85f0a51913c642e31e2570eb64b352c4dc4c6cbfc7/s3transfer-0.4.2.tar.gz"
+    sha256 "cb022f4b16551edebbb31a377d3f09600dbada7363d8c5db7976e7f47732e1b2"
   end
 
   resource "urllib3" do
-    url "https://files.pythonhosted.org/packages/b1/53/37d82ab391393565f2f831b8eedbffd57db5a718216f82f1a8b4d381a1c1/urllib3-1.24.1.tar.gz"
-    sha256 "de9529817c93f27c8ccbfead6985011db27bd0ddfcdb2d86f3f663385c6a9c22"
+    url "https://files.pythonhosted.org/packages/cb/cf/871177f1fc795c6c10787bc0e1f27bb6cf7b81dbde399fd35860472cecbc/urllib3-1.26.4.tar.gz"
+    sha256 "e7b021f7241115872f92f43c6508082facffbd1c048e3c6e2bb9c2a157e28937"
   end
 
   def install

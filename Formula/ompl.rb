@@ -1,25 +1,44 @@
 class Ompl < Formula
   desc "Open Motion Planning Library consists of many motion planning algorithms"
   homepage "https://ompl.kavrakilab.org/"
-  url "https://bitbucket.org/ompl/ompl/downloads/ompl-1.4.1-Source.tar.gz"
-  sha256 "409b968b4174df347eeb77945adb5d03c093480c50c20add958664ad2a8ab29b"
+  url "https://github.com/ompl/ompl/archive/1.5.2.tar.gz"
+  sha256 "db1665dd2163697437ef155668fdde6101109e064a2d1a04148e45b3747d5f98"
+  license "BSD-3-Clause"
+  head "https://github.com/ompl/ompl.git"
+
+  # We check the first-party download page because the "latest" GitHub release
+  # isn't a reliable indicator of the latest version on this repository.
+  livecheck do
+    url "https://ompl.kavrakilab.org/download.html"
+    regex(%r{href=.*?/ompl/ompl/archive/v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    sha256 "7c24a4217f117907a8a709c6c07712612357c45b184fe2e1af58316679cb6d4a" => :mojave
-    sha256 "802ac697fd52664ed73225122a5cf9e1df38911df8d695c6fbf87d453bfae5a8" => :high_sierra
-    sha256 "5d72b5722d23b3493118974ca35d93c9d694fa73474f6aba97a26a74f38bcd8d" => :sierra
+    sha256 arm64_big_sur: "214c8032cd621e44527cacc9af0800312e95922f7d79e58a94c93a09977638de"
+    sha256 big_sur:       "aab42d95974b15167f1a240f853283eed81a928877822a0aa8ee67664f1992e6"
+    sha256 catalina:      "6b0190b615a9929cd74f03e97ff62efdca225ce9c7afc171ed3f5be31f2a8afd"
+    sha256 mojave:        "b7d94176b089fc5959b6accb2da9390f94ab1863902f0f189bd542566815578c"
   end
 
   depends_on "cmake" => :build
+  depends_on "pkg-config" => :build
   depends_on "boost"
   depends_on "eigen"
-  depends_on "ode" => :optional
-
-  needs :cxx11
+  depends_on "flann"
+  depends_on "ode"
 
   def install
     ENV.cxx11
-    system "cmake", ".", *std_cmake_args
+    args = std_cmake_args + %w[
+      -DOMPL_REGISTRATION=OFF
+      -DOMPL_BUILD_DEMOS=OFF
+      -DOMPL_BUILD_TESTS=OFF
+      -DOMPL_BUILD_PYBINDINGS=OFF
+      -DOMPL_BUILD_PYTESTS=OFF
+      -DCMAKE_DISABLE_FIND_PACKAGE_spot=ON
+      -DCMAKE_DISABLE_FIND_PACKAGE_Triangle=ON
+    ]
+    system "cmake", ".", *args
     system "make", "install"
   end
 
@@ -35,7 +54,7 @@ class Ompl < Formula
       }
     EOS
 
-    system ENV.cc, "test.cpp", "-L#{lib}", "-lompl", "-lstdc++", "-o", "test"
+    system ENV.cxx, "test.cpp", "-I#{include}/ompl-1.5", "-L#{lib}", "-lompl", "-o", "test"
     system "./test"
   end
 end

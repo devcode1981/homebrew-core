@@ -1,24 +1,39 @@
 class Ctl < Formula
   desc "Programming language for digital color management"
   homepage "https://github.com/ampas/CTL"
+  # Check whether this can be switched to `openexr` and `imath` at version bump
   url "https://github.com/ampas/CTL/archive/ctl-1.5.2.tar.gz"
   sha256 "d7fac1439332c4d84abc3c285b365630acf20ea041033b154aa302befd25e0bd"
-  revision 2
+  license "AMPAS"
+  revision 6
 
   bottle do
-    sha256 "16f2a8692af07f7710d558e4de69a88705df2dd153e00dc36fdfb0d3a2accc0e" => :mojave
-    sha256 "edb2ab8944366710827ab289c0c0c6846642524fd0928dfab8cb8be033cd465d" => :high_sierra
-    sha256 "6668abc43f329b3220882182fa9f45c04e273f9f3d91a78a9c352df55d85171c" => :sierra
-    sha256 "744fa25276716928e3b7e43e1f176151fdcf1b60fab95b2f3308467d77bf75a6" => :el_capitan
+    sha256 arm64_big_sur: "44e972aad69a12929209b71a8ce3f0cd2c64c3619d38fe8e99f9118dfd231877"
+    sha256 big_sur:       "ff72d9eb8d78bfbc8be7e2df6c5b12ebe84539599f2874df9a63cdeab65d0e93"
+    sha256 catalina:      "348b69fc01982990dc24ba16332bd99851f8fbab4ccd25d05753288f4ff76344"
+    sha256 mojave:        "37dce198f7d3aa8dab4ea3519da23f8a02ffacd61569323d6ee24a9b18c35190"
   end
 
   depends_on "cmake" => :build
   depends_on "aces_container"
   depends_on "ilmbase"
   depends_on "libtiff"
-  depends_on "openexr"
+  depends_on "openexr@2"
+
+  # from https://github.com/ampas/CTL/pull/73
+  patch do
+    url "https://github.com/ampas/CTL/commit/bda2165b97e512a39ee67cf36fe95e1d897e823b.patch?full_index=1"
+    sha256 "09145020a79b180bb8bb8e18129194b064d4c8a949940fb97be4945b99b06d7f"
+  end
+
+  # from https://github.com/ampas/CTL/pull/74
+  patch do
+    url "https://github.com/ampas/CTL/commit/0646adf9dcf966db3c6ec9432901c08387c1a1eb.patch?full_index=1"
+    sha256 "5ec79eed7499612855d09d7bb18a66a660b6be9785fdfcc880d946f95fb7a44c"
+  end
 
   def install
+    ENV.cxx11
     ENV.delete "CTL_MODULE_PATH"
 
     mkdir "build" do
@@ -28,6 +43,6 @@ class Ctl < Formula
   end
 
   test do
-    assert_match /transforms an image/, shell_output("#{bin}/ctlrender -help", 1)
+    assert_match "transforms an image", shell_output("#{bin}/ctlrender -help", 1)
   end
 end

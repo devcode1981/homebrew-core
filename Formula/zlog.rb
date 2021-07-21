@@ -1,15 +1,16 @@
 class Zlog < Formula
   desc "High-performance C logging library"
   homepage "https://github.com/HardySimpson/zlog"
-  url "https://github.com/HardySimpson/zlog/archive/1.2.12.tar.gz"
-  sha256 "9c6014a3f74d136c70255539beba11f30e1d3617d07ce7ea917b35f3e52bac20"
+  url "https://github.com/HardySimpson/zlog/archive/1.2.15.tar.gz"
+  sha256 "00037ab8d52772a95d645f1dcfd2c292b7cea326b54e63e219a5b7fdcb7e6508"
+  license "LGPL-2.1"
 
   bottle do
-    cellar :any
-    sha256 "10b13197cf780ee263ce305b1d48bb005231110601d7d1e4a3c3e4d1e2e38598" => :mojave
-    sha256 "8c69d89489366fc6fbb92af4f89ed34dd82e44aea0587591998a52dc2d43392b" => :high_sierra
-    sha256 "88179deeaf4acb8638c155acc887661da3eb191e05b23ecd6c64757ffaedb6d9" => :sierra
-    sha256 "c18ad86b3c5f8721f18a1090e6d372564a89ac972d1cfaa8a6819c5ecaec25ee" => :el_capitan
+    sha256 cellar: :any,                 big_sur:      "07b323ff8ba13c92bf8c720b6fd0a760a776b5e9d6f46356700066ef2b3643a6"
+    sha256 cellar: :any,                 catalina:     "31352f21933854c635450c9cc5c00f1dc1370a62a331a691879bea2eaba45582"
+    sha256 cellar: :any,                 mojave:       "170ffd446913b23c344d82160c19bfb1c8325c07dc31490a636e72345abe1c7b"
+    sha256 cellar: :any,                 high_sierra:  "332ed23525b10970bd5bc81052bae67755aee5f2651fdaafed5dd036da470239"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "54d50cc28304b4841a04e49e269eef63c28be2be50031119ddf80cd1fb9ec2fc"
   end
 
   def install

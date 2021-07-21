@@ -1,19 +1,24 @@
 class Xcodegen < Formula
   desc "Generate your Xcode project from a spec file and your folder structure"
   homepage "https://github.com/yonaskolb/XcodeGen"
-  url "https://github.com/yonaskolb/XcodeGen/archive/2.0.0.tar.gz"
-  sha256 "15def1e83368a27c1836b66aa5e80f53513aa045ceb1eabd2480fd7db47f82bf"
+  url "https://github.com/yonaskolb/XcodeGen/archive/2.24.0.tar.gz"
+  sha256 "19383a24d3b18881bc6ab648cee99edceda5268e84befe59291d32d3547152b6"
+  license "MIT"
+  head "https://github.com/yonaskolb/XcodeGen.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "cc3d430915a155f9d56800905e6d2d838630c36b41f530db7822eb4391dff02f" => :mojave
-    sha256 "3552dd18b36c4dae40ac58c4aadfe708d7638da7c9f250ae9d238e3dd3700d80" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a023f81e3ae8a34609749db824fe75fcd1c65b672a3e522737a65ecc801f964d"
+    sha256 cellar: :any_skip_relocation, big_sur:       "4c7f2072fc885ca10a439367749c87a46e93955cad6148f59d0a2e71e0f9ef86"
+    sha256 cellar: :any_skip_relocation, catalina:      "dcd34d9054ff13b8eae754378c5f8f64a24c8bfb93630aa98384aa5867d39dca"
   end
 
-  depends_on :xcode => ["9.3", :build]
+  depends_on xcode: ["10.2", :build]
+  depends_on macos: :catalina
 
   def install
-    system "make", "install", "PREFIX=#{prefix}"
+    system "swift", "build", "--disable-sandbox", "-c", "release"
+    bin.install ".build/release/#{name}"
+    pkgshare.install "SettingPresets"
   end
 
   test do

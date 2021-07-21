@@ -1,29 +1,26 @@
 class Iamy < Formula
   desc "AWS IAM import and export tool"
   homepage "https://github.com/99designs/iamy"
-  url "https://github.com/99designs/iamy/archive/v2.2.0.tar.gz"
-  sha256 "be315753cd94a3652cfc0872f56e993c64ea0811247361742e3eb0be2ffcc64d"
+  url "https://github.com/99designs/iamy/archive/v2.3.2.tar.gz"
+  sha256 "66d44dd6af485b2b003b0aa1c8dcd799f7bae934f1ce1efb7e5d5f6cfe7f8bf2"
+  license "MIT"
   head "https://github.com/99designs/iamy.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b53242a77b9f929dae108b63f5c98dacd8dbbb012c5b84aba2a32e3a568997dd" => :mojave
-    sha256 "47472140d1784e319eea2d203722d957b588655234e266a3dab26be9fb103598" => :high_sierra
-    sha256 "4d1e5b3b9bb838117293c18979370d395cd111f3c32f9b00030fbed7ae9c2f3c" => :sierra
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "9ebdffb035a4c24087c7f3a7f9918ab1734fd00c6baa64da4e49fc721d0ea553"
+    sha256 cellar: :any_skip_relocation, big_sur:       "02aa2ecaab3e449d3ca641e88a22dca829a969d6984190146514b807cdf2b3a2"
+    sha256 cellar: :any_skip_relocation, catalina:      "f5b5f5a4db400dc6021f206a23e90fbff7666f92cfdef296efe86b2db3ba9aa4"
+    sha256 cellar: :any_skip_relocation, mojave:        "3f01263009a39e769d8144ba9c284d95421ab919c78f549f0e36cbf56985693c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f6c4629eac1aff33871ecea23af3c61cd3033de783bce867b67269b0e7c28dc5"
   end
 
   depends_on "go" => :build
   depends_on "awscli"
 
   def install
-    ENV["GOPATH"] = buildpath
-    dir = buildpath/"src/github.com/99designs/iamy"
-    dir.install buildpath.children
-    cd dir do
-      system "go", "build", "-o", bin/"iamy", "-ldflags",
-             "-X main.Version=v#{version}"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args, "-ldflags",
+            "-s -w -X main.Version=v#{version}"
   end
 
   test do

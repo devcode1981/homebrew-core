@@ -1,19 +1,30 @@
 class Ircii < Formula
   desc "IRC and ICB client"
   homepage "http://www.eterna.com.au/ircii/"
-  url "https://ircii.warped.com/ircii-20170704.tar.bz2"
-  mirror "https://mirrors.ocf.berkeley.edu/debian/pool/main/i/ircii/ircii_20170704.orig.tar.bz2"
-  sha256 "4e5a70fc4577de06fd5855ab7ca0a501fd16e02d5fd34e434a2b5abac80a2eda"
+  url "https://ircii.warped.com/ircii-20210314.tar.bz2"
+  mirror "https://deb.debian.org/debian/pool/main/i/ircii/ircii_20210314.orig.tar.bz2"
+  sha256 "866f2b847daed3d70859f208f7cb0f20b58c0933b2159f7ff92a68c518d393a9"
+  license all_of: [
+    "BSD-3-Clause",
+    "BSD-2-Clause",
+    "GPL-2.0-or-later",
+    "MIT",
+    :public_domain,
+  ]
 
-  bottle do
-    sha256 "aaf1bd01be68a060cd5e0323a6f645a05f2395708697a9754c518155f1dbd394" => :mojave
-    sha256 "d459c638c8c9d2e0f88b4382f592b4cd28d815b0455c799a9f89fba6c6b95496" => :high_sierra
-    sha256 "e8168dd5f7bb02880b0f8d199326fb81d7cf068cd2960d10aadd698d645bfa5a" => :sierra
-    sha256 "bd98e7588df62ead1c94d09b2fb200475f4c09a0950a572ae527f13f6443107e" => :el_capitan
-    sha256 "2bc24641161180093f7ea30ddbe7692afda55f1bbf9d46ed59b7773acf8137de" => :yosemite
+  livecheck do
+    url "https://ircii.warped.com/"
+    regex(/href=.*?ircii[._-]v?(\d{6,8})\.t/i)
   end
 
-  depends_on "openssl"
+  bottle do
+    sha256 arm64_big_sur: "59c85726eb16390bbeac0309702bf21e76116b552fac81ce36d2d4aa20866318"
+    sha256 big_sur:       "e7eae3e18034f4b13f64f83d538dae8b421245f03b3bd5c0c080a1a77db5414e"
+    sha256 catalina:      "dc265a9d5875eff670c60a9e81bc0185ee74eee142ad09b8f0bc6c20ea663507"
+    sha256 mojave:        "758aa15d57d51e9f2c97115e837cd10c9879bfeb46c84823380291a76573f669"
+  end
+
+  depends_on "openssl@1.1"
 
   def install
     ENV.append "LIBS", "-liconv"

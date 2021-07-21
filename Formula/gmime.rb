@@ -1,13 +1,17 @@
 class Gmime < Formula
   desc "MIME mail utilities"
   homepage "https://spruce.sourceforge.io/gmime/"
-  url "https://download.gnome.org/sources/gmime/3.2/gmime-3.2.3.tar.xz"
-  sha256 "6a0875eeb552ab447dd54853a68ced62217d863631048737dd97eaa2713e7311"
+  url "https://download.gnome.org/sources/gmime/3.2/gmime-3.2.7.tar.xz"
+  sha256 "2aea96647a468ba2160a64e17c6dc6afe674ed9ac86070624a3f584c10737d44"
+  license "LGPL-2.1"
 
   bottle do
-    sha256 "26dc02bb2c06eff3a4295cec5877568c6094e11f40cf38aff16c25a1b2ddfcd3" => :mojave
-    sha256 "056637f08f6bad4727245daf1edb7d8a87bc2c2ca46950b3d3881b39e850056b" => :high_sierra
-    sha256 "1dfa791ca0aeeb1b32f1315d84ea2e68f5a65a2c686acc1d1d6a3b97663f57d4" => :sierra
+    sha256                               arm64_big_sur: "0c12167da5badd3447325e0770666c1e7f5e5e8945613e4c54c4e3e5ef1915fa"
+    sha256                               big_sur:       "3714b2907a93c2495efb79c0cf870bdab5683c64c17696836b19e5b34108b852"
+    sha256                               catalina:      "877f2024cc0d97bc94f559ad992f87bdf6fdc23f9a1acc7b5bb13f0711b734c3"
+    sha256                               mojave:        "7a0bda5bca906bc62e3ab24fc39752e2858fce861ba759040fc864928ab18d96"
+    sha256                               high_sierra:   "0bb48841eae316695037bcd793673d518d0f2be20968a115a81c92824fb77ac0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "07bffed5c3be937ee007bd878ff92561ed7f17f841d5062eccc7a8900e416b42"
   end
 
   depends_on "gobject-introspection" => :build
@@ -62,8 +66,10 @@ class Gmime < Formula
       -lglib-2.0
       -lgmime-3.0
       -lgobject-2.0
-      -lintl
     ]
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "-o", "test", "test.c", *flags
     system "./test"
   end

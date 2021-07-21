@@ -1,23 +1,28 @@
 class Supertux < Formula
   desc "Classic 2D jump'n run sidescroller game"
   homepage "https://www.supertux.org/"
-  url "https://github.com/SuperTux/supertux/releases/download/v0.5.1/SuperTux-v0.5.1-Source.tar.gz"
-  sha256 "c9dc3b42991ce5c5d0d0cb94e44c4ec2373ad09029940f0e92331e7e9ada0ac5"
-  revision 3
+  url "https://github.com/SuperTux/supertux/releases/download/v0.6.2/SuperTux-v0.6.2-Source.tar.gz"
+  sha256 "26a9e56ea2d284148849f3239177d777dda5b675a10ab2d76ee65854c91ff598"
+  license "GPL-3.0-or-later"
+  revision 2
   head "https://github.com/SuperTux/supertux.git"
 
-  bottle do
-    cellar :any
-    rebuild 1
-    sha256 "006225504f80952487eb62f66359ac5976248ec4de46f266915f41f543e4742a" => :mojave
-    sha256 "66385b85ba64e6ce35f5d74e9c2304e73795b977b75f814ff4eeb55cbfccba0b" => :high_sierra
-    sha256 "fbde2e2249a89401fd9893b095857b283c4a7a3a4ab9dec47b8c30d2030d0268" => :sierra
-    sha256 "c66b6e14fc23160f5024ad7790286ec0bcb7f8ed262ce6c400dc8757c1c16ba8" => :el_capitan
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
-  depends_on "boost" => :build
+  bottle do
+    sha256 cellar: :any, arm64_big_sur: "a43aa28db1ce468178567d76e8d62ecc90b7059efebf09e7486adeb7fb4fa22e"
+    sha256 cellar: :any, big_sur:       "b2a5292147a6d0f84589d699a2c5f0ffb196602640c5302f82281d021274c506"
+    sha256 cellar: :any, catalina:      "59c8ea513385b6d4785c28cca54864ebdcc415d5ece4fe724d11a4a74f7f95cc"
+    sha256 cellar: :any, mojave:        "2b0b76de7aa2d930df7d8b22eb3389c4dcaea132a45de9eb88907ded500c7cb3"
+  end
+
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
+  depends_on "boost"
+  depends_on "freetype"
   depends_on "glew"
   depends_on "libogg"
   depends_on "libvorbis"
@@ -25,25 +30,14 @@ class Supertux < Formula
   depends_on "sdl2_image"
   depends_on "sdl2_mixer"
 
-  # Fix symlink passing to physfs
-  # https://github.com/SuperTux/supertux/issues/614
-  patch do
-    url "https://github.com/SuperTux/supertux/commit/47a353e2981161e2da12492822fe88d797af2fec.diff?full_index=1"
-    sha256 "2b12aeead4f425a0626051e246a9f6d527669624803d53d6d0b5758e51099059"
-  end
-
-  # Fix compilation issue with Xcode 9
-  # https://github.com/SuperTux/supertux/issues/762
-  # using Squirrel's patch
-  # https://github.com/albertodemichelis/squirrel/commit/a3a78eec
-  patch do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/834e41a/supertux/squirrel_xcode9.patch"
-    sha256 "1830dcb88f635f611aa3236abdaee75b53293df407ebc8214f31635a75876831"
-  end
-
-  needs :cxx11
-
   def install
+    unless build.head?
+      # Fix for `external/findlocale/VERSION` is trying to be compiled (on case-insensitive FS)
+      # This mimics behaviour of https://github.com/SuperTux/supertux/commit/afbae58a61abf0dab98ffe57401dead8f7f1c0dd
+      # Remove in the next release
+      File.rename "external/findlocale/VERSION", "external/findlocale/VERSION.txt"
+    end
+
     ENV.cxx11
 
     args = std_cmake_args
@@ -55,13 +49,13 @@ class Supertux < Formula
     system "make", "install"
 
     # Remove unnecessary files
-    (share/"appdata").rmtree
     (share/"applications").rmtree
     (share/"pixmaps").rmtree
     (prefix/"MacOS").rmtree
   end
 
   test do
-    assert_equal "supertux2 v#{version}", shell_output("#{bin}/supertux2 --version").chomp
+    (testpath / "config").write "(supertux-config)"
+    assert_equal "supertux2 v#{version}", shell_output("#{bin}/supertux2 --userdir #{testpath} --version").chomp
   end
 end

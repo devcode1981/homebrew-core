@@ -1,13 +1,21 @@
 class Freetds < Formula
   desc "Libraries to talk to Microsoft SQL Server and Sybase databases"
-  homepage "http://www.freetds.org/"
-  url "http://www.freetds.org/files/stable/freetds-1.00.104.tar.gz"
-  sha256 "c4f51525f2dd722fe3651913d4ea194798211293f195c38fc3933cc6db1dae42"
+  homepage "https://www.freetds.org/"
+  url "https://www.freetds.org/files/stable/freetds-1.3.tar.gz"
+  sha256 "8a3e13f828a9c5e92bb6a87d6a1deb0df49f0f3edb2fa229e3844e376df4f14c"
+  license "LGPL-2.0-or-later"
+
+  livecheck do
+    url "https://www.freetds.org/files/stable/"
+    regex(/href=.*?freetds[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "90914c82e7bcc6dd60a71a380e77ddd32a8d87dcbbee8de7b749fbe0eb025906" => :mojave
-    sha256 "da0b1d22579cf3e949ab1b9692a0cc8a9860fa264c9fc523324440705072de7b" => :high_sierra
-    sha256 "5eb80bcc14d56d4c7aa389f5883bcc0b852f3cd087144dee361c5453c464820f" => :sierra
+    sha256 arm64_big_sur: "2ecf06b662ffadd4c4ca07a63cef9913915c43da7657ee5a035411b9d6fe8878"
+    sha256 big_sur:       "d5af44165c7b0f2b41f2cc7b416badfd2cd0aeeb0c380cbdb06e14a2729b7399"
+    sha256 catalina:      "8ba7b87f0cbf655965d8e21df824e70cd9503da77f25f10d2b062247ffcaa72d"
+    sha256 mojave:        "dcf2635a61a19b41f34a5f8ecc7dbdda9f11c5305611d5bc3597df6493519d46"
+    sha256 x86_64_linux:  "c9759ef611d977986d751514f7dc24c9b73bbdd1d1071baf4f4785ea93628f42"
   end
 
   head do
@@ -19,11 +27,13 @@ class Freetds < Formula
     depends_on "libtool" => :build
   end
 
-  option "with-msdblib", "Enable Microsoft behavior in the DB-Library API where it diverges from Sybase's"
-
   depends_on "pkg-config" => :build
-  depends_on "openssl"
+  depends_on "openssl@1.1"
   depends_on "unixodbc"
+
+  on_linux do
+    depends_on "readline"
+  end
 
   def install
     args = %W[
@@ -32,15 +42,11 @@ class Freetds < Formula
       --mandir=#{man}
       --sysconfdir=#{etc}
       --with-unixodbc=#{Formula["unixodbc"].opt_prefix}
-      --with-openssl=#{Formula["openssl"].opt_prefix}
+      --with-openssl=#{Formula["openssl@1.1"].opt_prefix}
       --enable-sybase-compat
       --enable-krb5
       --enable-odbc-wide
     ]
-
-    if build.with? "msdblib"
-      args << "--enable-msdblib"
-    end
 
     if build.head?
       system "./autogen.sh", *args

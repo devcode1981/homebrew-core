@@ -1,83 +1,62 @@
 class Graphviz < Formula
   desc "Graph visualization software from AT&T and Bell Labs"
   homepage "https://www.graphviz.org/"
-  # versioned URLs are missing upstream as of 16 Dec 2017
-  url "https://www.mirrorservice.org/sites/distfiles.macports.org/graphviz/graphviz-2.40.1.tar.gz"
-  mirror "https://fossies.org/linux/misc/graphviz-2.40.1.tar.gz"
-  sha256 "ca5218fade0204d59947126c38439f432853543b0818d9d728c589dfe7f3a421"
+  url "https://gitlab.com/graphviz/graphviz.git",
+      tag:      "2.48.0",
+      revision: "0e477c1e151e57c7d1865ed14e6add1c63c0b03a"
+  license "EPL-1.0"
   version_scheme 1
+  head "https://gitlab.com/graphviz/graphviz.git"
 
   bottle do
-    rebuild 1
-    sha256 "668c64749620f556cf7d26ac96088005b4439acd9488be4c640fdc9cfe66d563" => :mojave
-    sha256 "b592ce51c2a929c3da82e96ec856571ebfc54cf4dac90c2924cd3845078d7082" => :high_sierra
-    sha256 "41b5811054f03978db12525919540fe41e073fb2c20e899247ed9c2a191f7a66" => :sierra
-    sha256 "cab27f92a59d543e2f2c1494c28c7563a4c2d7e0dce4c4fbc22587db91cafc5b" => :el_capitan
-    sha256 "6bd4c01e724cfc965871e1aad9a4fb2a6afef90a1e254d81e2fe33a997f50aaa" => :yosemite
+    sha256 arm64_big_sur: "452ad2a405771fc2d4655d5183f7b3e70520c1cca66c7ccf1567edd8e82a8a11"
+    sha256 big_sur:       "36bb031ebbc2080491538c2e3394c8295f7049db86eb3d9c0d6bb550f1bad10c"
+    sha256 catalina:      "b320c6481e7cc897ec533d7268b57bd668a079e471a7408b642137229872d12e"
+    sha256 mojave:        "0014adcf96e5eff7ede0e08e7b3e045681b03e779c2d5ede2b09dc308050f68c"
+    sha256 x86_64_linux:  "cdbcdcbd4d50288bc1c260eb59d35f5f4adfdf9bbb188d1ae171e5992f2d2833"
   end
 
-  head do
-    url "https://gitlab.com/graphviz/graphviz.git"
-
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "libtool" => :build
-  end
-
-  option "with-app", "Build GraphViz.app (requires full XCode install)"
-  option "with-gts", "Build with GNU GTS support (required by prism)"
-  option "with-pango", "Build with Pango/Cairo for alternate PDF output"
-
-  deprecated_option "with-pangocairo" => "with-pango"
-
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "bison" => :build
   depends_on "pkg-config" => :build
-  depends_on :xcode => :build if build.with? "app"
   depends_on "gd"
+  depends_on "gts"
   depends_on "libpng"
+  depends_on "librsvg"
   depends_on "libtool"
-  depends_on "gts" => :optional
-  depends_on "librsvg" => :optional
-  depends_on "pango" => :optional
+  depends_on "pango"
+
+  uses_from_macos "flex" => :build
+
+  on_linux do
+    depends_on "byacc" => :build
+    depends_on "ghostscript" => :build
+  end
 
   def install
-    # Only needed when using superenv, which causes qfrexp and qldexp to be
-    # falsely detected as available. The problem is triggered by
-    #   args << "-#{ENV["HOMEBREW_OPTIMIZATION_LEVEL"]}"
-    # during argument refurbishment of cflags.
-    # https://github.com/Homebrew/brew/blob/ab060c9/Library/Homebrew/shims/super/cc#L241
-    # https://github.com/Homebrew/legacy-homebrew/issues/14566
-    # Alternative fixes include using stdenv or using "xcrun make"
-    inreplace "lib/sfio/features/sfio", "lib qfrexp\nlib qldexp\n", "" unless build.head?
-
     args = %W[
       --disable-debug
       --disable-dependency-tracking
       --prefix=#{prefix}
       --disable-php
       --disable-swig
+      --disable-tcl
       --with-quartz
       --without-freetype2
+      --without-gdk
+      --without-gdk-pixbuf
+      --without-gtk
+      --without-poppler
       --without-qt
       --without-x
+      --with-gts
     ]
-    args << "--with-gts" if build.with? "gts"
-    args << "--without-pangocairo" if build.without? "pango"
-    args << "--without-rsvg" if build.without? "librsvg"
 
-    if build.head?
-      system "./autogen.sh", *args
-    else
-      system "./configure", *args
-    end
+    system "./autogen.sh"
+    system "./configure", *args
+    system "make"
     system "make", "install"
-
-    if build.with? "app"
-      cd "macosx" do
-        xcodebuild "SDKROOT=#{MacOS.sdk_path}", "-configuration", "Release", "SYMROOT=build", "PREFIX=#{prefix}",
-                   "ONLY_ACTIVE_ARCH=YES", "MACOSX_DEPLOYMENT_TARGET=#{MacOS.version}"
-      end
-      prefix.install "macosx/build/Release/Graphviz.app"
-    end
 
     (bin/"gvmap.sh").unlink
   end

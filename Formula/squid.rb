@@ -1,25 +1,32 @@
 class Squid < Formula
   desc "Advanced proxy caching server for HTTP, HTTPS, FTP, and Gopher"
   homepage "http://www.squid-cache.org/"
-  url "http://www.squid-cache.org/Versions/v3/3.5/squid-3.5.28.tar.xz"
-  sha256 "fd41b622e65c661ada9a98b0338c59e6f2d2ffdb367fe5c8c7212c535e298ed8"
+  url "http://www.squid-cache.org/Versions/v4/squid-4.16.tar.xz"
+  sha256 "7e00e891757c1c02dae546c9898f440c6031b684d8c243d6edab529076e3ba63"
+  license "GPL-2.0"
+
+  livecheck do
+    url "http://www.squid-cache.org/Versions/v4/"
+    regex(/href=.*?squid[._-]v?(\d+(?:\.\d+)+)-RELEASENOTES\.html/i)
+  end
 
   bottle do
-    sha256 "6edf20106047e4b1db2fc4a45a77ebac6bb2f594342857e868f14196fa754fa3" => :mojave
-    sha256 "153519db601c1579c3b845723a7db4ce034a5df6ded7b23e10a33ba886b03893" => :high_sierra
-    sha256 "d112d9cb8fc0de514eb4affaedda4e7df11a6d2927b2e072143860e4dcab74e2" => :sierra
-    sha256 "dc110f871460f553c232e41e62097447ec0ba3da35a6395ff2c521e51ba47c73" => :el_capitan
+    sha256 arm64_big_sur: "39b8e09ec1ac83ebd6e34df5fcdada2fb355e56b45db9fa0797d0653520d44e5"
+    sha256 big_sur:       "0247642889ffc549fc3e6a5476497c3cff9d7a6e4a847b818e877f5cd5cf61b3"
+    sha256 catalina:      "21b441ecf9b2bc62f5f12e30d5da8aff30a85745467a2642698d668263ef5716"
+    sha256 mojave:        "e36f6a5faa012cda8c7917e7943c5e53764915b1d9c277d920205cc3a5261b4e"
+    sha256 x86_64_linux:  "d6e537e7e2ab13d00b8b5f16d3c0a88dbefb254cf5d9487cc52fe03d9e9fba3d"
   end
 
   head do
-    url "lp:squid", :using => :bzr
+    url "lp:squid", using: :bzr
 
     depends_on "autoconf" => :build
     depends_on "automake" => :build
     depends_on "libtool" => :build
   end
 
-  depends_on "openssl"
+  depends_on "openssl@1.1"
 
   def install
     # https://stackoverflow.com/questions/20910109/building-squid-cache-on-os-x-mavericks
@@ -50,38 +57,46 @@ class Squid < Formula
     system "make", "install"
   end
 
-  plist_options :manual => "squid"
+  plist_options manual: "squid"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>KeepAlive</key>
-      <true/>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_sbin}/squid</string>
-        <string>-N</string>
-        <string>-d 1</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>WorkingDirectory</key>
-      <string>#{var}</string>
-    </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>KeepAlive</key>
+        <true/>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_sbin}/squid</string>
+          <string>-N</string>
+          <string>-d 1</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>WorkingDirectory</key>
+        <string>#{var}</string>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do
-    # This test should start squid and then check it runs correctly.
-    # However currently dies under the sandbox and "Current Directory"
-    # seems to be set hard on HOMEBREW_PREFIX/var/cache/squid.
-    # https://github.com/Homebrew/homebrew/pull/44348#issuecomment-143477353
-    # If you can fix this, please submit a PR. Thank you!
     assert_match version.to_s, shell_output("#{sbin}/squid -v")
+
+    pid = fork do
+      exec "#{sbin}/squid"
+    end
+    sleep 2
+
+    begin
+      system "#{sbin}/squid", "-k", "check"
+    ensure
+      exec "#{sbin}/squid -k interrupt"
+      Process.wait(pid)
+    end
   end
 end

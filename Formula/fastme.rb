@@ -1,19 +1,21 @@
 class Fastme < Formula
   desc "Accurate and fast distance-based phylogeny inference program"
   homepage "http://www.atgc-montpellier.fr/fastme/"
-  url "https://gite.lirmm.fr/atgc/FastME/raw/v2.1.6/tarball/fastme-2.1.6.tar.gz"
-  sha256 "4945c151e15acffd64820c5e1a4c4ed57ab9fada7f3fe84e3423c5155546b1d0"
-  revision 1
+  url "https://gite.lirmm.fr/atgc/FastME/raw/v2.1.6.1/tarball/fastme-2.1.6.1.tar.gz"
+  sha256 "ac05853bc246ccb3d88b8bc075709a82cfe096331b0f4682b639f37df2b30974"
+  revision 3
 
   bottle do
-    cellar :any
-    sha256 "a00be7dee09d2fc69a2b7a63ba6178669922cd71e5ad386527948d9218270cd2" => :mojave
-    sha256 "411f3b6aaa0ee9e1946d93e06a4eb6aec7e4e2b2e7d87f0deb0288e333635203" => :high_sierra
-    sha256 "5a722e15df45cfe77a39ab5c7f226422e589aa071eabf9c98bc0b779b4980620" => :sierra
-    sha256 "d4640b1d176234cb35c25ca3d9ad5dc318db840a1c0a79fc057b08a738a6147c" => :el_capitan
+    sha256                               arm64_big_sur: "a63f7a94429ad21604091dbec3fa347d83c81f335a0e112e3a601975c26593f3"
+    sha256 cellar: :any,                 big_sur:       "57efef94306e3b9dcbaa2b91289951b545b4ae49cdfe14fb444903e145485a49"
+    sha256 cellar: :any,                 catalina:      "0024bfdb601cd133d2d7a544fa04bb8ad6650f846eba08310a7d69458432d591"
+    sha256 cellar: :any,                 mojave:        "a685f1feb457d32b6df4444edec59913957347ae5bb3e3374ffedf334d07b210"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "cbe637bb7191480a174baa1ad2cce6d15d68f6d1f68b807b6d16b0b7c670b4e9"
   end
 
-  depends_on "gcc"
+  on_macos do
+    depends_on "gcc"
+  end
 
   fails_with :clang # no OpenMP support
 

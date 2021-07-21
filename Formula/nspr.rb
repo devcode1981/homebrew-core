@@ -1,25 +1,26 @@
 class Nspr < Formula
   desc "Platform-neutral API for system-level and libc-like functions"
   homepage "https://developer.mozilla.org/docs/Mozilla/Projects/NSPR"
-  url "https://archive.mozilla.org/pub/mozilla.org/nspr/releases/v4.20/src/nspr-4.20.tar.gz"
-  sha256 "2c8964913da89ffbaf464d49ce44d79e8804e1794ef9a8c52a7bff7224d1556e"
+  url "https://archive.mozilla.org/pub/nspr/releases/v4.32/src/nspr-4.32.tar.gz"
+  sha256 "bb6bf4f534b9559cf123dcdc6f9cd8167de950314a90a88b2a329c16836e7f6c"
+  license "MPL-2.0"
+
+  livecheck do
+    url "https://ftp.mozilla.org/pub/nspr/releases/"
+    regex(%r{href=.*?v?(\d+(?:\.\d+)+)/?["' >]}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "7263b00a86a15844b36baedf684fce6bc2b1608cfa4759353dad6005f02e2789" => :mojave
-    sha256 "2f81a6af2ef8632567e45e0a1b442b33583da98ed968aeda7e167caaf38bf11a" => :high_sierra
-    sha256 "4b1c5d6e2e7a758c58594c569606650f4ef831b280735d5a1cc58e3201ca716e" => :sierra
-    sha256 "d2863a8a722ad55128333d635774c2ce3de0300000648c39fc61748f638b6320" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "69c39b2f0a2d93ea5969a9906d0e5063caa34ad495cd56cef7e22b8b8628a67a"
+    sha256 cellar: :any,                 big_sur:       "fa4089b067d319a827833747ed64c0e9ed9ce1c95aa54d77fb1dabffd52436ed"
+    sha256 cellar: :any,                 catalina:      "f5a4e62a6d63a398ce0d14af9aa25ad1c33c8eb9ff64de988551ee0791aae69b"
+    sha256 cellar: :any,                 mojave:        "fd4bc5953ceff865f0a3e049fbb06ccb07015c4369a7aa4c67e820af6b7cc53b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e96c1aec46c06a8fb7644697cc962e75278a325e17d39622163b51bdb003d850"
   end
 
   def install
     ENV.deparallelize
     cd "nspr" do
-      # Fixes a bug with linking against CoreFoundation, needed to work with SpiderMonkey
-      # See: https://openradar.appspot.com/7209349
-      target_frameworks = Hardware::CPU.is_32_bit? ? "-framework Carbon" : ""
-      inreplace "pr/src/Makefile.in", "-framework CoreServices -framework CoreFoundation", target_frameworks
-
       args = %W[
         --disable-debug
         --prefix=#{prefix}
@@ -27,11 +28,14 @@ class Nspr < Formula
         --with-pthreads
         --enable-ipv6
         --enable-macos-target=#{MacOS.version}
+        --enable-64bit
       ]
-      args << "--enable-64bit" if MacOS.prefer_64_bit?
       system "./configure", *args
-      # Remove the broken (for anyone but Firefox) install_name
-      inreplace "config/autoconf.mk", "-install_name @executable_path/$@ ", "-install_name #{lib}/$@ "
+
+      on_macos do
+        # Remove the broken (for anyone but Firefox) install_name
+        inreplace "config/autoconf.mk", "-install_name @executable_path/$@ ", "-install_name #{lib}/$@ "
+      end
 
       system "make"
       system "make", "install"

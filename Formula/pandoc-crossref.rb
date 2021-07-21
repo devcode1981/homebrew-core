@@ -1,29 +1,28 @@
-require "language/haskell"
-
 class PandocCrossref < Formula
-  include Language::Haskell::Cabal
-
   desc "Pandoc filter for numbering and cross-referencing"
   homepage "https://github.com/lierdakil/pandoc-crossref"
-  url "https://hackage.haskell.org/package/pandoc-crossref-0.3.3.0/pandoc-crossref-0.3.3.0.tar.gz"
-  sha256 "3c36ea56cb5feb167806e59e97613470f887c068dc27a9332fe91df0d183cc3e"
+  url "https://hackage.haskell.org/package/pandoc-crossref-0.3.12.0/pandoc-crossref-0.3.12.0.tar.gz"
+  sha256 "5f1fc6a1755488477448f4df82869b05f3cf21f7d2f0b08ef951be652e0d2979"
+  license "GPL-2.0-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "f393944b4015b3bf249f774e5cc7f242adb9a06ac2951e0d41e47c829b3d18f7" => :mojave
-    sha256 "8ab28ffcd5baa7dbf4ddfc911bbafa1e9b1fb6dcd2191c4e36588a3ac867ad46" => :high_sierra
-    sha256 "660fbcc8fdd583bcf3740c6fc8bd312b5970c3f4ff140b5ebc482bd1a4fc9afa" => :sierra
-    sha256 "9ed94e5c687ca4962b15b99f79febbf00dac8a729338e9e4c44e7ee106a15e07" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "3b525d5593fc8e35259c94fe0352ac89ae51564d2681a69e08e66915f8c0dd7d"
+    sha256 cellar: :any_skip_relocation, big_sur:       "777c6def219f6ce20fc702ff5b9da4cf404c083b4376947c46a98da6cfeae046"
+    sha256 cellar: :any_skip_relocation, catalina:      "57d4c7b20861051984b105ffce52e3e7716ddd3484dd34b2068da1851ad35547"
+    sha256 cellar: :any_skip_relocation, mojave:        "f5b01586f853381399a67e203a95e404184916cc6fe81edc5c3a0844b6762337"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "ae4f8dbc8a165ebc5adb838c4fe21acd1d674fa8b614837962c200aa93bbd027"
   end
 
   depends_on "cabal-install" => :build
   depends_on "ghc" => :build
   depends_on "pandoc"
 
+  uses_from_macos "unzip" => :build
+  uses_from_macos "zlib"
+
   def install
-    args = []
-    args << "--constraint=cryptonite -support_aesni" if MacOS.version <= :lion
-    install_cabal_package *args
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args
   end
 
   test do

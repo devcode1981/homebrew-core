@@ -1,15 +1,27 @@
 class Maven < Formula
   desc "Java-based project management"
   homepage "https://maven.apache.org/"
-  url "https://www.apache.org/dyn/closer.cgi?path=maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz"
-  mirror "https://archive.apache.org/dist/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz"
-  sha256 "6a1b346af36a1f1a491c1c1a141667c5de69b42e6611d3687df26868bc0f4637"
+  url "https://www.apache.org/dyn/closer.lua?path=maven/maven-3/3.8.1/binaries/apache-maven-3.8.1-bin.tar.gz"
+  mirror "https://archive.apache.org/dist/maven/maven-3/3.8.1/binaries/apache-maven-3.8.1-bin.tar.gz"
+  sha256 "b98a1905eb554d07427b2e5509ff09bd53e2f1dd7a0afa38384968b113abef02"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  livecheck do
+    url "https://maven.apache.org/download.cgi"
+    regex(/href=.*?apache-maven[._-]v?(\d+(?:\.\d+)+)-bin\.t/i)
+  end
 
-  depends_on :java => "1.7+"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "bb95e2849040358e1e30b918c5cfdcfb78535915d834f32f0f5fcb39231a87f6"
+    sha256 cellar: :any,                 big_sur:       "f894602e16a46f6d40a259c860d8f9d5103baac5681d1803349eaf5b6771f527"
+    sha256 cellar: :any,                 catalina:      "f894602e16a46f6d40a259c860d8f9d5103baac5681d1803349eaf5b6771f527"
+    sha256 cellar: :any,                 mojave:        "f894602e16a46f6d40a259c860d8f9d5103baac5681d1803349eaf5b6771f527"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "fb05503b1a17a40a22060c04caab17ac630ba985194600065f746e9924a363bf"
+  end
 
-  conflicts_with "mvnvm", :because => "also installs a 'mvn' executable"
+  depends_on "openjdk"
+
+  conflicts_with "mvnvm", because: "also installs a 'mvn' executable"
 
   def install
     # Remove windows files
@@ -24,8 +36,10 @@ class Maven < Formula
     # file will be found relative to it
     Pathname.glob("#{libexec}/bin/*") do |file|
       next if file.directory?
+
       basename = file.basename
       next if basename.to_s == "m2.conf"
+
       (bin/basename).write_env_script file, Language::Java.overridable_java_home_env
     end
   end

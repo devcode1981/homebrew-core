@@ -1,14 +1,17 @@
 class LibbitcoinNode < Formula
   desc "Bitcoin Full Node"
   homepage "https://github.com/libbitcoin/libbitcoin-node"
-  url "https://github.com/libbitcoin/libbitcoin-node/archive/v3.5.0.tar.gz"
-  sha256 "e3a0a96155ca93aa6cba75789c18419f40686a69cbd40c77aa77ca84ccc43cab"
-  revision 2
+  url "https://github.com/libbitcoin/libbitcoin-node/archive/v3.6.0.tar.gz"
+  sha256 "9556ee8aab91e893db1cf343883034571153b206ffbbce3e3133c97e6ee4693b"
+  license "AGPL-3.0"
+  revision 1
 
   bottle do
-    sha256 "ee41f18784cf98b2cfd6060f0e3fe9f8f6ec37451a9878092e375c272e8ca164" => :mojave
-    sha256 "e901829a39b3d9c82cd548a2199ff177f66a7b39f17cc75b8316b6a9da8e6b31" => :high_sierra
-    sha256 "58d1a6da15bd06108da253e52df4d26082f10eed14022c52576c2e9405f7183f" => :sierra
+    rebuild 1
+    sha256 arm64_big_sur: "618362516d236aa0d42448d44f67ea2243cfb89413b863abc7fd21da9cb09c3d"
+    sha256 big_sur:       "bbc1a8235a1f33d915be794610ed69f06407ea63d85843a5ae71c978688f6935"
+    sha256 catalina:      "c2932309e38888270138f7ced8f07f5dfe4c924664a1c0d2ad4835206b75a323"
+    sha256 mojave:        "3280108b6455d1d70d1af8288ad910198b63f9cfcc6bef5d55a61e3855eacb3d"
   end
 
   depends_on "autoconf" => :build
@@ -24,7 +27,8 @@ class LibbitcoinNode < Formula
     system "./autogen.sh"
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
-                          "--prefix=#{prefix}"
+                          "--prefix=#{prefix}",
+                          "--with-boost-libdir=#{Formula["boost"].opt_lib}"
     system "make", "install"
 
     bash_completion.install "data/bn"

@@ -1,38 +1,34 @@
 class Fabio < Formula
   desc "Zero-conf load balancing HTTP(S) router"
   homepage "https://github.com/fabiolb/fabio"
-  url "https://github.com/fabiolb/fabio/archive/v1.5.10.tar.gz"
-  sha256 "6d11f5115d41bba0462a1d289b6a09db9cacb8728d0d2cef6a096ce8416475b8"
+  url "https://github.com/fabiolb/fabio/archive/v1.5.15.tar.gz"
+  sha256 "19dcd4d8c6e4fe16e63e4208564d08ed442a0c724661ef4d91e9dbc85a9afbe1"
+  license "MIT"
   head "https://github.com/fabiolb/fabio.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "e9e27a699f09e25dcd5c1dc403eda6c8e533f8fe96b328277898ecfa31b5c4e1" => :mojave
-    sha256 "3c954b8625010295436faf57ceca390fa7a8947f838fe0c7ed5ddb5e04a4122b" => :high_sierra
-    sha256 "97157de3fe8eca2a6162f08364ad0ae692093d3fc78c6e1551d415416089bda0" => :sierra
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, big_sur:      "64a7ae7497bc62f44ad203a43b4e0c9bbcb1bad020cb876422bd0d746f6d8bcc"
+    sha256 cellar: :any_skip_relocation, catalina:     "ffbae8584c9186bb63a761cc52aafd82fb90fd3ec35bce7b9fe81ffa0baf5b0d"
+    sha256 cellar: :any_skip_relocation, mojave:       "813e3edb76153f73dbd94b5291213a7584632f43a6bc9d4a8ef4deab6e3f96d8"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "1acc04acdcfaba5e627a62d9257c4ddad3d3dca9169720b9b6e976a38bc3a165"
   end
 
   depends_on "go" => :build
   depends_on "consul"
 
   def install
-    mkdir_p buildpath/"src/github.com/fabiolb"
-    ln_s buildpath, buildpath/"src/github.com/fabiolb/fabio"
-
-    ENV["GOPATH"] = buildpath.to_s
-    ENV["GO111MODULE"] = "off"
-
-    system "go", "install", "github.com/fabiolb/fabio"
-    bin.install "#{buildpath}/bin/fabio"
+    system "go", "build", "-ldflags", "-s -w", "-trimpath", "-o", bin/"fabio"
+    prefix.install_metafiles
   end
 
   test do
     require "socket"
     require "timeout"
 
-    CONSUL_DEFAULT_PORT = 8500
-    FABIO_DEFAULT_PORT = 9999
-    LOCALHOST_IP = "127.0.0.1".freeze
+    consul_default_port = 8500
+    fabio_default_port = 9999
+    localhost_ip = "127.0.0.1".freeze
 
     def port_open?(ip_address, port, seconds = 1)
       Timeout.timeout(seconds) do
@@ -43,27 +39,24 @@ class Fabio < Formula
       false
     end
 
-    if !port_open?(LOCALHOST_IP, FABIO_DEFAULT_PORT)
-      if !port_open?(LOCALHOST_IP, CONSUL_DEFAULT_PORT)
-        fork do
-          exec "consul agent -dev -bind 127.0.0.1"
-          puts "consul started"
-        end
-        sleep 30
-      else
-        puts "Consul already running"
-      end
-      fork do
-        exec "#{bin}/fabio &>fabio-start.out&"
-        puts "fabio started"
-      end
-      sleep 10
-      assert_equal true, port_open?(LOCALHOST_IP, FABIO_DEFAULT_PORT)
-      system "killall", "fabio" # fabio forks off from the fork...
-      system "consul", "leave"
-    else
+    if port_open?(localhost_ip, fabio_default_port)
       puts "Fabio already running or Consul not available or starting fabio failed."
       false
+    else
+      if port_open?(localhost_ip, consul_default_port)
+        puts "Consul already running"
+      else
+        fork do
+          exec "consul agent -dev -bind 127.0.0.1"
+        end
+        sleep 30
+      end
+      fork do
+        exec "#{bin}/fabio"
+      end
+      sleep 10
+      assert_equal true, port_open?(localhost_ip, fabio_default_port)
+      system "consul", "leave"
     end
   end
 end

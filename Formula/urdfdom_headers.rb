@@ -1,19 +1,19 @@
 class UrdfdomHeaders < Formula
   desc "Headers for Unified Robot Description Format (URDF) parsers"
   homepage "https://wiki.ros.org/urdfdom_headers/"
-  url "https://github.com/ros/urdfdom_headers/archive/1.0.2.tar.gz"
-  sha256 "28d488d4a1542c427f09df23d443655db50405406f7b8e313eb0de499ce6b163"
+  url "https://github.com/ros/urdfdom_headers/archive/1.0.5.tar.gz"
+  sha256 "76a68657c38e54bb45bddc4bd7d823a3b04edcd08064a56d8e7d46b9912035ac"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "bddc8c1985d764bee36ee25db4b3c18fe45b8de0f113875a3085489f3cd50d1d" => :mojave
-    sha256 "9757800f4153efd48e5d77b3548da9a4b854165376eed6d541897f120a3d7da5" => :high_sierra
-    sha256 "9757800f4153efd48e5d77b3548da9a4b854165376eed6d541897f120a3d7da5" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "9d1960994a18f178a7ff7b5f6a0b479bbd5abcba370fb72b816fd99ff044283c"
+    sha256 cellar: :any_skip_relocation, big_sur:       "45e38439bb14220663e856c3db0017987adfe1765c815344c38f404cf49849a6"
+    sha256 cellar: :any_skip_relocation, catalina:      "c6840c3177042a718ae29bc8238e5ec20dbcde4f9269b3042f8eed1a2aa6292c"
+    sha256 cellar: :any_skip_relocation, mojave:        "c6840c3177042a718ae29bc8238e5ec20dbcde4f9269b3042f8eed1a2aa6292c"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "c6840c3177042a718ae29bc8238e5ec20dbcde4f9269b3042f8eed1a2aa6292c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f9b714415e5939d4ee8c7cbee3494f3f84eb06def8635f8d579dff740af05d6f"
   end
 
   depends_on "cmake" => :build
-
-  needs :cxx11
 
   def install
     ENV.cxx11

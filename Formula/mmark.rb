@@ -1,55 +1,35 @@
-require "language/go"
-
 class Mmark < Formula
   desc "Powerful markdown processor in Go geared towards the IETF"
-  homepage "https://mmark.nl/"
-  url "https://github.com/mmarkdown/mmark/archive/v2.0.7.tar.gz"
-  sha256 "8ab83495b21d0b05fd763f3a79aeaf983c6905eccfbcca48f63c169ef3705639"
+  homepage "https://mmark.miek.nl/"
+  url "https://github.com/mmarkdown/mmark/archive/v2.2.10.tar.gz"
+  sha256 "1fc9d26b4c2910e72c7ee94c80d2fb1707aaae2d278204c68557ccd1802a2c08"
+  license "BSD-2-Clause"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "4f44a848ea631eb30d12a0268056f6a43aa4b19c12a03498dc3819e8abd6e4cd" => :mojave
-    sha256 "6f8482d9d2c05aab64664281af2dd617637eadf61762b40e6b8bd284495b193d" => :high_sierra
-    sha256 "195b590522d39c6ca3e298615e5b21112c0cbe7b33db367565d67268ae3a4fe4" => :sierra
-    sha256 "062eca50beb44f55e4940edb11ae3c1e9a0c4360b5d770f4c7ee0f37631543b9" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "5b3ad3d847d107bea295ae82ede2123ad3f7404bafd23be0ed13e89d2da147dd"
+    sha256 cellar: :any_skip_relocation, big_sur:       "0c8b1e5790cf95425c1b929177150c9fe9859146e14670fc0b2e80b3a6d67020"
+    sha256 cellar: :any_skip_relocation, catalina:      "30e4ee4ae7c5c24cb7a0aa4380a9bb6c0757bd8ab501b5137beaf645c71c101f"
+    sha256 cellar: :any_skip_relocation, mojave:        "e874bd258951d5df18a3b059007ada27d8e43be623077f2b11900cdbf37f0b7c"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "d48a18e114f676ff7f7676fce7ca7d4bf6c1dcce7c9949e9161348d536a4aec1"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "39d5de2a2d76377d8f1559914a4362ef580d850c9632dde8d043976d49ca5f80"
   end
 
   depends_on "go" => :build
 
-  go_resource "github.com/BurntSushi/toml" do
-    url "https://github.com/BurntSushi/toml.git",
-        :revision => "3012a1dbe2e4bd1391d42b32f0577cb7bbc7f005"
-  end
-
-  go_resource "github.com/gomarkdown/markdown" do
-    url "https://github.com/gomarkdown/markdown.git",
-        :revision => "6fda95a9e93f739db582f4a3514309830fd47354"
-  end
-
-  go_resource "github.com/mmarkdown/markdown" do
-    url "https://github.com/mmarkdown/markdown.git",
-        :revision => "6fda95a9e93f739db582f4a3514309830fd47354"
-  end
-
   resource "test" do
-    url "https://raw.githubusercontent.com/mmarkdown/mmark/v2.0.7/rfc/2100.md"
-    sha256 "2d220e566f8b6d18cf584290296c45892fe1a010c38d96fb52a342e3d0deda30"
+    url "https://raw.githubusercontent.com/mmarkdown/mmark/v2.2.10/rfc/2100.md"
+    sha256 "0b5383917a0fbc0d2a4ef009d6ccd787444ce2e80c1ea06088cb96269ecf11f0"
   end
 
   def install
-    ENV["GOPATH"] = buildpath
-    mkdir_p buildpath/"src/github.com/mmarkdown/"
-    ln_sf buildpath, buildpath/"src/github.com/mmarkdown/mmark"
-    Language::Go.stage_deps resources, buildpath/"src"
-
-    system "go", "build", "-o", bin/"mmark"
+    system "go", "build", "-ldflags", "-s -w", "-trimpath", "-o", bin/"mmark"
     man1.install "mmark.1"
-    doc.install "Syntax.md"
+    prefix.install_metafiles
   end
 
   test do
     resource("test").stage do
-      system "#{bin}/mmark", "-2", "-ast", "2100.md"
+      assert_match "The Naming of Hosts", shell_output("#{bin}/mmark -ast 2100.md")
     end
   end
 end

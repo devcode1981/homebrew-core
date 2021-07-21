@@ -1,14 +1,16 @@
 class P11Kit < Formula
   desc "Library to load and enumerate PKCS#11 modules"
   homepage "https://p11-glue.freedesktop.org"
-  url "https://github.com/p11-glue/p11-kit/releases/download/0.23.14/p11-kit-0.23.14.tar.gz"
-  sha256 "1cb9fa6d237539f25f62f4c3d4ec71a1c8e0772957ec45ec5af92134129e0d70"
+  url "https://github.com/p11-glue/p11-kit/releases/download/0.24.0/p11-kit-0.24.0.tar.xz"
+  sha256 "81e6140584f635e4e956a1b93a32239acf3811ff5b2d3a5c6094e94e99d2c685"
+  license "BSD-3-Clause"
 
   bottle do
-    sha256 "42760c3b204ec89a91c3d6612faa7dd12e4a15673bf324e41ae4952ae7cab790" => :mojave
-    sha256 "d1c17d13b8b3a2257c3273d1be310128c370a2a3f9542b9ffe7eb1e92a094846" => :high_sierra
-    sha256 "8e1a60e5e5f876636c8e6b2124bf0107d5f7c570a00082cc55a372a71e2cb819" => :sierra
-    sha256 "af9c149cd855e559ec2d7547746da8370f8b5037048e419d04ce744c6316fc48" => :el_capitan
+    sha256 arm64_big_sur: "08f5b20fdf61c9b8fae57e972c9970aa28f5ef2daa7ea5990e20b02989c49095"
+    sha256 big_sur:       "d72ad488a7efacfbd178e3c95fbc2315661cf27071500c05ff267abd196e2970"
+    sha256 catalina:      "438735a16afded002578fd553d96047e53fda95de84928e696bd3dda08aee0de"
+    sha256 mojave:        "1948f25f27aa1a6978246c644c5c356ea5b4371bf2eabe5b96c378251d5bbeaf"
+    sha256 x86_64_linux:  "795988f18b0a393f4e5769c3b55646f7ee236b865489f547c6853ce111073903"
   end
 
   head do
@@ -40,7 +42,6 @@ class P11Kit < Formula
                           "--with-module-config=#{etc}/pkcs11/modules",
                           "--without-libtasn1"
     system "make"
-    system "make", "check"
     system "make", "install"
   end
 

@@ -1,16 +1,21 @@
 class Djview4 < Formula
   desc "Viewer for the DjVu image format"
   homepage "https://djvu.sourceforge.io/djview4.html"
-  url "https://downloads.sourceforge.net/project/djvu/DjView/4.10/djview-4.10.6.tar.gz"
-  sha256 "8446f3cd692238421a342f12baa365528445637bffb96899f319fe762fda7c21"
+  url "https://downloads.sourceforge.net/project/djvu/DjView/4.12/djview-4.12.tar.gz"
+  sha256 "5673c6a8b7e195b91a1720b24091915b8145de34879db1158bc936b100eaf3e3"
+  license "GPL-2.0-or-later"
   revision 1
 
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/djview[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
+
   bottle do
-    sha256 "9eebefeb3550c14c8f72b75d78ef07cb1ae226c3ddb6ecfad69c07039f202dc2" => :mojave
-    sha256 "8674ef6625416ddcb9d5f7a8a5b50c4e6846d19f04630de7038c759fbef95bac" => :high_sierra
-    sha256 "8cc214252ddf146d8e4b65210436036197b556ff40b136e2784a1d95c9a4f43e" => :sierra
-    sha256 "82c4310f2e0af35fb98fce109660ec79bdc4075205b8f5c053d58b4b87b37099" => :el_capitan
-    sha256 "92dec68ad76d1e5a1e158b6b1a700d119f4a651cafd45c8cd4a787ecf31ff402" => :yosemite
+    rebuild 1
+    sha256 cellar: :any, big_sur:  "e9764b18d1b3a47b052ed924c09f36b31428b429dce1aaa7ade4e679f1c52339"
+    sha256 cellar: :any, catalina: "f77e017d7a0acdfbdadf62c2e5773b254d72691f9e51301fb91130ea3cb3d42a"
+    sha256 cellar: :any, mojave:   "03517ea84af4e35f7997e7e5a25bee8c786d9ca3ef8a681066405ef31304e031"
   end
 
   depends_on "autoconf" => :build
@@ -18,10 +23,9 @@ class Djview4 < Formula
   depends_on "libtool" => :build
   depends_on "pkg-config" => :build
   depends_on "djvulibre"
-  depends_on "qt"
+  depends_on "qt@5"
 
   def install
-    inreplace "src/djview.pro", "10.6", MacOS.version
     system "autoreconf", "-fiv"
 
     system "./configure", "--disable-debug",
@@ -32,8 +36,23 @@ class Djview4 < Formula
     system "make", "CC=#{ENV.cc}", "CXX=#{ENV.cxx}"
 
     # From the djview4.8 README:
-    # Note3: Do not use command "make install".
+    # NOTE: Do not use command "make install".
     # Simply copy the application bundle where you want it.
-    prefix.install "src/djview.app"
+    on_macos do
+      prefix.install "src/djview.app"
+      bin.write_exec_script prefix/"djview.app/Contents/MacOS/djview"
+    end
+    on_linux do
+      prefix.install "src/djview"
+    end
+  end
+
+  test do
+    on_macos do
+      assert_predicate prefix/"djview.app", :exist?
+    end
+    on_linux do
+      assert_predicate prefix/"djview", :exist?
+    end
   end
 end

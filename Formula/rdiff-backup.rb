@@ -1,41 +1,32 @@
 class RdiffBackup < Formula
-  desc "Backs up one directory to another--also works over networks"
-  homepage "https://www.nongnu.org/rdiff-backup/"
-  url "https://savannah.nongnu.org/download/rdiff-backup/rdiff-backup-1.2.8.tar.gz"
-  sha256 "0d91a85b40949116fa8aaf15da165c34a2d15449b3cbe01c8026391310ac95db"
+  desc "Reverse differential backup tool, over a network or locally"
+  homepage "https://rdiff-backup.net/"
+  url "https://github.com/rdiff-backup/rdiff-backup/releases/download/v2.0.5/rdiff-backup-2.0.5.tar.gz"
+  sha256 "2bb7837b4a9712b6efaebfa7da8ed6348ffcb02fcecff0e19d8fff732e933b87"
+  license "GPL-2.0-or-later"
   revision 1
 
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
+
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "76ac2c10776a2dcb230f07b95704c65522cae20865a9bf4e4772c86b94673bda" => :mojave
-    sha256 "899687c88770af610d76f66f02da736a2a62ac4676f0f80796dbbae1d92bc47f" => :high_sierra
-    sha256 "7dcf4c878ccafc113e5742c83214f946dd3a55b472e086a944e918bcee1cf2bd" => :sierra
-    sha256 "f06f79bc1536dbaa990e6005565f18de05e9dc12deb09701a504ab6bfc8b8f11" => :el_capitan
-    sha256 "35f6a0f726a680d639f7a1c83af8e27d046d5a68a334bf19d47eaa363748767c" => :yosemite
-    sha256 "5b0eab2335afe2d298cd51737c744d052536cb0bdbee780819496e1000a3b179" => :mavericks
+    sha256 cellar: :any, arm64_big_sur: "8ca9789a8e2456096ab851fe8277004201bc2f9ca66adf6934a6a942f9eaf3d3"
+    sha256 cellar: :any, big_sur:       "da5cbef995206de251e217fbfb1a0594d3222c26c20c003df78a8aad6e855b8f"
+    sha256 cellar: :any, catalina:      "1597986cbff907a671f1449f59b0f456344e27b9104f7139d40f001b67d27477"
+    sha256 cellar: :any, mojave:        "875e5fcc8ae219dc64d5c2f3e435313f69fd4d0ea595d01ff3ae70fe5873b547"
+    sha256 cellar: :any, high_sierra:   "215f96cb06d3e4c64dd52081fb22cfa6658ab25bd3fd76b52a128c70b5c93838"
   end
 
   depends_on "librsync"
-
-  # librsync 1.x support
-  patch do
-    url "https://git.archlinux.org/svntogit/community.git/plain/trunk/rdiff-backup-1.2.8-librsync-1.0.0.patch?h=packages/rdiff-backup"
-    mirror "https://src.fedoraproject.org/cgit/rpms/rdiff-backup.git/plain/rdiff-backup-1.2.8-librsync-1.0.0.patch"
-    sha256 "a00d993d5ffea32d58a73078fa20c90c1c1c6daa0587690cec0e3da43877bf12"
-  end
+  depends_on "python@3.9"
 
   def install
-    # Find the arch for the Python we are building against.
-    # We remove 'ppc' support, so we can pass Intel-optimized CFLAGS.
-    archs = archs_for_command("python")
-    archs.remove_ppc!
-    archs.delete :x86_64 if Hardware::CPU.is_32_bit?
-    ENV["ARCHFLAGS"] = archs.as_arch_flags
-    system "python", "setup.py", "--librsync-dir=#{prefix}", "build"
+    system "python3", "setup.py", "build", "--librsync-dir=#{prefix}"
     libexec.install Dir["build/lib.macosx*/rdiff_backup"]
     libexec.install Dir["build/scripts-*/*"]
-    man1.install Dir["*.1"]
+    man1.install Dir["docs/*.1"]
     bin.install_symlink Dir["#{libexec}/rdiff-backup*"]
   end
 

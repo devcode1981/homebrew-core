@@ -1,12 +1,13 @@
 class Unp < Formula
   desc "Unpack everything with one command"
   homepage "https://packages.debian.org/source/stable/unp"
-  url "https://mirrors.ocf.berkeley.edu/debian/pool/main/u/unp/unp_2.0~pre7+nmu1.tar.bz2"
-  mirror "https://mirrorservice.org/sites/ftp.debian.org/debian/pool/main/u/unp/unp_2.0~pre7+nmu1.tar.bz2"
+  url "https://deb.debian.org/debian/pool/main/u/unp/unp_2.0~pre7+nmu1.tar.bz2"
   version "2.0-pre7-nmu1"
   sha256 "7c2d6f2835a5a59ee2588b66d8015d97accd62e71e38ba90ebd4d71d8fd78227"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "5a374c0c81bf82f8ddb0ed151f3042bc7d616d90d2dc3a3f89497d0f80aaf591"
+  end
 
   depends_on "p7zip"
 

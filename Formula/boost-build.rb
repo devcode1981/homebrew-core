@@ -1,23 +1,31 @@
 class BoostBuild < Formula
   desc "C++ build system"
   homepage "https://www.boost.org/build/"
-  url "https://github.com/boostorg/build/archive/boost-1.68.0.tar.gz"
-  sha256 "0b8612f45c43da57f370234f52018d4a6a22e11e0fcd0dff4050a1650d82e294"
+  url "https://github.com/boostorg/build/archive/boost-1.76.0.tar.gz"
+  sha256 "886bc799c4a7c56218a41acee89f37073672c5c02586b680bf6dc0603d6c9349"
+  license "BSL-1.0"
   version_scheme 1
   head "https://github.com/boostorg/build.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "968fdb513f199d9ff96f59369339c8f06ffe53262dbfd24579d19e67eb5cceaf" => :mojave
-    sha256 "2ad7e180a9526558f89b889a26c41c8b63745da4f4486abe2334947ff69950d3" => :high_sierra
-    sha256 "700eb1116d61b9025fcdffa4f995054facd97d4149144d96d5a41306dd23be1c" => :sierra
+  livecheck do
+    url :stable
+    regex(/^boost[._-]v?(\d+(?:\.\d+)+)$/i)
   end
 
-  conflicts_with "b2-tools", :because => "both install `b2` binaries"
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1b5f6010ccb4c9cf6d2ffa8f59e09ebebe54264425648f473aa8d704b0fe1120"
+    sha256 cellar: :any_skip_relocation, big_sur:       "a3115a74eee73792fa4c7b2dcd025c2a254f66a87a1427b8382c77f62aac61b5"
+    sha256 cellar: :any_skip_relocation, catalina:      "045128c087f35b78de73c5723385607a9a5ba061a076cd646a61f9240e6a2b50"
+    sha256 cellar: :any_skip_relocation, mojave:        "37ca4bbff9b1d54b04141cc63f9fc3ccbfe3b6fc875ed66a83456600b79aed7d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "8ee01029c5ebfa4012102049946d63357ad8c3ad08710ad7a68d74f662133ba1"
+  end
+
+  conflicts_with "b2-tools", because: "both install `b2` binaries"
 
   def install
     system "./bootstrap.sh"
     system "./b2", "--prefix=#{prefix}", "install"
+    pkgshare.install "boost-build.jam"
   end
 
   test do
@@ -28,7 +36,15 @@ class BoostBuild < Formula
     (testpath/"Jamroot.jam").write("exe hello : hello.cpp ;")
 
     system bin/"b2", "release"
-    out = Dir["bin/darwin-*/release/hello"]
+    release = nil
+    on_macos do
+      release = "darwin-*"
+    end
+    on_linux do
+      version = IO.popen("gcc -dumpversion").read.chomp
+      release = "gcc-#{version}"
+    end
+    out = Dir["bin/#{release}/release/hello"]
     assert out.length == 1
     assert_predicate testpath/out[0], :exist?
     assert_equal "Hello world", shell_output(out[0])

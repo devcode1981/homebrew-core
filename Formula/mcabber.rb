@@ -1,19 +1,25 @@
 class Mcabber < Formula
   desc "Console Jabber client"
   homepage "https://mcabber.com/"
-  url "https://mcabber.com/files/mcabber-1.1.0.tar.bz2"
-  sha256 "04fc2c22c36da75cf4b761b5deccd074a19836368f38ab9d03c1e5708b41f0bd"
-  revision 1
+  url "https://mcabber.com/files/mcabber-1.1.2.tar.bz2"
+  sha256 "c4a1413be37434b6ba7d577d94afb362ce89e2dc5c6384b4fa55c3e7992a3160"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url :homepage
+    regex(/href=.*?mcabber[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "9d764d5cf8465b0fe0f005324e93984e2d5be8be6abea22bbf9729b9bdc7550d" => :mojave
-    sha256 "2823cae4b0424e6ee1e3beb912275889e4d25c11f90ce2395b77dc60dcda0b39" => :high_sierra
-    sha256 "eec539d040769c20a0515909bf79f65265c22b868c7fffa72a014e54b68a5ccb" => :sierra
-    sha256 "349752c0dfc6164a84e41548079657878fd5bd3226ec16df17470ac91f64fb16" => :el_capitan
+    sha256 arm64_big_sur: "b9660212f5a994bd663e5795d9f707da933f95b8aad23bf11f5e724c2e59a1ef"
+    sha256 big_sur:       "639edfef4ad26bdaea6a714b18acbda1d4d240f658ee8813b9b49f17f85952c4"
+    sha256 catalina:      "f5296e7fffbc0702dcce5794e2f47c77a998f002b0852416c8411ac5ad44b31e"
+    sha256 mojave:        "301d1883a89bcf494b5ab8c2c6dc4f267b29124d479d47483f562e8c3739d531"
+    sha256 high_sierra:   "73d4da3e1e562308e3d4a3b3318f2b5de951d50a44eec9115780170f282022b6"
   end
 
   head do
-    url "https://mcabber.com/hg/", :using => :hg
+    url "https://mcabber.com/hg/", using: :hg
 
     depends_on "autoconf" => :build
     depends_on "automake" => :build
@@ -44,12 +50,13 @@ class Mcabber < Formula
     pkgshare.install %w[mcabberrc.example contrib]
   end
 
-  def caveats; <<~EOS
-    A configuration file is necessary to start mcabber.  The template is here:
-      #{opt_pkgshare}/mcabberrc.example
-    And there is a Getting Started Guide you will need to setup Mcabber:
-      https://wiki.mcabber.com/#index2h1
-  EOS
+  def caveats
+    <<~EOS
+      A configuration file is necessary to start mcabber.  The template is here:
+        #{opt_pkgshare}/mcabberrc.example
+      And there is a Getting Started Guide you will need to setup Mcabber:
+        https://wiki.mcabber.com/#index2h1
+    EOS
   end
 
   test do

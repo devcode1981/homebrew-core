@@ -1,29 +1,29 @@
-require "language/haskell"
-
 class Taskell < Formula
-  include Language::Haskell::Cabal
-
   desc "Command-line Kanban board/task manager with support for Trello"
   homepage "https://taskell.app"
-  url "https://github.com/smallhadroncollider/taskell/archive/1.3.5.tar.gz"
-  sha256 "c1d0c5e8b1703f312e1150d1f121311898008d5a9d1dbb823df0bbc5e1b8b3ce"
+  url "https://github.com/smallhadroncollider/taskell/archive/1.11.1.tar.gz"
+  sha256 "95fdaa7bc263f8ade47399a49d9175fe885e297e4c124c4cf68347ff063a715c"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "63d740bff025d90721e5884928e6070b530d8a09cca413487480545132311b00" => :mojave
-    sha256 "29b60fee3c327db90ab96465bad5133a8583b6ed6cd89406f41041d795199ebb" => :high_sierra
-    sha256 "8d5a18b033e871bcd82bc2b50b5519cafe6d6c9da65672a01deb665a3d1af825" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "9fad32c49602fdb5149a64a0ae7dce11f3d0cfd3c8a955df86322fc4ceed78a2"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c95a88da66c6183220d8ec6d7894eba3be90a9b6a84b0164dca643ec1815e0a1"
+    sha256 cellar: :any_skip_relocation, catalina:      "714ff7f48235b81bb89b9cdae12513e9c4667622bd00423f8f9efa5715d34efa"
+    sha256 cellar: :any_skip_relocation, mojave:        "cfe418dcc1fc8858d25cc1b83a71a4bbb37d82c7c541b0a487c72fb629f4f035"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "dbd5cd50b7b69021a0d8e1cbec409027ea92f7c032559bd0bd07056189945ad3"
   end
 
   depends_on "cabal-install" => :build
   depends_on "ghc" => :build
+  depends_on "hpack" => :build
+
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
 
   def install
-    cabal_sandbox do
-      cabal_install "hpack"
-      system "./.cabal-sandbox/bin/hpack"
-      install_cabal_package
-    end
+    system "hpack"
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args
   end
 
   test do

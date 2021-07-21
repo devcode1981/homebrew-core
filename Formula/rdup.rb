@@ -3,16 +3,17 @@ class Rdup < Formula
   homepage "https://github.com/miekg/rdup"
   url "https://github.com/miekg/rdup/archive/1.1.15.tar.gz"
   sha256 "787b8c37e88be810a710210a9d9f6966b544b1389a738aadba3903c71e0c29cb"
+  license "GPL-3.0"
+  revision 2
   head "https://github.com/miekg/rdup.git"
 
   bottle do
-    cellar :any
-    sha256 "c198ebca564d97de07f9571c296c93239a58dbc195648e9c6eb25e5ba8c363e5" => :mojave
-    sha256 "9a5c191bea14d721e49d5622567104e6fc1b6e6c3326e528ba8a08498fb66c46" => :high_sierra
-    sha256 "43582c3cc5fb02bb50a73d71963045fa27cc38d03eed2e1e57d915a7f5c162cc" => :sierra
-    sha256 "c9afd06e3d3cfb9628c9618723d1913916f2563d2b18159cffe2b2586ce0c508" => :el_capitan
-    sha256 "0b83116666ac22439d46a6d92f6d75eb3dd7f231021dbc441c2388b4bd076e00" => :yosemite
-    sha256 "ddfd0b0a7116c618739caffb054a0b149e17c7bf517c512ccb1543c3e7784275" => :mavericks
+    sha256 cellar: :any,                 arm64_big_sur: "d46e7dd067e403544b2a287f92efe1d1ddcaa224f084e79f65878d4ef676a474"
+    sha256 cellar: :any,                 big_sur:       "72d7f3ffd694f739534d795c9e317e025037482956f810b312b5e483d8907213"
+    sha256 cellar: :any,                 catalina:      "cf02c3004b312a3d90c6e47227f35e39319736270be76d7e4b0705568a21abec"
+    sha256 cellar: :any,                 mojave:        "fb091d60536b72e20dc5e1448d9876e7b2eaefd16d40f2bfbf7bba48059af348"
+    sha256 cellar: :any,                 high_sierra:   "417244fe66e0f47ab1afea65e9a52db01c15ac2f5db5e150ad65d80b2e85e2cc"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6f3b71f0f9c4a1d1879274bf2eb6f0244b3b06612128991a6c91e4bd39b56cc9"
   end
 
   depends_on "autoconf" => :build

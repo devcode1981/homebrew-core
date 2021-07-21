@@ -1,16 +1,21 @@
 class Onscripter < Formula
   desc "NScripter-compatible visual novel engine"
-  homepage "https://onscripter.osdn.jp/"
-  url "https://onscripter.osdn.jp/onscripter-20170814.tar.gz"
-  sha256 "07010e633e490f24f4c5a57dd8c7979f519d0a10a2bfbba8e04828753f1ba97a"
+  homepage "https://onscripter.osdn.jp/onscripter.html"
+  url "https://onscripter.osdn.jp/onscripter-20200722.tar.gz"
+  sha256 "12e5f4ac336ae3da46bf166ff1d439840be6336b19401a76c7d788994a9cd35e"
+  license "GPL-2.0"
   revision 1
 
+  livecheck do
+    url :homepage
+    regex(/href=.*?onscripter[._-]v?(\d+(?:\.\d+)*)\.t/i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "d9d3934ce14353ab4527ab02c9f8fe4e562d78e6c707fa5eb2520f2dad1d5b54" => :mojave
-    sha256 "c7843b57d4404e6a7ac61d521bc60e9b572dff73d916c6a95c3ba2a5f5527125" => :high_sierra
-    sha256 "d32055f6e69f36da381320ffffb898b4a94e5d29e7a7ae1a00c60a4766439e8c" => :sierra
-    sha256 "dab8de0970901e7c63b32ad3d2071895c4259c5eb20a7abf8701b328d55bb8cf" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "6bf87dccb1539e34ca53a5d2912937d812d91d5540885a53d7e10e9c334a0f1a"
+    sha256 cellar: :any, big_sur:       "444a199a064d388e2fdcdc2e0bde6b33b55c61423484269af44e203db2badd49"
+    sha256 cellar: :any, catalina:      "6d28e84b6fce1f2b9bbba114b325835cd03250706d510719a5291d370d6d148f"
+    sha256 cellar: :any, mojave:        "72be2f1701d8a25edd139c7beeccf563b73e4f802b1c74708e6102f6f6fd8557"
   end
 
   depends_on "pkg-config" => :build
@@ -21,12 +26,6 @@ class Onscripter < Formula
   depends_on "sdl_mixer"
   depends_on "sdl_ttf"
   depends_on "smpeg"
-
-  # jpeg 9 compatibility
-  patch do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/eeb2de3/onscripter/jpeg9.patch"
-    sha256 "08695ddcbc6b874b903694ac783f7c21c61b5ba385572463d17fbf6ed75f60a1"
-  end
 
   def install
     incs = [

@@ -2,20 +2,25 @@ class AwsSdkCpp < Formula
   desc "AWS SDK for C++"
   homepage "https://github.com/aws/aws-sdk-cpp"
   # aws-sdk-cpp should only be updated every 10 releases on multiples of 10
-  url "https://github.com/aws/aws-sdk-cpp/archive/1.7.10.tar.gz"
-  sha256 "603ba39d0cb36d1acfc4d8e70538e30fdadf95f29b423bd279ce2911eae0d4e0"
+  url "https://github.com/aws/aws-sdk-cpp.git",
+    tag:      "1.9.50",
+    revision: "78ef64daf78e1c6bc95b1545ee91fbf4659d6536"
+  license "Apache-2.0"
   head "https://github.com/aws/aws-sdk-cpp.git"
 
   bottle do
-    cellar :any
-    sha256 "ca224ba81a80e20fbc1b2afbbce1f81f915c1cf2461aa4dd37268051bb9428e3" => :mojave
-    sha256 "a4261ea5c83e7fd440cffc2f78bdef1641b4af5e0bd355c4beee02660c763068" => :high_sierra
-    sha256 "0c9e8ae231f9befee65af936f2840b1ad20b5b8dfb48841684b8230398e1114e" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "5e21ddd503bab8a8e7e5162075fd8b896c36d0e75ef4b752573e744d5277c260"
+    sha256 cellar: :any, big_sur:       "536a969fd4d6e4e33a7eeaf405d28e7b7bc14c573c06046236f94303e63e7331"
+    sha256 cellar: :any, catalina:      "df2db5f6cc7afb4300ce38d3feba23ff020618dc0b318ba29aa5f5b8caf282a4"
+    sha256 cellar: :any, mojave:        "c0f20125c57e868a6a5564c1157bd99390db771610c961dc5acee2559cfe9575"
   end
 
   depends_on "cmake" => :build
 
+  uses_from_macos "curl"
+
   def install
+    ENV.append "LDFLAGS", "-Wl,-rpath,#{rpath}"
     mkdir "build" do
       system "cmake", "..", *std_cmake_args
       system "make"

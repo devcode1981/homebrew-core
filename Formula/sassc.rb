@@ -2,16 +2,17 @@ class Sassc < Formula
   desc "Wrapper around libsass that helps to create command-line apps"
   homepage "https://github.com/sass/sassc"
   url "https://github.com/sass/sassc.git",
-      :tag      => "3.5.0",
-      :revision => "aa6d5c635ea8faf44d542a23aaf85d27e5777d48"
+      tag:      "3.6.2",
+      revision: "66f0ef37e7f0ad3a65d2f481eff09d09408f42d0"
+  license "MIT"
   head "https://github.com/sass/sassc.git"
 
   bottle do
-    cellar :any
-    sha256 "0776912423914ce74e8451f0b66004cae6f2e00a8c40e4a35f77fdbe0d036b72" => :mojave
-    sha256 "efda15371cdf37716f508cbbbc7512bd4db103cbdd25a0a5b27ae74e6f5a4705" => :high_sierra
-    sha256 "8160ead69c6f3e7665cb474e719cc244412c37335013e4d98bf10bfdfcff6a32" => :sierra
-    sha256 "32edbfd6543029224ea742a23f0bac7f675a9aa8e7a0511cee09561518591854" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "ae86a3868be7edf32aadf47abd949d3806789f5edf319c4d86120a05fee9053d"
+    sha256 cellar: :any,                 big_sur:       "fe3a719ec1b2b01385924b8cb3bbb758d006ff3dbd75b1c3691ce09a43d1ebcd"
+    sha256 cellar: :any,                 catalina:      "0826a1c50657da448806febb03694bce523e60ac56e7dd0de7362fe4b41f2277"
+    sha256 cellar: :any,                 mojave:        "6aa4de7c6d9b1b64beda27f0c06a6d8c9224616b74ae48ea8e706f166b374ce9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "4575b459543c822d40a074f73591b1865790aa8977e7dc12148c10c858d55203"
   end
 
   depends_on "autoconf" => :build

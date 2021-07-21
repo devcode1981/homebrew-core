@@ -1,29 +1,39 @@
 class Gawk < Formula
   desc "GNU awk utility"
   homepage "https://www.gnu.org/software/gawk/"
-  url "https://ftp.gnu.org/gnu/gawk/gawk-4.2.1.tar.xz"
-  mirror "https://ftpmirror.gnu.org/gawk/gawk-4.2.1.tar.xz"
-  sha256 "d1119785e746d46a8209d28b2de404a57f983aa48670f4e225531d3bdc175551"
+  url "https://ftp.gnu.org/gnu/gawk/gawk-5.1.0.tar.xz"
+  mirror "https://ftpmirror.gnu.org/gawk/gawk-5.1.0.tar.xz"
+  sha256 "cf5fea4ac5665fd5171af4716baab2effc76306a9572988d5ba1078f196382bd"
+  license "GPL-3.0-or-later"
 
   bottle do
-    rebuild 1
-    sha256 "bf7cdce224032a58bfaadc3a87024ae7cb6490a5fef6c5f1d4631a1e41585716" => :mojave
-    sha256 "3e915ae4989aaba561315c95923bd70ab2a5eaf661b6003359a50c2add2ee758" => :high_sierra
-    sha256 "df69c7a625a6bf308841a603c80211ed8cb67d57e3d2d13cdc07da50c879de4f" => :sierra
-    sha256 "00053f97981327326623a8adc914b5431e3f8797aaec15342a3c0ebb4bf1eb9d" => :el_capitan
+    sha256 arm64_big_sur: "9b31b5843e7f156d5af09afb14b9fdbe359ece800222c9fe3fe23a77621491a6"
+    sha256 big_sur:       "8ff8108740004ede9c938b8bb42d2768d532d9ac8ee492250bbd23c8dfbef0cb"
+    sha256 catalina:      "581b48f781104f0c3233edc30c47628f4eec8c2f1f2e191151f367ce26ec538a"
+    sha256 mojave:        "ddbb56c56d66f375147769a27301e2ffd099abdc07f5dfc16389af22028e185b"
+    sha256 high_sierra:   "eac1b8c97c682c32a1b6c589818aa8ffb8f09630258ed6f215c882368540713e"
+    sha256 x86_64_linux:  "9dbdb614ce8517ce0d43f4058ea96bdc9ab172fbb2a60160c3963109f19b3d71"
   end
 
   depends_on "gettext"
   depends_on "mpfr"
   depends_on "readline"
 
+  conflicts_with "awk",
+    because: "both install an `awk` executable"
+
   def install
     system "./configure", "--disable-debug",
                           "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
                           "--without-libsigsegv-prefix"
+
     system "make"
-    system "make", "check"
+    if which "cmp"
+      system "make", "check"
+    else
+      opoo "Skipping `make check` due to unavailable `cmp`"
+    end
     system "make", "install"
 
     (libexec/"gnubin").install_symlink bin/"gawk" => "awk"

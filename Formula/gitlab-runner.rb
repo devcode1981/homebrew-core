@@ -1,71 +1,45 @@
 class GitlabRunner < Formula
-  desc "The official GitLab CI runner written in Go"
+  desc "Official GitLab CI runner"
   homepage "https://gitlab.com/gitlab-org/gitlab-runner"
   url "https://gitlab.com/gitlab-org/gitlab-runner.git",
-      :tag      => "v11.4.2",
-      :revision => "cf91d5e113e5e77f245c63276e2e4d5f4224bbca"
+      tag:      "v14.1.0",
+      revision: "8925d9a06fd8e452e2161a768462652a2a13111f"
+  license "MIT"
   head "https://gitlab.com/gitlab-org/gitlab-runner.git"
 
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "160da4e3ba4afbee39a7d55582d81f4b679de4b436d8854ec3f99b39fea92b4a" => :mojave
-    sha256 "fceb731ad4117d6dcb95af86c0a7de8497f50592797b3c4bd84a0b2a5011e74c" => :high_sierra
-    sha256 "e93c8993dd4ff270eff15ab9eb0508c87570821b8469b0e6cbbe9a39610562e1" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "4017374ee8ebe818985995a346c66ec7438416573dbae4d326a7d80bbe367cd8"
+    sha256 cellar: :any_skip_relocation, big_sur:       "5bdfe0e955e2761c47a8016be92dbe35af60a8e10febe76996aec02bcc736e8c"
+    sha256 cellar: :any_skip_relocation, catalina:      "f1097a08020404d4ef163e4b68f3de99f647eb83b198099776966948740cbfb2"
+    sha256 cellar: :any_skip_relocation, mojave:        "4cd4d95737a3eaf45ffec086f307428d7338fe2d2c9f61007f93bc065f18a0f8"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "fd24acfe88f1e806270490d5f62928941a1599b8e7e74c9691c5705d72670cd5"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    dir = buildpath/"src/gitlab.com/gitlab-org/gitlab-runner"
-    dir.install buildpath.children
-
-    cd dir do
-      proj = "gitlab.com/gitlab-org/gitlab-runner"
-      commit = Utils.popen_read("git", "rev-parse", "--short", "HEAD").chomp
-      branch = version.to_s.split(".")[0..1].join("-") + "-stable"
-      built = Time.new.strftime("%Y-%m-%dT%H:%M:%S%:z")
-      system "go", "build", "-ldflags", <<~EOS
-        -X #{proj}/common.NAME=gitlab-runner
-        -X #{proj}/common.VERSION=#{version}
-        -X #{proj}/common.REVISION=#{commit}
-        -X #{proj}/common.BRANCH=#{branch}
-        -X #{proj}/common.BUILT=#{built}
-      EOS
-
-      bin.install "gitlab-runner"
-      prefix.install_metafiles
-    end
+    proj = "gitlab.com/gitlab-org/gitlab-runner"
+    ldflags = %W[
+      -X #{proj}/common.NAME=gitlab-runner
+      -X #{proj}/common.VERSION=#{version}
+      -X #{proj}/common.REVISION=#{Utils.git_short_head(length: 8)}
+      -X #{proj}/common.BRANCH=#{version.major}-#{version.minor}-stable
+      -X #{proj}/common.BUILT=#{time.strftime("%Y-%m-%dT%H:%M:%S%:z")}
+    ].join(" ")
+    system "go", "build", *std_go_args(ldflags: ldflags)
   end
 
-  plist_options :manual => "gitlab-runner start"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>SessionCreate</key><false/>
-        <key>KeepAlive</key><true/>
-        <key>RunAtLoad</key><true/>
-        <key>Disabled</key><false/>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/gitlab-runner</string>
-          <string>run</string>
-          <string>--working-directory</string>
-          <string>#{ENV["HOME"]}</string>
-          <string>--config</string>
-          <string>#{ENV["HOME"]}/.gitlab-runner/config.toml</string>
-          <string>--service</string>
-          <string>gitlab-runner</string>
-          <string>--syslog</string>
-        </array>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_bin/"gitlab-runner", "run", "--syslog"]
+    environment_variables PATH: std_service_path_env
+    working_dir ENV["HOME"]
+    keep_alive true
+    macos_legacy_timers true
   end
 
   test do

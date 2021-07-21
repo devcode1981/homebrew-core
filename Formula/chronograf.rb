@@ -3,85 +3,54 @@ require "language/node"
 class Chronograf < Formula
   desc "Open source monitoring and visualization UI for the TICK stack"
   homepage "https://docs.influxdata.com/chronograf/latest/"
-  url "https://github.com/influxdata/chronograf/archive/1.7.3.tar.gz"
-  sha256 "b9c67025cca8cf69a50fd01b4589ac2c150085e56de32cb9f0d3ba9cd269cc89"
+  url "https://github.com/influxdata/chronograf/archive/1.9.0.tar.gz"
+  sha256 "d372ed570ffca770395ec2f8b3cf3da5c493462b3f9a9a23431bce48fa58db12"
+  license "AGPL-3.0-or-later"
   head "https://github.com/influxdata/chronograf.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "8c0465495d830b6a99f6628a1db4ed527d79f3d6c8c06d5f275a0b5a626d5386" => :mojave
-    sha256 "e538d66723735a76a50998b30e8dae685b9ffc8ae0fd45ced7a6380cb2bcf2f4" => :high_sierra
-    sha256 "2c3a3486a55e822364d6c548cbd0fe2364f2961bd4605e00877b1d109c6d055d" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a3ca0abd746047054e2fa1e16af01c66959d5016a0e53378f06d5e3abeefe6df"
+    sha256 cellar: :any_skip_relocation, big_sur:       "cce9f41de6c70595ab6784f274f66ceddbd06199660c43a45ce87c88bf137cce"
+    sha256 cellar: :any_skip_relocation, catalina:      "eea319beb941aebc561e2620daa487cc1dab344917b0eaacb13abae53ef73f64"
+    sha256 cellar: :any_skip_relocation, mojave:        "bf63451f3ee0f4dc13c324e2611d63b31943a1e4b305ed4e29fcbe3edf0dae6b"
   end
 
   depends_on "go" => :build
-  depends_on "node" => :build
+  depends_on "go-bindata" => :build
+  # Switch to `node` when chronograf updates dependency node-sass>=6.0.0
+  depends_on "node@14" => :build
   depends_on "yarn" => :build
   depends_on "influxdb"
   depends_on "kapacitor"
 
   def install
-    ENV["GOPATH"] = buildpath
-    ENV.prepend_create_path "PATH", buildpath/"bin"
     Language::Node.setup_npm_environment
-    chronograf_path = buildpath/"src/github.com/influxdata/chronograf"
-    chronograf_path.install buildpath.children
 
-    # fixes yarn + upath@1.0.4 incompatibility, remove once upath is upgraded to 1.0.5+
-    Pathname.new("#{ENV["HOME"]}/.yarnrc").write("ignore-engines true\n")
-
-    cd chronograf_path do
-      system "make", "dep"
-      system "make", ".jssrc"
-      system "make", "chronograf"
-      bin.install "chronograf"
-      prefix.install_metafiles
-    end
+    system "make", "dep"
+    system "make", ".jssrc"
+    system "make", "chronograf"
+    bin.install "chronograf"
   end
 
-  plist_options :manual => "chronograf"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>KeepAlive</key>
-        <dict>
-          <key>SuccessfulExit</key>
-          <false/>
-        </dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/chronograf</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>WorkingDirectory</key>
-        <string>#{var}</string>
-        <key>StandardErrorPath</key>
-        <string>#{var}/log/chronograf.log</string>
-        <key>StandardOutPath</key>
-        <string>#{var}/log/chronograf.log</string>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run opt_bin/"chronograf"
+    keep_alive true
+    error_log_path var/"log/chronograf.log"
+    log_path var/"log/chronograf.log"
+    working_dir var
   end
 
   test do
-    begin
-      pid = fork do
-        exec "#{bin}/chronograf"
-      end
-      sleep 1
-      output = shell_output("curl -s 0.0.0.0:8888/chronograf/v1/")
-      sleep 1
-      assert_match %r{/chronograf/v1/layouts}, output
-    ensure
-      Process.kill("SIGINT", pid)
-      Process.wait(pid)
+    port = free_port
+    pid = fork do
+      exec "#{bin}/chronograf --port=#{port}"
     end
+    sleep 10
+    output = shell_output("curl -s 0.0.0.0:#{port}/chronograf/v1/")
+    sleep 1
+    assert_match %r{/chronograf/v1/layouts}, output
+  ensure
+    Process.kill("SIGTERM", pid)
+    Process.wait(pid)
   end
 end

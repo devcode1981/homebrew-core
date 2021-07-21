@@ -1,53 +1,58 @@
 class Wxpython < Formula
+  include Language::Python::Virtualenv
+
   desc "Python bindings for wxWidgets"
-  homepage "https://www.wxwidgets.org/"
-  url "https://downloads.sourceforge.net/project/wxpython/wxPython/3.0.2.0/wxPython-src-3.0.2.0.tar.bz2"
-  sha256 "d54129e5fbea4fb8091c87b2980760b72c22a386cb3b9dd2eebc928ef5e8df61"
-  revision 1
+  homepage "https://www.wxpython.org/"
+  url "https://files.pythonhosted.org/packages/b0/4d/80d65c37ee60a479d338d27a2895fb15bbba27a3e6bb5b6d72bb28246e99/wxPython-4.1.1.tar.gz"
+  sha256 "00e5e3180ac7f2852f342ad341d57c44e7e4326de0b550b9a5c4a8361b6c3528"
+  license "LGPL-2.0-or-later" => { with: "WxWindows-exception-3.1" }
+  revision 2
 
   bottle do
-    cellar :any
-    sha256 "e4d26479673fb7ada6601f4fc67525f843b13a68c03d15e3c793481398fcfef3" => :mojave
-    sha256 "b3ed6dbe3c7b58b55d98025a7e2799137eeb78ec6260d18cd1b4e2057fb969f5" => :high_sierra
-    sha256 "2ada5517b6cb456d65ad6849a65355893676d09f6c7a997b03325f0079a849f4" => :sierra
-    sha256 "073777ade162a654d43d5866f69e6a857a7cedc677d7115200972e91261d9e0f" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "d8fb50086a3047b2ff39d2747903ae591a87947f0dd84174e3da2ae1eb0f0171"
+    sha256 cellar: :any, big_sur:       "40e9e6c3cfe094b254d55e69e89ed38e8b48437efb49a641dc17ac2bbddf0df9"
+    sha256 cellar: :any, catalina:      "67183e7560f2add598527db7eb0d30d4f4fe6e82b07db59bedd1cadeaedd1693"
+    sha256 cellar: :any, mojave:        "8e06cb7727b4dd39b3ebd93f6691aa8147a1ee0fef47cdbfbece77d203f411f4"
   end
 
-  depends_on "python@2"
-  depends_on "wxmac"
+  depends_on "freetype"
+  depends_on "jpeg"
+  depends_on "libpng"
+  depends_on "libtiff"
+  depends_on "numpy"
+  depends_on "pillow"
+  depends_on "python@3.9"
+  depends_on "six"
+  depends_on "tcl-tk"
+
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "pkg-config" => :build
+    depends_on "gtk+3"
+  end
 
   def install
-    ENV["WXWIN"] = buildpath
-    ENV.append_to_cflags "-arch #{MacOS.preferred_arch}"
-
-    # wxPython is hardcoded to install headers in wx's prefix;
-    # set it to use wxPython's prefix instead
-    # See #47187.
-    inreplace %w[wxPython/config.py wxPython/wx/build/config.py],
-      "WXPREFIX +", "'#{prefix}' +"
-
-    args = [
-      "WXPORT=osx_cocoa",
-      # Reference our wx-config
-      "WX_CONFIG=#{Formula["wxmac"].opt_bin}/wx-config",
-      # At this time Wxmac is installed Unicode only
-      "UNICODE=1",
-      # Some scripts (e.g. matplotlib) expect to `import wxversion`, which is
-      # only available on a multiversion build.
-      "INSTALL_MULTIVERSION=1",
-      # OpenGL and stuff
-      "BUILD_GLCANVAS=1",
-      "BUILD_GIZMOS=1",
-      "BUILD_STC=1",
-    ]
-
-    cd "wxPython" do
-      system "python", "setup.py", "install", "--prefix=#{prefix}", *args
+    # Fix build of included wxwidgets:
+    # https://github.com/wxWidgets/Phoenix/issues/1247
+    # https://github.com/Homebrew/homebrew-core/pull/58988
+    inreplace "buildtools/build_wxwidgets.py" do |s|
+      s.gsub! "#wxpy_configure_opts.append(\"--enable-monolithic\")",
+              "wxpy_configure_opts.append(\"--disable-precomp-headers\")"
     end
+
+    inreplace "wscript", "MACOSX_DEPLOYMENT_TARGET = \"10.6\"",
+                         "MACOSX_DEPLOYMENT_TARGET = \"#{MacOS.version}\""
+
+    on_macos do
+      sdk = MacOS.sdk_path_if_needed
+      ENV.append_to_cflags "-I#{sdk}/usr/include" if sdk
+    end
+    system "python3", *Language::Python.setup_install_args(prefix)
   end
 
   test do
-    output = shell_output("python -c 'import wx ; print wx.version()'")
+    output = shell_output("#{Formula["python@3.9"].opt_bin}/python3 -c 'import wx ; print(wx.__version__)'")
     assert_match version.to_s, output
   end
 end

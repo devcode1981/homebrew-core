@@ -1,26 +1,38 @@
 class Snort < Formula
   desc "Flexible Network Intrusion Detection System"
   homepage "https://www.snort.org"
-  url "https://www.snort.org/downloads/snort/snort-2.9.11.1.tar.gz"
-  sha256 "9f6b3aeac5a109f55504bd370564ac431cb1773507929dc461626898f33f46cd"
+  url "https://www.snort.org/downloads/snort/snort-2.9.18.tar.gz"
+  mirror "https://fossies.org/linux/misc/snort-2.9.18.tar.gz"
+  sha256 "d0308642f69e0d36f70db9703e5766afce2f44ff05b7d2c9cc8e3ac8323b2c77"
+  license "GPL-2.0-only"
+
+  livecheck do
+    url "https://www.snort.org/downloads"
+    regex(/href=.*?snort[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "7eb1bf8de87e1f55412cbc27e4b7e25d37819506481a036058d666ca2c62052e" => :mojave
-    sha256 "ac8a7b3007b307d8368da7e3879e3c6cd6c718746b9443d544f5e8adcb286be6" => :high_sierra
-    sha256 "b152a9869efd30d40e0d3750a0fd12f825360bf7c1d7cb39156320d32381a649" => :sierra
-    sha256 "00de9088a3e7471026430cf17a7cc7d3d9787496398662c2e2c6a7c766c212cd" => :el_capitan
+    sha256 cellar: :any, big_sur:  "20a02212522fd5b3e67928e7435c2118c96e858ddd30ae6c57c7e8dd764db49a"
+    sha256 cellar: :any, catalina: "f3ecad817c5ef3b9a4821c3644045f3cefe61a231b2e0e38a0a827ce5b2990c3"
+    sha256 cellar: :any, mojave:   "efc0a9d82cd81e417fea60516e7f6ffa62b7690825515bdf321c759d5268f1c0"
   end
 
   depends_on "pkg-config" => :build
   depends_on "daq"
   depends_on "libdnet"
+  depends_on "libpcap"
   depends_on "luajit"
-  depends_on "openssl"
+  depends_on "nghttp2"
+  depends_on "openssl@1.1"
   depends_on "pcre"
 
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
+  uses_from_macos "xz"
+
   def install
-    openssl = Formula["openssl"]
+    openssl = Formula["openssl@1.1"]
+    libpcap = Formula["libpcap"]
 
     args = %W[
       --prefix=#{prefix}
@@ -39,21 +51,27 @@ class Snort < Formula
       --enable-targetbased
       --with-openssl-includes=#{openssl.opt_include}
       --with-openssl-libraries=#{openssl.opt_lib}
+      --with-libpcap-includes=#{libpcap.opt_include}
+      --with-libpcap-libraries=#{libpcap.opt_lib}
     ]
 
     system "./configure", *args
     system "make", "install"
 
+    # Currently configuration files in etc have strange permissions which causes postinstall to fail
+    # Reported to upstream: https://lists.snort.org/pipermail/snort-devel/2020-April/011466.html
+    (buildpath/"etc").children.each { |f| chmod 0644, f }
     rm Dir[buildpath/"etc/Makefile*"]
-    (etc/"snort").install Dir[buildpath/"etc/*"]
+    (etc/"snort").install (buildpath/"etc").children
   end
 
-  def caveats; <<~EOS
-    For snort to be functional, you need to update the permissions for /dev/bpf*
-    so that they can be read by non-root users.  This can be done manually using:
-        sudo chmod o+r /dev/bpf*
-    or you could create a startup item to do this for you.
-  EOS
+  def caveats
+    <<~EOS
+      For snort to be functional, you need to update the permissions for /dev/bpf*
+      so that they can be read by non-root users.  This can be done manually using:
+          sudo chmod o+r /dev/bpf*
+      or you could create a startup item to do this for you.
+    EOS
   end
 
   test do

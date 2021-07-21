@@ -3,14 +3,14 @@ class Gtkextra < Formula
   homepage "https://gtkextra.sourceforge.io/"
   url "https://downloads.sourceforge.net/project/gtkextra/3.3/gtkextra-3.3.4.tar.gz"
   sha256 "651b738a78edbd5d6ccb64f5a256c39ec35fbbed898e54a3ab7e6cf8fd82f1d6"
-  revision 1
+  license "GPL-2.0-or-later"
+  revision 3
 
   bottle do
-    cellar :any
-    sha256 "e091e7fe354ef84cf5d9418a838debea012f88ac63cf10b43594c47317ddea37" => :mojave
-    sha256 "dccb6576a9313eec96b7b7c7abd6e9411959b351b996f19592021c7c2348d518" => :high_sierra
-    sha256 "74d2f3a62c9a008d18f68e40aec68e94f6054ce0b94f5d0e5f67c79d88610411" => :sierra
-    sha256 "3bd2f9a0bfc2296316e69702a126b23dc126a513192ce709b6d8d5120bc16904" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "841d46dfdaee00be8a853e8069db2b8ca1fbbfcaf298360411b6f9c0a0706da6"
+    sha256 cellar: :any, big_sur:       "3c35df2372587b0cc5bde265a9ff06774ec70651ac5aa103639dc41e669ae3b7"
+    sha256 cellar: :any, catalina:      "17ba389425eea1e26e308f07b94a3f8637645e83a7b8314681f2285e09996d9b"
+    sha256 cellar: :any, mojave:        "d154740567dfe6c084d3ba87d2afb32e9be63b370f85828e01cd5a3ec164d18f"
   end
 
   depends_on "pkg-config" => :build
@@ -42,9 +42,16 @@ class Gtkextra < Formula
     gettext = Formula["gettext"]
     glib = Formula["glib"]
     gtkx = Formula["gtk+"]
+    harfbuzz = Formula["harfbuzz"]
     libpng = Formula["libpng"]
     pango = Formula["pango"]
     pixman = Formula["pixman"]
+
+    backend = "quartz"
+    on_linux do
+      backend = "x11"
+    end
+
     flags = %W[
       -I#{atk.opt_include}/atk-1.0
       -I#{cairo.opt_include}/cairo
@@ -56,6 +63,7 @@ class Gtkextra < Formula
       -I#{glib.opt_lib}/glib-2.0/include
       -I#{gtkx.opt_include}/gtk-2.0
       -I#{gtkx.opt_lib}/gtk-2.0/include
+      -I#{harfbuzz.opt_include}/harfbuzz
       -I#{include}/gtkextra-3.0
       -I#{libpng.opt_include}/libpng16
       -I#{pango.opt_include}/pango-1.0
@@ -71,17 +79,19 @@ class Gtkextra < Formula
       -L#{pango.opt_lib}
       -latk-1.0
       -lcairo
-      -lgdk-quartz-2.0
+      -lgdk-#{backend}-2.0
       -lgdk_pixbuf-2.0
       -lgio-2.0
       -lglib-2.0
       -lgobject-2.0
-      -lgtk-quartz-2.0
-      -lgtkextra-quartz-3.0
-      -lintl
+      -lgtk-#{backend}-2.0
+      -lgtkextra-#{backend}-3.0
       -lpango-1.0
       -lpangocairo-1.0
     ]
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end

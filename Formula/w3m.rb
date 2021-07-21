@@ -1,43 +1,62 @@
 class W3m < Formula
   desc "Pager/text based browser"
   homepage "https://w3m.sourceforge.io/"
-  revision 5
+  revision 7
   head "https://github.com/tats/w3m.git"
 
   stable do
-    url "https://downloads.sourceforge.net/project/w3m/w3m/w3m-0.5.3/w3m-0.5.3.tar.gz"
+    url "https://deb.debian.org/debian/pool/main/w/w3m/w3m_0.5.3.orig.tar.gz"
     sha256 "e994d263f2fd2c22febfbe45103526e00145a7674a0fda79c822b97c2770a9e3"
 
     # Upstream is effectively Debian https://github.com/tats/w3m at this point.
     # The patches fix a pile of CVEs
     patch do
-      url "https://mirrors.ocf.berkeley.edu/debian/pool/main/w/w3m/w3m_0.5.3-36.debian.tar.xz"
-      mirror "https://mirrorservice.org/sites/ftp.debian.org/debian/pool/main/w/w3m/w3m_0.5.3-36.debian.tar.xz"
-      sha256 "e7f41ac222c55830ce121e1c50e67ab04b292837b9bb1ece2eae2689c82147ec"
-      apply "patches/010_upstream.patch",
-            "patches/020_debian.patch"
+      url "https://salsa.debian.org/debian/w3m/-/raw/debian/0.5.3-38/debian/patches/010_upstream.patch"
+      sha256 "39e80b36bc5213d15a3ef015ce8df87f7fab5f157e784c7f06dc3936f28d11bc"
+    end
+
+    patch do
+      url "https://salsa.debian.org/debian/w3m/-/raw/debian/0.5.3-38/debian/patches/020_debian.patch"
+      sha256 "08bd013064dc544dc2e70599ea1c9e90f18998bc207dd8053188417fbdaeefb2"
     end
   end
 
+  livecheck do
+    url "https://deb.debian.org/debian/pool/main/w/w3m/"
+    regex(/href=.*?w3m[._-]v?(\d+(?:\.\d+)+)\.orig\.t/i)
+  end
+
   bottle do
-    sha256 "e8aa7de4835538616cd9902bb49cbc1bf5c897969c9fdcc8aed9ecd42175e376" => :mojave
-    sha256 "4b0be4259e778c1c7df97d43b9e176e019e6de5d7bdeceec89baa34bdc0392db" => :high_sierra
-    sha256 "1e2305cc1e1e717648d331a44d3f0867ad20e63a50fbdd0d824e4482e4d8a6f7" => :sierra
-    sha256 "745f4a07f511c4a9ecbf4cb12bba58eac9c36a92291945134cbebe4fe03dc747" => :el_capitan
+    sha256 arm64_big_sur: "ca603325cc6d0904d5d709f6e9407b26fd22e3eeb3984d38e11c21d8f45e7b3a"
+    sha256 big_sur:       "9865fb7a43e8732bb7d309502c3de3410d05aeb093ba8916462b5aab36563a5a"
+    sha256 catalina:      "5b752461983a608c684bae9efa13a0a5e37a456def0b368c8b0706b35fd480a3"
+    sha256 mojave:        "a77f9a7ceee4dbb2a7288ecfad9c903c489ce4a60ff10056cd735433986df901"
+    sha256 x86_64_linux:  "425cc2d1f5e1c4dff0f4f70c916322e55e95d50b18a003c9ff065cb982fc90e9"
   end
 
   depends_on "pkg-config" => :build
   depends_on "bdw-gc"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
+
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "gettext"
+    depends_on "libbsd"
+  end
 
   def install
+    # Work around configure issues with Xcode 12
+    ENV.append "CFLAGS", "-Wno-implicit-function-declaration"
+
     system "./configure", "--prefix=#{prefix}",
                           "--disable-image",
-                          "--with-ssl=#{Formula["openssl"].opt_prefix}"
+                          "--with-ssl=#{Formula["openssl@1.1"].opt_prefix}"
     system "make", "install"
   end
 
   test do
-    assert_match /DuckDuckGo/, shell_output("#{bin}/w3m -dump https://duckduckgo.com")
+    assert_match "DuckDuckGo", shell_output("#{bin}/w3m -dump https://duckduckgo.com")
   end
 end

@@ -1,19 +1,27 @@
 class Lldpd < Formula
   desc "Implementation of IEEE 802.1ab (LLDP)"
   homepage "https://vincentbernat.github.io/lldpd/"
-  url "https://media.luffy.cx/files/lldpd/lldpd-1.0.1.tar.gz"
-  sha256 "450b622aac7ae1758f1ef82f3b7b94ec47f2ff33abfb0e6ac82555b9ee55f151"
+  url "https://media.luffy.cx/files/lldpd/lldpd-1.0.11.tar.gz"
+  sha256 "b51d15700fbaefcb7fb85c3506b49d33173a0f15d700f933ef044067b42d46e4"
+  license "ISC"
+
+  livecheck do
+    url "https://github.com/vincentbernat/lldpd.git"
+  end
 
   bottle do
-    rebuild 1
-    sha256 "8222ab9826ddcdad598d354c001d064fe92aa386b8088464c29fdc2cb0a08757" => :mojave
-    sha256 "c5ba1d60ebad77d94fd21fe743bd62f99e08ef364ab0ca3b9c852d4be531ff51" => :high_sierra
-    sha256 "0bcede6bdf6809586f730d2938f9e17a508c43baac194fc36e24fb9b7d54f9aa" => :sierra
+    sha256 arm64_big_sur: "9aa7753ca04624756238d5067494d09d9bde797034dca7321f3f4868c6d05c48"
+    sha256 big_sur:       "ae966214024578b49cc642d8fbd141446d3321b3ce3a6ef360db2b9acda5509d"
+    sha256 catalina:      "e34ca3a997738dcf2e0d3fa8a549c6c503a9e8119c2173293c0de24c612c4873"
+    sha256 mojave:        "9e72bb2d06eb3035026d4c3731c1fc71e72e9fe18009ed89b1946eea7ac6c390"
+    sha256 x86_64_linux:  "cdecef66cd30283cd88c61eeafc1ccb70a58e6f78bc3941d1ce72bcbbeaa3436"
   end
 
   depends_on "pkg-config" => :build
   depends_on "libevent"
   depends_on "readline"
+
+  uses_from_macos "libxml2"
 
   def install
     readline = Formula["readline"]
@@ -41,11 +49,9 @@ class Lldpd < Formula
     (var/"run").mkpath
   end
 
-  plist_options :startup => true
+  plist_options startup: true
 
   def plist
-    additional_args = ""
-    additional_args += "<string>-x</string>" if build.with? "snmp"
     <<~EOS
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -56,7 +62,6 @@ class Lldpd < Formula
         <key>ProgramArguments</key>
         <array>
           <string>#{opt_sbin}/lldpd</string>
-          #{additional_args}
         </array>
         <key>RunAtLoad</key><true/>
         <key>KeepAlive</key><true/>

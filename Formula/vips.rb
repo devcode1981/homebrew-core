@@ -1,53 +1,64 @@
 class Vips < Formula
   desc "Image processing library"
   homepage "https://github.com/libvips/libvips"
-  url "https://github.com/libvips/libvips/releases/download/v8.7.1/vips-8.7.1.tar.gz"
-  sha256 "1ab080fc7970e6f0a16b1499e44628ea55f80d34c991f5c015d21ede2e486bf0"
+  url "https://github.com/libvips/libvips/releases/download/v8.11.2/vips-8.11.2.tar.gz"
+  sha256 "bb5ab776ee4c61ae94b4496c63ef523ca7367ebceabcba78ceb1bf97b1d36e06"
+  license "LGPL-2.1-or-later"
+  revision 1
 
-  bottle do
-    sha256 "c511c6aa3b5a8a85e4fd8feaa0086fd864f0939cf2f2e3977163ede38a1ce479" => :mojave
-    sha256 "6bf5f39ff9d5137a3d4d8c369fb4e2a43339ef1ce0d11206a5a91b4536d8a3d4" => :high_sierra
-    sha256 "ef2b32a0cce490d39f65a92bf95f02b2cd19e64236555e35cab3b646eebe7eb8" => :sierra
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
-  depends_on "gobject-introspection" => :build
+  bottle do
+    sha256 arm64_big_sur: "cf57fd026f936e3f6ef97cb2f934d2154ef4a5928ac59e4e3f34c2170dc23ede"
+    sha256 big_sur:       "4328eae6820e58d8c940c64c24455d8b3780330203d149d233f624f274c99cc3"
+    sha256 catalina:      "2061aaedb12b85e18c9ffb37501e94e37d12254fbaffdb6e2fddce54709b759f"
+    sha256 mojave:        "9b7c1079ee213f96175732a4752a15d6cbeaf7cab00aacf35ddee1b59c411399"
+  end
+
   depends_on "pkg-config" => :build
+  depends_on "cfitsio"
+  depends_on "fftw"
   depends_on "fontconfig"
   depends_on "gettext"
   depends_on "giflib"
   depends_on "glib"
-  depends_on "jpeg"
+  depends_on "imagemagick"
   depends_on "libexif"
   depends_on "libgsf"
+  depends_on "libheif"
+  depends_on "libimagequant"
+  depends_on "libmatio"
   depends_on "libpng"
   depends_on "librsvg"
+  depends_on "libspng"
   depends_on "libtiff"
   depends_on "little-cms2"
+  depends_on "mozjpeg"
+  depends_on "openexr"
+  depends_on "openslide"
   depends_on "orc"
   depends_on "pango"
+  depends_on "poppler"
   depends_on "webp"
-  depends_on "fftw" => :recommended
-  depends_on "graphicsmagick" => :recommended
-  depends_on "poppler" => :recommended
-  depends_on "imagemagick" => :optional
-  depends_on "openexr" => :optional
-  depends_on "openslide" => :optional
 
-  if build.with?("graphicsmagick") && build.with?("imagemagick")
-    odie "vips: --with-imagemagick requires --without-graphicsmagick"
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "gobject-introspection"
   end
 
   def install
+    # mozjpeg needs to appear before libjpeg, otherwise it's not used
+    ENV.prepend_path "PKG_CONFIG_PATH", Formula["mozjpeg"].opt_lib/"pkgconfig"
+
     args = %W[
       --disable-dependency-tracking
       --prefix=#{prefix}
+      --with-magick
     ]
-
-    if build.with? "graphicsmagick"
-      args << "--with-magick" << "--with-magickpackage=GraphicsMagick"
-    elsif build.with? "imagemagick"
-      args << "--with-magick"
-    end
 
     system "./configure", *args
     system "make", "install"
@@ -57,5 +68,13 @@ class Vips < Formula
     system "#{bin}/vips", "-l"
     cmd = "#{bin}/vipsheader -f width #{test_fixtures("test.png")}"
     assert_equal "8", shell_output(cmd).chomp
+
+    # --trellis-quant requires mozjpeg, vips warns if it's not present
+    cmd = "#{bin}/vips jpegsave #{test_fixtures("test.png")} #{testpath}/test.jpg --trellis-quant 2>&1"
+    assert_equal "", shell_output(cmd)
+
+    # [palette] requires libimagequant, vips warns if it's not present
+    cmd = "#{bin}/vips copy #{test_fixtures("test.png")} #{testpath}/test.png[palette] 2>&1"
+    assert_equal "", shell_output(cmd)
   end
 end

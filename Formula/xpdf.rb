@@ -1,30 +1,32 @@
 class Xpdf < Formula
   desc "PDF viewer"
   homepage "https://www.xpdfreader.com/"
-  url "https://xpdfreader-dl.s3.amazonaws.com/xpdf-4.00.tar.gz"
-  mirror "https://fossies.org/linux/misc/xpdf-4.00.tar.gz"
-  sha256 "ff3d92c42166e35b1ba6aec9b5f0adffb5fc05a3eb95dc49505b6e344e4216d6"
+  url "https://dl.xpdfreader.com/xpdf-4.03.tar.gz"
+  sha256 "0fe4274374c330feaadcebb7bd7700cb91203e153b26aa95952f02bf130be846"
+  license any_of: ["GPL-2.0-only", "GPL-3.0-only"]
+  revision 1
+
+  livecheck do
+    url "https://www.xpdfreader.com/download.html"
+    regex(/href=.*?xpdf[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "5e9b256817f4a4050cbed7d914cde590c66f989588f250983dbff80059df9670" => :mojave
-    sha256 "9d27d28c52d120d30c6d2293da42a96d993171f2d68febc00c406a0e5bbe4cb9" => :high_sierra
-    sha256 "e747937587f1ba1acd33b7caf1f407b1baa3951c8b31e091ea0ae6f00ccc9d79" => :sierra
-    sha256 "1013c1a0224961955bed42d33a37748ac899b6f3a07f87809865974b760d59e0" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "052d966e5649b652bb61db7ff96386e5ca543fd65fb06818ab002b2f1138086b"
+    sha256 cellar: :any, big_sur:       "2c74e3ae45d2666271efb5a3a913db86a300110d2e89acb97f27b4e6d5c2af7f"
+    sha256 cellar: :any, catalina:      "af0d633049cdccbb05a15b92e1dddb2951ea6d2994a2bee343400681bfbf1a2d"
+    sha256 cellar: :any, mojave:        "d5a0e1f2c8d6897bda1290648814b351ffebf0aadbbe856b19f7088d2673baf5"
   end
 
   depends_on "cmake" => :build
+  depends_on "fontconfig"
   depends_on "freetype"
-  depends_on "qt"
+  depends_on "qt@5"
 
-  conflicts_with "pdf2image", "poppler",
-    :because => "xpdf, pdf2image, and poppler install conflicting executables"
+  conflicts_with "pdf2image", "pdftohtml", "poppler",
+    because: "poppler, pdftohtml, pdf2image, and xpdf install conflicting executables"
 
   def install
-    # Reported 6 Feb 2018 to xpdf AT xpdfreader DOT com
-    inreplace ["xpdf/CMakeLists.txt", "xpdf-qt/CMakeLists.txt"], " man/",
-                                                                 " share/man/"
-
     system "cmake", ".", *std_cmake_args
     system "make", "install"
   end

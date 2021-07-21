@@ -1,32 +1,29 @@
 class Immortal < Formula
   desc "OS agnostic (*nix) cross-platform supervisor"
   homepage "https://immortal.run/"
-  url "https://github.com/immortal/immortal/archive/0.21.0.tar.gz"
-  sha256 "124c2428404f1f3b577d78392ec098f73a4d5bfc5a0bf1a5ccfd61a6729bd425"
+  url "https://github.com/immortal/immortal/archive/0.24.3.tar.gz"
+  sha256 "e31d5afb9028fb5047b5a2cc5f96c844f6480d600643a12075550f497e65f5cb"
+  license "BSD-3-Clause"
   head "https://github.com/immortal/immortal.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "317718d93ca4dd4406333a94c9a950a5b77d196b075d02e255e7784ed9b4b905" => :mojave
-    sha256 "64d887c755dbc3849e106b93e5b08fe074866ab506f9a923121cef930f40e90c" => :high_sierra
-    sha256 "897d5bf3e2be8450405595ef3c1cb20b6514624ca89fef6752afd49e6db39901" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "38ec22b15e305094470a996cd4a9b4362f225da6d573618403c58bb949c39ee5"
+    sha256 cellar: :any_skip_relocation, big_sur:       "96761cea1b43a1550e499f854dd6969f886a18345dddc24615ca75e10a4bf1e2"
+    sha256 cellar: :any_skip_relocation, catalina:      "4b1f289dbe2b0998f091ebf9fbf6df2894f0eb3d447df2b5840915a53cdb3c09"
+    sha256 cellar: :any_skip_relocation, mojave:        "c35c0718289bac0d3557ac5d17af6895765557d2c5a7124f389653163b40bb36"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "702cb544d23450cf258ef7b9287e99925e8cf715e1708513694f9068233a5cba"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "44afbe226bc53ce9abec4435e8057dc307d0f73bce4ffa804460801f66978917"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/immortal/immortal").install buildpath.children
-    cd "src/github.com/immortal/immortal" do
-      system "dep", "ensure", "-vendor-only"
-      ldflags = "-s -w -X main.version=#{version}"
-      system "go", "build", "-ldflags", ldflags, "-o", "#{bin}/immortal", "cmd/immortal/main.go"
-      system "go", "build", "-ldflags", ldflags, "-o", "#{bin}/immortalctl", "cmd/immortalctl/main.go"
-      system "go", "build", "-ldflags", ldflags, "-o", "#{bin}/immortaldir", "cmd/immortaldir/main.go"
-      man8.install Dir["man/*.8"]
-      prefix.install_metafiles
-    end
+    ldflags = "-s -w -X main.version=#{version}"
+    system "go", "build", "-ldflags", ldflags, "-o", "#{bin}/immortal", "cmd/immortal/main.go"
+    system "go", "build", "-ldflags", ldflags, "-o", "#{bin}/immortalctl", "cmd/immortalctl/main.go"
+    system "go", "build", "-ldflags", ldflags, "-o", "#{bin}/immortaldir", "cmd/immortaldir/main.go"
+    man8.install Dir["man/*.8"]
+    prefix.install_metafiles
   end
 
   test do

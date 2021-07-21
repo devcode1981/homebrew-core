@@ -4,15 +4,21 @@ class Bower < Formula
   desc "Package manager for the web"
   homepage "https://bower.io/"
   # Use Github tarball to avoid bowers npm 4+ incompatible bundled dep usage
-  url "https://github.com/bower/bower/archive/v1.8.4.tar.gz"
-  sha256 "62a6f019638e2a1628d2434a3c62cb62f8d88528fee9abaf6199d203e68cffbc"
+  url "https://github.com/bower/bower/archive/v1.8.10.tar.gz"
+  sha256 "1485f6b216cde0e156dc22b576ebcf895b3088930393967c26f5bc30a1ac624a"
+  license "MIT"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "71091cd752679276938b3d522b3a3208028ac39d7567621c6be01d9ff8176208" => :mojave
-    sha256 "055539589006d7eeb83b1ce11bf54e120660790c5795fc73acf5842691984e6e" => :high_sierra
-    sha256 "aaaf74c6e92afb1cb2f2907a8e8380414915aac75a00e03c2356a6099b33520e" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "32480f78d1238505be4d7031e9d39d51a7167fc4ff24b762afeaa6f712915481"
+    sha256 cellar: :any_skip_relocation, big_sur:       "7086bda09e7699d4feb9c105723fa332e5a97d0af7dbaba799394f95cda46a62"
+    sha256 cellar: :any_skip_relocation, catalina:      "bc9d7b039ab0f4542330d662ea1af873f1d0313e7216ba5aa179ef6065e1eed0"
+    sha256 cellar: :any_skip_relocation, mojave:        "aa51c9ec9aa6d785ff9973d81d9ece85decf852f3812fe82534f48a9c2f8dc23"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e47dabe1136ca6b812906d803a17238002e9049a8b4b58a76a76b1c1f88824c7"
   end
 
   depends_on "node"

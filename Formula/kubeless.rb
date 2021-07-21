@@ -1,76 +1,83 @@
 class Kubeless < Formula
   desc "Kubernetes Native Serverless Framework"
-  homepage "https://github.com/kubeless/kubeless"
-  url "https://github.com/kubeless/kubeless/archive/v1.0.0.tar.gz"
-  sha256 "df692501fd861f6cdad1be06d11261eebcf2723e1a1de6c673821f3fb161cbf9"
+  homepage "https://kubeless.io"
+  url "https://github.com/kubeless/kubeless/archive/v1.0.8.tar.gz"
+  sha256 "c25dd4908747ac9e2b1f815dfca3e1f5d582378ea5a05c959f96221cafd3e4cf"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "47f95cde7b0591505c3de96e99c9c54073ab021f067d14cc243e43d84eb51297" => :mojave
-    sha256 "bfdaecb3d7eddb036138c0c3db0a6c7e455678c45b3bdda9dd6681bd9d03faa8" => :high_sierra
-    sha256 "4feb3ead8b2fda79abe0693f51b6a00a0445ffabb57a30e9496f16d617f1fc92" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "457c1b5b7f10562288c98ec9a5bd75378256a930ebead0f4acd1dd02a157c81a"
+    sha256 cellar: :any_skip_relocation, big_sur:       "617d7ec712263ee395d113e427a8557a0b4da5f0a13904aaa7b6dd88076d2e34"
+    sha256 cellar: :any_skip_relocation, catalina:      "622d26db25c0c672ab9204caf7478453912916c6d3cf4626818afb1e7e029f56"
+    sha256 cellar: :any_skip_relocation, mojave:        "4892e5ecc077136f2259e496b82951e4601fbe4e5fc2b5c5d3cf84216b15f29d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b87b97575b27569433e254396eaa15c265fd9f11de80c916e346e7fb0271559f"
   end
 
   depends_on "go" => :build
-  depends_on "kubernetes-cli" => :recommended
+  depends_on "kubernetes-cli"
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/kubeless/kubeless").install buildpath.children
-    cd "src/github.com/kubeless/kubeless" do
-      ldflags = %W[
-        -w -X github.com/kubeless/kubeless/pkg/version.Version=v#{version}
-      ]
-      system "go", "build", "-o", bin/"kubeless", "-ldflags",
-             ldflags.join(" "), "./cmd/kubeless"
-      prefix.install_metafiles
-    end
+    ldflags = %W[
+      -s -w -X github.com/kubeless/kubeless/pkg/version.Version=v#{version}
+    ]
+    system "go", "build", "-ldflags", ldflags.join(" "), "-trimpath",
+           "-o", bin/"kubeless", "./cmd/kubeless"
+    prefix.install_metafiles
   end
 
   test do
-    require "socket"
+    port = free_port
+    server = TCPServer.new("127.0.0.1", port)
 
-    server = TCPServer.new("127.0.0.1", 0)
-    port = server.addr[1]
     pid = fork do
       loop do
         socket = server.accept
         request = socket.gets
-        request_path = request.split(" ")[1]
-        if request_path == "/api/v1/namespaces/kubeless/configmaps/kubeless-config"
-          response = '{
+        request_path = request.split[1]
+        runtime_images_data = <<-'EOS'.gsub(/\s+/, "")
+        [{
+          \"ID\": \"python\",
+          \"versions\": [{
+            \"name\": \"python27\",
+            \"version\": \"2.7\",
+            \"httpImage\": \"kubeless/python\"
+          }]
+        }]
+        EOS
+        response = case request_path
+        when "/api/v1/namespaces/kubeless/configmaps/kubeless-config"
+          <<-EOS
+          {
             "kind": "ConfigMap",
             "apiVersion": "v1",
             "metadata": { "name": "kubeless-config", "namespace": "kubeless" },
             "data": {
-              "runtime-images": "[{' \
-                '\"ID\": \"python\",' \
-                '\"versions\": [{' \
-                  '\"name\": \"python27\",' \
-                  '\"version\": \"2.7\",' \
-                  '\"httpImage\": \"kubeless/python\"' \
-                  "}]" \
-                '}]"
-              }
-            }'
-        elsif request_path == "/apis/kubeless.io/v1beta1/namespaces/default/functions"
-          response = '{
+              "runtime-images": "#{runtime_images_data}"
+            }
+          }
+          EOS
+        when "/apis/kubeless.io/v1beta1/namespaces/default/functions"
+          <<-EOS
+          {
             "apiVersion": "kubeless.io/v1beta1",
             "kind": "Function",
             "metadata": { "name": "get-python", "namespace": "default" }
-            }'
-        elsif request_path == "/apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions/functions.kubeless.io"
-          response = '{
+          }
+          EOS
+        when "/apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions/functions.kubeless.io"
+          <<-EOS
+          {
             "apiVersion": "apiextensions.k8s.io/v1beta1",
             "kind": "CustomResourceDefinition",
             "metadata": { "name": "functions.kubeless.io" }
-            }'
+          }
+          EOS
         else
-          response = "OK"
+          "OK"
         end
         socket.print "HTTP/1.1 200 OK\r\n" \
-                    "Content-Length: #{response.bytesize}\r\n" \
-                    "Connection: close\r\n"
+                     "Content-Length: #{response.bytesize}\r\n" \
+                     "Connection: close\r\n"
         socket.print "\r\n"
         socket.print response
         socket.close

@@ -3,23 +3,21 @@ class Stoken < Formula
   homepage "https://stoken.sourceforge.io/"
   url "https://downloads.sourceforge.net/project/stoken/stoken-0.92.tar.gz"
   sha256 "aa2b481b058e4caf068f7e747a2dcf5772bcbf278a4f89bc9efcbf82bcc9ef5a"
+  revision 1
 
   bottle do
-    cellar :any
-    sha256 "3a362165a5fac3e9c9117f0f247449aad1c1c6dfa76dfd6dfd652ed5137d7c09" => :mojave
-    sha256 "cb6b6bb8d97abca20a4395fe9686717186ad1e4fc99f470e74a3b7748bde4d4d" => :high_sierra
-    sha256 "005b85ff93aa190fbe9590324b1579d960c3207cd144cf860cfc6050eaf10e71" => :sierra
-    sha256 "f29de39d399ca3b9acbdae0e170e82173f2fbcd5806663a8697c10695b5d1b82" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "2f66cb207fe048720b4497e774752de500d005b4bcc7bd45ccb164ecd11fafc8"
+    sha256 cellar: :any,                 big_sur:       "701102c6cb8138920a8ccf7aae6d89ea247d259d17f7f4ce3e4af46cad516802"
+    sha256 cellar: :any,                 catalina:      "423dbce4e76710fe932fc4d86fa25b39ced8f138d781fcccbc3982ce83136216"
+    sha256 cellar: :any,                 mojave:        "59ee230b63a707bf9c1fd966ec003c14ca16c7e61a331b765e31a1ba4b7db867"
+    sha256 cellar: :any,                 high_sierra:   "6c6b704e5f9830e0192383c53717f64b0af48119d6f0d96d78de521820a6c84b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "76dc36073ec825c62714e281e7e02cf6a159a5f43a27c2011440cc683cebb3ed"
   end
 
   depends_on "pkg-config" => :build
   depends_on "nettle"
-  depends_on "gtk+3" => :optional
 
-  if build.with? "gtk+3"
-    depends_on "adwaita-icon-theme"
-    depends_on "hicolor-icon-theme"
-  end
+  uses_from_macos "libxml2"
 
   def install
     args = %W[

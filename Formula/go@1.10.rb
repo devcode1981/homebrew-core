@@ -1,69 +1,82 @@
 class GoAT110 < Formula
   desc "Go programming environment (1.10)"
   homepage "https://golang.org"
-  url "https://dl.google.com/go/go1.10.4.src.tar.gz"
-  mirror "https://fossies.org/linux/misc/go1.10.4.src.tar.gz"
-  sha256 "6fe44965ed453cd968a81988523e9b0e794d3a478f91fd7983c28763d52d5781"
+  url "https://dl.google.com/go/go1.10.8.src.tar.gz"
+  mirror "https://fossies.org/linux/misc/go1.10.8.src.tar.gz"
+  sha256 "6faf74046b5e24c2c0b46e78571cca4d65e1b89819da1089e53ea57539c63491"
+  license "BSD-3-Clause"
 
   bottle do
-    sha256 "708d7da25f16bc496d2031d18e3364cd27307cc81b350efd70cf0129f12d7f3e" => :mojave
-    sha256 "8f61daebea1012743280f2aab830db7d812b6064dffa786a1514dc06550facc0" => :high_sierra
-    sha256 "c198d33774a788840143677bd396fd9f9601c1e568b01f6c41afe1b292a94796" => :sierra
-    sha256 "f8ae863158b47ddbc82df4dcfdd3248d1c55c5f2bbce291a855053850819044b" => :el_capitan
+    rebuild 2
+    sha256 big_sur:     "b61ba9c56d4064290af620c92e23ce5f5428c8a4a9964c787d62e0f20a142d57"
+    sha256 catalina:    "fa6f1fcd01302191009869886cf56208a42224ad86e201ebd98be6346f72f4a3"
+    sha256 mojave:      "b00703a47e9352ee299c81d269c66209edca69605d06b2ce031b9754b8da56e6"
+    sha256 high_sierra: "395dcfc97f048bf95efedcf084206d730dba4ba59391075869b6cbae8d4ad0c1"
   end
 
   keg_only :versioned_formula
 
-  depends_on :macos => :mountain_lion
+  disable! date: "2021-02-16", because: :unsupported
+
+  depends_on arch: :x86_64
 
   resource "gotools" do
     url "https://go.googlesource.com/tools.git",
-        :branch => "release-branch.go1.10"
+        branch: "release-branch.go1.10"
   end
 
   # Don't update this unless this version cannot bootstrap the new version.
   resource "gobootstrap" do
-    url "https://storage.googleapis.com/golang/go1.7.darwin-amd64.tar.gz"
-    version "1.7"
-    sha256 "51d905e0b43b3d0ed41aaf23e19001ab4bc3f96c3ca134b48f7892485fc52961"
+    on_macos do
+      url "https://storage.googleapis.com/golang/go1.7.darwin-amd64.tar.gz"
+      sha256 "51d905e0b43b3d0ed41aaf23e19001ab4bc3f96c3ca134b48f7892485fc52961"
+    end
+
+    on_linux do
+      url "https://storage.googleapis.com/golang/go1.7.linux-amd64.tar.gz"
+      sha256 "702ad90f705365227e902b42d91dd1a40e48ca7f67a2f4b2fd052aaa4295cd95"
+    end
+  end
+
+  # Prevents Go from building malformed binaries. Fixed upstream, should
+  # be in a future release.
+  # https://github.com/golang/go/issues/32673
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/b8d26872202f4efc9797a51265b868f7ebc0d03a/go%401.10/dwarf_segments.patch"
+    sha256 "7bdf34196f5e8f7de705670e6199cf7dc22835f9a188af3e319aed60f7398ff6"
   end
 
   def install
+    on_linux do
+      # Fixes: Error: Failure while executing: ../bin/ldd ../line-clang.elf: Permission denied
+      chmod "+x", Dir.glob("src/debug/dwarf/testdata/*.elf")
+      chmod "+x", Dir.glob("src/debug/elf/testdata/*-exec")
+    end
+
     (buildpath/"gobootstrap").install resource("gobootstrap")
     ENV["GOROOT_BOOTSTRAP"] = buildpath/"gobootstrap"
 
-    cd "src" do
+    cd "go/src" do
       ENV["GOROOT_FINAL"] = libexec
-      ENV["GOOS"]         = "darwin"
       system "./make.bash", "--no-clean"
     end
 
-    (buildpath/"pkg/obj").rmtree
+    (buildpath/"go/pkg/obj").rmtree
     rm_rf "gobootstrap" # Bootstrap not required beyond compile.
     libexec.install Dir["*"]
-    bin.install_symlink Dir[libexec/"bin/go*"]
+    bin.install_symlink Dir[libexec/"go/bin/go*"]
 
     system bin/"go", "install", "-race", "std"
 
     # Build and install godoc
     ENV.prepend_path "PATH", bin
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/golang.org/x/tools").install resource("gotools")
-    cd "src/golang.org/x/tools/cmd/godoc/" do
+    ENV["GOPATH"] = buildpath/"go"
+    (buildpath/"go/src/golang.org/x/tools").install resource("gotools")
+    cd "go/src/golang.org/x/tools/cmd/godoc/" do
       system "go", "build"
       (libexec/"bin").install "godoc"
     end
     bin.install_symlink libexec/"bin/godoc"
-  end
-
-  def caveats; <<~EOS
-    A valid GOPATH is required to use the `go get` command.
-    If $GOPATH is not specified, $HOME/go will be used by default:
-      https://golang.org/doc/code.html#GOPATH
-
-    You may wish to add the GOROOT-based install location to your PATH:
-      export PATH=$PATH:#{opt_libexec}/bin
-  EOS
   end
 
   test do

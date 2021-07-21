@@ -1,38 +1,59 @@
 class Pdnsrec < Formula
   desc "Non-authoritative/recursing DNS server"
   homepage "https://www.powerdns.com/recursor.html"
-  url "https://downloads.powerdns.com/releases/pdns-recursor-4.1.4.tar.bz2"
-  sha256 "b19f4353bea3fe54a581a4e7ace101637f8474f5ebfe925e2d3ff4910b71b550"
+  url "https://downloads.powerdns.com/releases/pdns-recursor-4.5.4.tar.bz2"
+  sha256 "015d606a8f9a4a711489634d57375c77cc34f999ca43c195d8002e31a747896a"
+  license "GPL-2.0-only"
+
+  livecheck do
+    url "https://downloads.powerdns.com/releases/"
+    regex(/href=.*?pdns-recursor[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "324b5650c13c396603b3a3146ec1d34cae0ee6f6581e6a03d4c4cf3f4279e98c" => :mojave
-    sha256 "0bec1537a23c906110eb882451e7f6a23c8cd1f4efe4f0b8d231441aee29712c" => :high_sierra
-    sha256 "13d7deb2f2f06d40842f60f1f641bbd0c00006bbc69673e93a0885563f9cb562" => :sierra
-    sha256 "6c2a044482066cbdf24c8fcf7a828f5035d4757ba678c7640db526f4d6126230" => :el_capitan
+    sha256 arm64_big_sur: "da945ba43769742cd9e0263e6c12e81a6a1e2efbd039ca696257f77284f2dc8b"
+    sha256 big_sur:       "f49c224c33ed279bcb5b932401b69448dcbb8d6738413bddf67e6380685b3844"
+    sha256 catalina:      "f788ecc3c854cae9a7b5ea0f4a72c7a6631d60ae8f7d1d87c3fd24ca84a89f6b"
+    sha256 mojave:        "fe84e72a0968bbcad84bf3cfb8d46c1676801c8808b9084b9bc580e22d727c4d"
+    sha256 x86_64_linux:  "fdae24f7ccc5dcb221f5a6d544e508b9de96f9dcf388f9b81335dcfa6790ab65"
   end
 
   depends_on "pkg-config" => :build
   depends_on "boost"
-  depends_on "gcc" if DevelopmentTools.clang_build_version <= 600
   depends_on "lua"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
 
-  fails_with :clang do
-    build 600
-    cause "incomplete C++11 support"
+  on_macos do
+    depends_on "llvm" => :build if DevelopmentTools.clang_build_version <= 1100
   end
 
-  needs :cxx11
+  on_linux do
+    depends_on "gcc"
+  end
+
+  fails_with :clang do
+    build 1100
+    cause <<-EOS
+      Undefined symbols for architecture x86_64:
+        "MOADNSParser::init(bool, std::__1::basic_string_view<char, std::__1::char_traits<char> > const&)"
+    EOS
+  end
+
+  fails_with gcc: "5"
 
   def install
     ENV.cxx11
+    ENV.remove "HOMEBREW_LIBRARY_PATHS", Formula["llvm"].opt_lib
+    on_macos do
+      ENV.llvm_clang if DevelopmentTools.clang_build_version <= 1100
+    end
 
     args = %W[
       --prefix=#{prefix}
       --sysconfdir=#{etc}/powerdns
       --disable-silent-rules
       --with-boost=#{Formula["boost"].opt_prefix}
-      --with-libcrypto=#{Formula["openssl"].opt_prefix}
+      --with-libcrypto=#{Formula["openssl@1.1"].opt_prefix}
       --with-lua
       --without-net-snmp
     ]

@@ -1,19 +1,28 @@
 class Libofx < Formula
   desc "Library to support OFX command responses"
   homepage "https://libofx.sourceforge.io"
-  url "https://downloads.sourceforge.net/project/libofx/libofx/libofx-0.9.13.tar.gz"
-  sha256 "57eaf97cddbaf82c24f26b8f5cf8b2fbfd4969c74500a2c9acc9082b83bcc0e4"
+  url "https://downloads.sourceforge.net/project/libofx/libofx/libofx-0.10.2.tar.gz"
+  sha256 "7164fbe6c570867296f38f46f9def62ea993e46f2a67a9af1771d8edb877eb18"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/libofx[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    sha256 "8474a3f5f575c9950791274b365452ca0cc6e36b11134373b7918616ae76b958" => :mojave
-    sha256 "76ec57f4127bd219529ab60bff89e86e8779479424f69e2f485aba05cf4ca63c" => :high_sierra
-    sha256 "6a59abeb58d3b9f5659fa0e6544540a50fb6521c7b149e4aa2f677d91d5093e8" => :sierra
-    sha256 "c59e5f4445b49e59cc869aa9c01c0dbcb6d8cc5eb7822c3b1c2500f10fd4dacc" => :el_capitan
+    sha256 arm64_big_sur: "5f99ba4a0ff227ff1ab95201f5064e334612001af2dd1d9bd2d178d018142759"
+    sha256 big_sur:       "ff79aca1e58097d1eda8e2bd0b67d76e897a4146b1be0355adb38528911ec526"
+    sha256 catalina:      "0c663487948a3090f30bb2f9d034132c9c5ff7c034efc703c49746d573e22d45"
+    sha256 mojave:        "5a8264996840f6844933633f245463f7d6c7a5c625d6688a89083a393d04f650"
+    sha256 x86_64_linux:  "f56550e600a49e15e7e86b6adbd6fc9ec21d8e3b248588449f9df0ac1e2047be"
   end
 
   depends_on "open-sp"
 
   def install
+    ENV.cxx11
+
     opensp = Formula["open-sp"]
     system "./configure", "--disable-dependency-tracking",
                           "--with-opensp-includes=#{opensp.opt_include}/OpenSP",

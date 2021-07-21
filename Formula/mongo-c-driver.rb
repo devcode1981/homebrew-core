@@ -1,23 +1,32 @@
 class MongoCDriver < Formula
   desc "C driver for MongoDB"
   homepage "https://github.com/mongodb/mongo-c-driver"
-  url "https://github.com/mongodb/mongo-c-driver/releases/download/1.13.0/mongo-c-driver-1.13.0.tar.gz"
-  sha256 "25164e03b08baf9f2dd88317f1a36ba36b09f563291a7cf241f0af8676155b8d"
+  url "https://github.com/mongodb/mongo-c-driver/releases/download/1.18.0/mongo-c-driver-1.18.0.tar.gz"
+  sha256 "db9bfc28355fe068c88b00974ca770a5449c7931b66f2895c9fbf2104d883992"
+  license "Apache-2.0"
   head "https://github.com/mongodb/mongo-c-driver.git"
 
   bottle do
-    cellar :any
-    sha256 "6cfbe9b713a6d4ea03f10ebc370229ffe318f6445d6a18315e9844299bfcc633" => :mojave
-    sha256 "d93d3021fd33985914a781407ca747e7151faa2ca24b706a62fe1414cc5450fe" => :high_sierra
-    sha256 "e9a91f813111094853791a28a9964338363a120b5a41e24f31ea971664d159df" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "b32b43cfbdcf8a6886d549e062bfc05ebdebc561b380aa9a860efb4b5a6903cf"
+    sha256 cellar: :any,                 big_sur:       "b6b2cce1b0e769f831a568fd288062ebff90a72af119977c705e555fbc7a93e8"
+    sha256 cellar: :any,                 catalina:      "55cee809f56d9386cf6c3c31ce50e9a221448f462cee6b19e91b4b909ede935e"
+    sha256 cellar: :any,                 mojave:        "1224bad595b44b5b36f5d482aec0b135b8c9789ae9d4797ceaa9bf6994bff7be"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "86607f8a41038ad1691652aa265f3062ac883891f937ce2cb474e2e617e600da"
   end
 
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
   depends_on "sphinx-doc" => :build
+  depends_on "openssl@1.1"
+
+  uses_from_macos "zlib"
 
   def install
-    system "cmake", ".", *std_cmake_args
+    cmake_args = std_cmake_args
+    cmake_args << "-DBUILD_VERSION=1.18.0-pre" if build.head?
+    cmake_args << "-DCMAKE_INSTALL_RPATH=#{rpath}"
+    inreplace "src/libmongoc/src/mongoc/mongoc-config.h.in", "@MONGOC_CC@", ENV.cc
+    system "cmake", ".", *cmake_args
     system "make", "install"
     (pkgshare/"libbson").install "src/libbson/examples"
     (pkgshare/"libmongoc").install "src/libmongoc/examples"

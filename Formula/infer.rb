@@ -1,26 +1,44 @@
 class Infer < Formula
   desc "Static analyzer for Java, C, C++, and Objective-C"
   homepage "https://fbinfer.com/"
-  # pull from git tag to get submodules
-  url "https://github.com/facebook/infer.git",
-      :tag      => "v0.15.0",
-      :revision => "8bda23fadcc51c6ed38a4c3a75be25a266e8f7b4"
+  url "https://github.com/facebook/infer/archive/v1.1.0.tar.gz"
+  sha256 "201c7797668a4b498fe108fcc13031b72d9dbf04dab0dc65dd6bd3f30e1f89ee"
+  license "MIT"
+  head "https://github.com/facebook/infer.git"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "0b056e3162e0e5c791173f790e5e06dda2f80781531098ca8c6eb3d89dc96768" => :high_sierra
-    sha256 "91c68a2e6487e2218567a2e92c10b76bbfea5c69497b1bd9b027426ed23ec615" => :sierra
-    sha256 "8bb9d822db58e8b34e286dbc167c391e497ae5e37d96766ca355dd9bc7e6ec50" => :el_capitan
+    sha256 cellar: :any, big_sur:  "e3f2d774f27d1daac2b41ed5cb2bcf1b180f9b6d6440ae5ddfb8d1c001c4413a"
+    sha256 cellar: :any, catalina: "2dcd6c8c088ee88b21f3740a770fd3f73850815aa1f9270d814bfdd4095d2fc4"
+    sha256 cellar: :any, mojave:   "b1e1ea3fd12e96a325ca3a5618032a0f9289caae1704afcab131b87a2104ad84"
   end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
   depends_on "cmake" => :build
-  depends_on :java => ["1.7+", :build]
   depends_on "libtool" => :build
-  depends_on "ocaml" => :build
+  depends_on "ninja" => :build
   depends_on "opam" => :build
+  depends_on "openjdk@11" => [:build, :test]
   depends_on "pkg-config" => :build
+  depends_on "python@3.9" => :build
+  depends_on "gmp"
+  depends_on "mpfr"
+  depends_on "sqlite"
+
+  uses_from_macos "m4" => :build
+  uses_from_macos "unzip" => :build
+  uses_from_macos "ncurses"
+  uses_from_macos "xz"
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "patchelf" => :build
+  end
 
   def install
     # needed to build clang
@@ -29,43 +47,42 @@ class Infer < Formula
     # Apple's libstdc++ is too old to build LLVM
     ENV.libcxx if ENV.compiler == :clang
 
+    # Use JDK11
+    ENV["JAVA_HOME"] = Formula["openjdk@11"].opt_prefix
+
     opamroot = buildpath/"opamroot"
     opamroot.mkpath
     ENV["OPAMROOT"] = opamroot
     ENV["OPAMYES"] = "1"
+    ENV["OPAMVERBOSE"] = "1"
+    on_linux do
+      ENV["PATCHELF"] = Formula["patchelf"].opt_bin/"patchelf"
+    end
+
+    system "opam", "init", "--no-setup", "--disable-sandboxing"
 
     # do not attempt to use the clang in facebook-clang-plugins/ as it hasn't been built yet
     ENV["INFER_CONFIGURE_OPTS"] = "--prefix=#{prefix} --without-fcp-clang"
 
-    llvm_args = %w[
-      -DLLVM_INCLUDE_DOCS=OFF
-      -DLLVM_INSTALL_UTILS=OFF
-      -DLLVM_TARGETS_TO_BUILD=all
-      -DLIBOMP_ARCH=x86_64
-      -DLLVM_BUILD_EXTERNAL_COMPILER_RT=ON
-      -DLLVM_BUILD_LLVM_DYLIB=ON
-    ]
+    # Let's try build clang faster
+    ENV["JOBS"] = ENV.make_jobs.to_s
 
-    system "opam", "init", "--no-setup"
-    ocaml_version = File.read("build-infer.sh").match(/OCAML_VERSION_DEFAULT=\"([^\"]+)\"/)[1]
-    ocaml_version_number = ocaml_version.split("+", 2)[0]
-    inreplace "#{opamroot}/compilers/#{ocaml_version_number}/#{ocaml_version}/#{ocaml_version}.comp",
-      '["./configure"', '["./configure" "-no-graph"'
-    # so that `infer --version` reports a release version number
-    inreplace "infer/src/base/Version.ml.in", "let is_release = is_yes \"@IS_RELEASE_TREE@\"", "let is_release = true"
-    inreplace "facebook-clang-plugins/clang/setup.sh", "CMAKE_ARGS=(", "CMAKE_ARGS=(\n  " + llvm_args.join("\n  ")
+    # Release build
+    touch ".release"
+
     system "./build-infer.sh", "all", "--yes"
-    system "opam", "config", "exec", "--switch=infer-#{ocaml_version}", "--", "make", "install"
+    system "make", "install-with-libs"
   end
 
   test do
+    ENV["JAVA_HOME"] = Formula["openjdk@11"].opt_prefix
+
     (testpath/"FailingTest.c").write <<~EOS
       #include <stdio.h>
 
       int main() {
         int *s = NULL;
         *s = 42;
-
         return 0;
       }
     EOS
@@ -78,13 +95,34 @@ class Infer < Formula
         if (s != NULL) {
           *s = 42;
         }
-
         return 0;
       }
     EOS
 
-    shell_output("#{bin}/infer --fail-on-issue -- clang -c FailingTest.c", 2)
-    shell_output("#{bin}/infer --fail-on-issue -- clang -c PassingTest.c")
+    no_issues_output = "\n  No issues found  \n"
+
+    failing_c_output = <<~EOS
+
+      FailingTest.c:5: error: Null Dereference
+      \  pointer `s` last assigned on line 4 could be null and is dereferenced at line 5, column 3.
+      \  3. int main() {
+      \  4.   int *s = NULL;
+      \  5.   *s = 42;
+      \       ^
+      \  6.   return 0;
+      \  7. }
+
+
+      Found 1 issue
+      \          Issue Type(ISSUED_TYPE_ID): #
+      \  Null Dereference(NULL_DEREFERENCE): 1
+    EOS
+
+    assert_equal failing_c_output.to_s,
+      shell_output("#{bin}/infer --fail-on-issue -P -- clang -c FailingTest.c", 2)
+
+    assert_equal no_issues_output.to_s,
+      shell_output("#{bin}/infer --fail-on-issue -P -- clang -c PassingTest.c")
 
     (testpath/"FailingTest.java").write <<~EOS
       class FailingTest {
@@ -120,7 +158,26 @@ class Infer < Formula
       }
     EOS
 
-    shell_output("#{bin}/infer --fail-on-issue -- javac FailingTest.java", 2)
-    shell_output("#{bin}/infer --fail-on-issue -- javac PassingTest.java")
+    failing_java_output = <<~EOS
+
+      FailingTest.java:12: error: Null Dereference
+      \  object `s` last assigned on line 11 could be null and is dereferenced at line 12.
+      \  10.     int mayCauseNPE() {
+      \  11.       String s = mayReturnNull(0);
+      \  12. >     return s.length();
+      \  13.     }
+      \  14.   }
+
+
+      Found 1 issue
+      \          Issue Type(ISSUED_TYPE_ID): #
+      \  Null Dereference(NULL_DEREFERENCE): 1
+    EOS
+
+    assert_equal failing_java_output.to_s,
+      shell_output("#{bin}/infer --fail-on-issue -P -- javac FailingTest.java", 2)
+
+    assert_equal no_issues_output.to_s,
+      shell_output("#{bin}/infer --fail-on-issue -P -- javac PassingTest.java")
   end
 end

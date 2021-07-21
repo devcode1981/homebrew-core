@@ -1,40 +1,32 @@
 class Fceux < Formula
-  desc "The all in one NES/Famicom Emulator"
-  homepage "http://fceux.com"
-  url "https://downloads.sourceforge.net/project/fceultra/Source%20Code/2.2.3%20src/fceux-2.2.3.src.tar.gz"
-  sha256 "4be6dda9a347f941809a3c4a90d21815b502384adfdd596adaa7b2daf088823e"
-  revision 1
+  desc "All-in-one NES/Famicom Emulator"
+  homepage "https://fceux.com/"
+  url "https://github.com/TASVideos/fceux.git",
+      tag:      "fceux-2.4.0",
+      revision: "941da60ecb283263a3810ed199d80abf94bd6494"
+  license "GPL-2.0-only"
+  head "https://github.com/TASVideos/fceux.git"
 
   bottle do
-    cellar :any
-    sha256 "5c0c3d6c59e39e053a1d64605f57a9e05fce54f62c8b9778ffb4103708842f23" => :mojave
-    sha256 "b075151a3db5a502f98f6ee8b5fcbd5ffa05064a88c786c99fa9fa908b85eacf" => :high_sierra
-    sha256 "4102c16cb5f5412d36cdcc52f739c98c2f457be7a8d4f0a55aa6f973eeb8c39d" => :sierra
-    sha256 "013d1b9b126426b76e814b56a5424281c348333e6a6e69db87cf603362c25397" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "3d03e8b04207f50eb560c5cb0343ec6600565bc24cf8b2dba1abb2f42e4ef288"
+    sha256 cellar: :any, big_sur:       "2d900d6d428da14dc3cc5a2cb651bbc61a840c56271aa85fee6eec76fe781935"
+    sha256 cellar: :any, catalina:      "c5eaa79f94834d5f38399293de563f292f03f175b5a7968251ae45887f07f120"
+    sha256 cellar: :any, mojave:        "536f893139bcd6fd413eaa457d996c9df6b184ca89f267253f01312971c6cb39"
   end
 
+  depends_on "cmake" => :build
   depends_on "pkg-config" => :build
-  depends_on "scons" => :build
-  depends_on "gtk+3"
-  depends_on "sdl"
-
-  # Fix "error: ordered comparison between pointer and zero"
-  if DevelopmentTools.clang_build_version >= 900
-    patch do
-      url "https://raw.githubusercontent.com/Homebrew/formula-patches/c126b2c/fceux/xcode9.patch"
-      sha256 "3fdea3b81180d1720073c943ce9f3e2630d200252d33c1e2efc1cd8c1e3f8148"
-    end
-  end
+  depends_on "minizip"
+  depends_on "qt@5"
+  depends_on "sdl2"
+  depends_on "x264"
 
   def install
-    # Bypass X11 dependency injection
-    # https://sourceforge.net/p/fceultra/bugs/755/
-    inreplace "src/drivers/sdl/SConscript", "env.ParseConfig(config_string)", ""
-
-    # gdlib required for logo insertion, but headers are not detected
-    # https://sourceforge.net/p/fceultra/bugs/756/
-    scons "RELEASE=1", "GTK=0", "GTK3=1", "LOGO=0"
-    libexec.install "src/fceux"
+    ENV["CXXFLAGS"] = "-DPUBLIC_RELEASE=1" if build.stable?
+    system "cmake", ".", *std_cmake_args
+    system "make"
+    cp "src/auxlib.lua", "output/luaScripts"
+    libexec.install "src/fceux.app/Contents/MacOS/fceux"
     pkgshare.install ["output/luaScripts", "output/palettes", "output/tools"]
     (bin/"fceux").write <<~EOS
       #!/bin/bash
@@ -43,6 +35,6 @@ class Fceux < Formula
   end
 
   test do
-    system "#{bin}/fceux", "-h"
+    system "#{bin}/fceux", "--help"
   end
 end

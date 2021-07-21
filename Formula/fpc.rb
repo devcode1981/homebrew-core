@@ -1,29 +1,37 @@
 class Fpc < Formula
   desc "Free Pascal: multi-architecture Pascal compiler"
   homepage "https://www.freepascal.org/"
-  url "https://downloads.sourceforge.net/project/freepascal/Source/3.0.4/fpc-3.0.4.source.tar.gz"
-  sha256 "69b3b7667b72b6759cf27226df5eb54112ce3515ff5efb79d95ac14bac742845"
-  revision 1
+  url "https://downloads.sourceforge.net/project/freepascal/Source/3.2.2/fpc-3.2.2.source.tar.gz"
+  sha256 "d542e349de246843d4f164829953d1f5b864126c5b62fd17c9b45b33e23d2f44"
+  license "GPL-2.0-or-later"
+
+  # fpc releases involve so many files that the tarball is pushed out of the
+  # RSS feed and we can't rely on the SourceForge strategy.
+  livecheck do
+    url "https://sourceforge.net/projects/freepascal/files/Source/"
+    strategy :page_match
+    regex(%r{href=(?:["']|.*?Source/)?v?(\d+(?:\.\d+)+)/?["' >]}i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "91c82c96317247dd7c5992a559b7ead81ad71e58c9be7331364bfd9a16558c32" => :mojave
-    sha256 "adc48d394c224bd91e22e0963156c53323d6647b09a1ef6588a37a9444d29623" => :high_sierra
-    sha256 "9117ae666c6b4f9b9fb63f9993b530c6910084090a1ae7668a06d7d1f9a1170c" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "b6a8dd5b23132c110efda34b59aaaeeebaf509e72dd1d4f621b07d97fe99ec17"
+    sha256 cellar: :any, big_sur:       "9d41a4f67a0850724a81ad507d155a2874132fc6f9af076485ffbb38bfcb8fb4"
+    sha256 cellar: :any, catalina:      "609f7ebf13e5986764661d44044cac9e66ca327f4247def6d395eb4f35a1ff96"
+    sha256 cellar: :any, mojave:        "9d1cca864137ed5eca91156d76dc8005034739a21c23d667774b349a87d90cd9"
   end
 
   resource "bootstrap" do
-    url "https://downloads.sourceforge.net/project/freepascal/Bootstrap/3.0.0/x86_64-macosx-10.7-ppcx64.tar.bz2"
-    sha256 "a67ef5def356d122a4692e21b209c328f6d46deef4539f4d4506c3dc1eecb4b0"
+    url "https://downloads.sourceforge.net/project/freepascal/Mac%20OS%20X/3.0.4/fpc-3.0.4a.intel-macosx.dmg"
+    sha256 "56b870fbce8dc9b098ecff3c585f366ad3e156ca32a6bf3b20091accfb252616"
   end
-
-  # Help fpc find the startup files (crt1.o and friends) with 10.14 SDK
-  patch :DATA
 
   def install
     fpc_bootstrap = buildpath/"bootstrap"
-    resource("bootstrap").stage { fpc_bootstrap.install Dir["*"] }
-    fpc_compiler = fpc_bootstrap/"ppcx64"
+    resource("bootstrap").stage do
+      system "pkgutil", "--expand-full", "fpc-3.0.4a.intel-macosx.pkg", "contents"
+      (fpc_bootstrap/"fpc-3.0.4a").install Dir["contents/fpc-3.0.4a.intel-macosx.pkg/Payload/usr/local/*"]
+    end
+    fpc_compiler = fpc_bootstrap/"fpc-3.0.4a/bin/ppcx64"
 
     # Help fpc find the startup files (crt1.o and friends) with 10.14 SDK
     args = (MacOS.version >= :mojave) ? ['OPT="-XR/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"'] : []
@@ -53,21 +61,3 @@ class Fpc < Formula
     assert_equal "Hello Homebrew", `./hello`.strip
   end
 end
-
-__END__
-diff --git a/compiler/systems/t_bsd.pas b/compiler/systems/t_bsd.pas
-index b35a78ae..61d0817d 100644
---- a/compiler/systems/t_bsd.pas
-+++ b/compiler/systems/t_bsd.pas
-@@ -310,7 +310,10 @@ begin
-   if startupfile<>'' then
-     begin
-      if not librarysearchpath.FindFile(startupfile,false,result) then
--       result:='/usr/lib/'+startupfile
-+       if sysutils.fileexists('/usr/lib/'+startupfile) then
-+         result:='/usr/lib/'+startupfile
-+       else if sysutils.fileexists('/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/') then
-+         result:='/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/'+startupfile
-     end
-   else
-     result:='';

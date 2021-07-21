@@ -1,16 +1,29 @@
 class Dbhash < Formula
   desc "Computes the SHA1 hash of schema and content of a SQLite database"
   homepage "https://www.sqlite.org/dbhash.html"
-  url "https://sqlite.org/2018/sqlite-src-3260000.zip"
-  version "3.26.0"
-  sha256 "e042825ba823d61db7edc45e52655c0434903a1b54bbe85a55880c9aa5884f7b"
+  url "https://www.sqlite.org/2021/sqlite-src-3360000.zip"
+  version "3.36.0"
+  sha256 "25a3b9d08066b3a9003f06a96b2a8d1348994c29cc912535401154501d875324"
+  license "blessing"
+
+  livecheck do
+    url "https://sqlite.org/index.html"
+    regex(%r{href=.*?releaselog/v?(\d+(?:[._]\d+)+)\.html}i)
+    strategy :page_match do |page, regex|
+      page.scan(regex).map { |match| match&.first&.gsub("_", ".") }
+    end
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b1c8c8483e02a795de5515c11b1ec21b15c30ca82c3ac9f87154322fa4237973" => :mojave
-    sha256 "2207c65b8956bccd27056dd65c905b73dc4e41eab4a86fb4dbeb04405d1eff82" => :high_sierra
-    sha256 "bcaf1062b066f14132261ef326ba56bd827f05c2abf4957a32b35cd12b582167" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "93a11d1334f5d87a45445373afe1de1fd99ed87f8dd12a9b02dc92bdcf01735e"
+    sha256 cellar: :any_skip_relocation, big_sur:       "23eccd9d6af0e7e0e23e708bd4697cb3334299a5d7127d763fe53a90aab6d064"
+    sha256 cellar: :any_skip_relocation, catalina:      "f7e686231f1748f5655b27cf334fe972a7be8d029a284f291ea2daa8f94c51af"
+    sha256 cellar: :any_skip_relocation, mojave:        "56404056dd0a9b8ece371576e64a1b3ad8c9b19f129dd500c38edfbe58c5cccf"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "036505f744fca371174119931c174fc1bfd73d4772a46983fe40e8cfb7b4d90e"
   end
+
+  uses_from_macos "tcl-tk" => :build
+  uses_from_macos "sqlite" => :test
 
   def install
     system "./configure", "--disable-debug", "--prefix=#{prefix}"
@@ -22,7 +35,7 @@ class Dbhash < Formula
     dbpath = testpath/"test.sqlite"
     sqlpath = testpath/"test.sql"
     sqlpath.write "create table test (name text);"
-    system "/usr/bin/sqlite3 #{dbpath} < #{sqlpath}"
+    system "sqlite3 #{dbpath} < #{sqlpath}"
     assert_equal "b6113e0ce62c5f5ca5c9f229393345ce812b7309",
                  shell_output("#{bin}/dbhash #{dbpath}").strip.split.first
   end

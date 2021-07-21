@@ -1,55 +1,66 @@
 class ClangFormat < Formula
   desc "Formatting tools for C, C++, Obj-C, Java, JavaScript, TypeScript"
   homepage "https://clang.llvm.org/docs/ClangFormat.html"
-  version "2018-10-04"
+  # The LLVM Project is under the Apache License v2.0 with LLVM Exceptions
+  license "Apache-2.0"
+  version_scheme 1
+  head "https://github.com/llvm/llvm-project.git", branch: "main"
 
   stable do
-    url "http://llvm.org/svn/llvm-project/llvm/tags/google/stable/2018-10-04/", :using => :svn
+    url "https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.1/llvm-12.0.1.src.tar.xz"
+    sha256 "7d9a8405f557cefc5a21bf5672af73903b64749d9bc3a50322239f56f34ffddf"
 
     resource "clang" do
-      url "http://llvm.org/svn/llvm-project/cfe/tags/google/stable/2018-10-04/", :using => :svn
+      url "https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.1/clang-12.0.1.src.tar.xz"
+      sha256 "6e912133bcf56e9cfe6a346fa7e5c52c2cde3e4e48b7a6cc6fcc7c75047da45f"
     end
+  end
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+    regex(%r{href=.*?/tag/llvmorg[._-]v?(\d+(?:\.\d+)+)}i)
   end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "28b91825e07d1226b5e380613ab56548c0422f9afa5201295f8e743aad30ccc1" => :mojave
-    sha256 "ad3674897a21263f6fb7f7fbef4db9e85908f97520de1b6d27bcf7f39d67eac9" => :high_sierra
-    sha256 "00664db0aaf542bda425318369391787a9decb0179cb845b42539f15001bdf27" => :sierra
-  end
-
-  head do
-    url "http://llvm.org/svn/llvm-project/llvm/trunk/", :using => :svn
-
-    resource "clang" do
-      url "http://llvm.org/svn/llvm-project/cfe/trunk/", :using => :svn
-    end
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "4f6a5ed840cccc724fa7018634a10cb793c303772076ffd6f001f445235df63c"
+    sha256 cellar: :any_skip_relocation, big_sur:       "2ecea9cf5259a440a55eb7493c9a2e2c831d94c1aa0f01ef93707415129a2e08"
+    sha256 cellar: :any_skip_relocation, catalina:      "300fad934c6c2bbb348a1293e2d56813b40547c8e6bec9b50236dba15e3c5f1e"
+    sha256 cellar: :any_skip_relocation, mojave:        "e532d4fe08eb491426eb1bb290f8c6275088ac6cee9b2d97e74ae77a95f7a9c0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "389471e5cf1b8ed375389e7e9858cec22464a2c22227b232daea0980ce322df1"
   end
 
   depends_on "cmake" => :build
   depends_on "ninja" => :build
-  depends_on "subversion" => :build
 
-  resource "libcxx" do
-    url "https://releases.llvm.org/7.0.0/libcxx-7.0.0.src.tar.xz"
-    sha256 "9b342625ba2f4e65b52764ab2061e116c0337db2179c6bce7f9a0d70c52134f0"
+  uses_from_macos "libxml2"
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
+
+  on_linux do
+    keg_only "it conflicts with llvm"
   end
 
   def install
-    (buildpath/"projects/libcxx").install resource("libcxx")
-    (buildpath/"tools/clang").install resource("clang")
+    if build.head?
+      ln_s buildpath/"clang", buildpath/"llvm/tools/clang"
+    else
+      (buildpath/"tools/clang").install resource("clang")
+    end
 
-    mkdir "build" do
+    llvmpath = build.head? ? buildpath/"llvm" : buildpath
+
+    mkdir llvmpath/"build" do
       args = std_cmake_args
-      args << "-DCMAKE_OSX_SYSROOT=/" unless MacOS::Xcode.installed?
-      args << "-DLLVM_ENABLE_LIBCXX=ON"
+      args << "-DLLVM_EXTERNAL_PROJECTS=\"clang\""
       args << ".."
       system "cmake", "-G", "Ninja", *args
       system "ninja", "clang-format"
-      bin.install "bin/clang-format"
     end
-    bin.install "tools/clang/tools/clang-format/git-clang-format"
-    (share/"clang").install Dir["tools/clang/tools/clang-format/clang-format*"]
+
+    bin.install llvmpath/"build/bin/clang-format"
+    bin.install llvmpath/"tools/clang/tools/clang-format/git-clang-format"
+    (share/"clang").install Dir[llvmpath/"tools/clang/tools/clang-format/clang-format*"]
   end
 
   test do

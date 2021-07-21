@@ -1,15 +1,16 @@
 class Nfdump < Formula
   desc "Tools to collect and process netflow data on the command-line"
-  homepage "https://nfdump.sourceforge.io"
-  url "https://github.com/phaag/nfdump/archive/v1.6.17.tar.gz"
-  sha256 "f71c2c57bdcd0731b2cfecf6d45f9bf57fc7c946858644caf829f738c67c393d"
+  homepage "https://github.com/phaag/nfdump"
+  url "https://github.com/phaag/nfdump/archive/v1.6.23.tar.gz"
+  sha256 "8c5a7959e66bb90fcbd8ad508933a14ebde4ccf7f4ae638d8f18c9473c63af33"
+  license "BSD-3-Clause"
+  head "https://github.com/phaag/nfdump.git"
 
   bottle do
-    cellar :any
-    sha256 "dddf3a460d59b020d24243fa355a751625c1a79b45e69f90b68c6ca1a476ffa6" => :mojave
-    sha256 "4011e1aa739d163bf04d5df0bff1bb779e89c5a0253332325da99ccf65ea6965" => :high_sierra
-    sha256 "7f810fe9a5e90455e8e3e2bf80fc474dd56a752a1f87310a80399d819e8e4d4b" => :sierra
-    sha256 "9312372f4ecd45cb576cbe261b6caca79f6baf314421f4c3165e99e1368aa934" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "0166cf87b2fac3b3d48f54a7b5d3dd2433e43fd0aa21500f485167e035b09d49"
+    sha256 cellar: :any, big_sur:       "04cb78152af1e986c69f60f6e3437cce46d362f4087ded5717e6ab0390cc7041"
+    sha256 cellar: :any, catalina:      "cd1575d5edc5474ab44e8729ef1fbdb10df0508b96d408888ab147d7ba6408f5"
+    sha256 cellar: :any, mojave:        "cf8ab09a45c609ba6deb8e4b7db49077c301c228658b778ecd29f81b9fbb1482"
   end
 
   depends_on "autoconf" => :build
@@ -24,6 +25,6 @@ class Nfdump < Formula
   end
 
   test do
-    system bin/"nfdump", "-Z 'host 8.8.8.8'"
+    system bin/"nfdump", "-Z", "host 8.8.8.8"
   end
 end

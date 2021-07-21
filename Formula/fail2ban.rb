@@ -1,26 +1,39 @@
 class Fail2ban < Formula
   desc "Scan log files and ban IPs showing malicious signs"
   homepage "https://www.fail2ban.org/"
-  url "https://github.com/fail2ban/fail2ban/archive/0.10.4.tar.gz"
-  sha256 "d6ca1bbc7e7944f7acb2ba7c1065953cd9837680bc4d175f30ed155c6a372449"
+  url "https://github.com/fail2ban/fail2ban/archive/0.11.2.tar.gz"
+  sha256 "383108e5f8644cefb288537950923b7520f642e7e114efb843f6e7ea9268b1e0"
+  license "GPL-2.0"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    sha256 "8a94f2acb50779d21bf5f419ef4ab65692d03e827d1d618a878b14b5174fba59" => :mojave
-    sha256 "96f7b39c78cab991ea75e7c68e65b764fe1ce0299ce82281e25800a255662bb9" => :high_sierra
-    sha256 "96f7b39c78cab991ea75e7c68e65b764fe1ce0299ce82281e25800a255662bb9" => :sierra
+    sha256 cellar: :any_skip_relocation, big_sur:      "dccbafae1bda5f12ef0ba27f74069fb179376e9a50adf0a597ff7d6d978c12f1"
+    sha256 cellar: :any_skip_relocation, catalina:     "dc4e847cf92ddfbd7e70647f671de4e5f64a7752b7d9334455b528e0fc9318d9"
+    sha256 cellar: :any_skip_relocation, mojave:       "eb5646fd06a94a1638b44fc0afd4406bf88dc3bb4672ae68e264dc5455f10d05"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "d2d8049b6513801a4b0706354b1165fd25a52f52d246e251af5cff8c46768d09"
   end
 
   depends_on "help2man" => :build
   depends_on "sphinx-doc" => :build
+  depends_on "python@3.9"
 
   def install
-    ENV.prepend_create_path "PYTHONPATH", libexec/"lib/python2.7/site-packages"
+    ENV.prepend_create_path "PYTHONPATH", libexec/"lib/python3.9/site-packages"
+    ENV["PYTHON"] = Formula["python@3.9"].opt_bin/"python3"
 
     rm "setup.cfg"
     Dir["config/paths-*.conf"].each do |r|
-      next if File.basename(r) =~ /paths-common\.conf|paths-osx\.conf/
+      next if /paths-common\.conf|paths-osx\.conf/.match?(File.basename(r))
+
       rm r
     end
+
+    # Replace paths in config
+    inreplace "config/jail.conf", "before = paths-debian.conf", "before = paths-osx.conf"
 
     # Replace hardcoded paths
     inreplace "setup.py" do |s|
@@ -61,7 +74,8 @@ class Fail2ban < Formula
     inreplace "setup.py", "if os.path.exists('#{var}/run')", "if True"
     inreplace "setup.py", "platform_system in ('linux',", "platform_system in ('linux', 'darwin',"
 
-    system "python", "setup.py", "install", "--prefix=#{libexec}"
+    system "./fail2ban-2to3"
+    system "python3", "setup.py", "install", "--prefix=#{libexec}"
 
     cd "doc" do
       system "make", "dirhtml", "SPHINXBUILD=sphinx-build"
@@ -69,7 +83,7 @@ class Fail2ban < Formula
     end
 
     bin.install Dir[libexec/"bin/*"]
-    bin.env_script_all_files(libexec/"bin", :PYTHONPATH => ENV["PYTHONPATH"])
+    bin.env_script_all_files(libexec/"bin", PYTHONPATH: ENV["PYTHONPATH"])
     man1.install Dir["man/*.1"]
     man5.install "man/jail.conf.5"
   end
@@ -101,27 +115,10 @@ class Fail2ban < Formula
     EOS
   end
 
-  plist_options :startup => true
+  plist_options startup: true
 
-  def plist
-    <<~EOS
-      <?xml version="1.0" encoding="UTF-8"?>
-      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-      <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/fail2ban-client</string>
-          <string>-x</string>
-          <string>start</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-      </dict>
-      </plist>
-    EOS
+  service do
+    run [opt_bin/"fail2ban-client", "-x", "start"]
   end
 
   test do

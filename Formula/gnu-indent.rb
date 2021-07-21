@@ -4,20 +4,22 @@ class GnuIndent < Formula
   url "https://ftp.gnu.org/gnu/indent/indent-2.2.12.tar.gz"
   mirror "https://ftpmirror.gnu.org/indent/indent-2.2.12.tar.gz"
   sha256 "e77d68c0211515459b8812118d606812e300097cfac0b4e9fb3472664263bb8b"
+  license "GPL-3.0-or-later"
+  revision 1
 
   bottle do
-    rebuild 1
-    sha256 "af195d9c6363843cee1a9ec8707cdcedb193fd74dbcd1abcb34781baac0231ed" => :mojave
-    sha256 "7402c4707255b5d9d80208dcb922b37a8d0753c6143d291c53fc2774d6b23088" => :high_sierra
-    sha256 "059d45ddc36600a53e52afd810123570e0bd277fc11f6c1b6b7c594919ab84db" => :sierra
-    sha256 "d31ad8b842092150f18dd706d369a0fa6db7fbb41302247eac601c97785218af" => :el_capitan
+    sha256 arm64_big_sur: "bf082593202d39ea4c2929b333d544c72ef23d16fed04f570e1f4227098ebf6e"
+    sha256 big_sur:       "af4b5212440cdbb8c1c80bef3a13ca33bbdbd49918d24588af3a9eb44e484dab"
+    sha256 catalina:      "82a12279be8834591a2104253ac562978b557c26b262dd8d5bfbf6e7b1103dd1"
+    sha256 mojave:        "e960e3f35f6a77daef487f54158953522f58a27caf27e39e0c17702754718ee1"
+    sha256 high_sierra:   "3280e6e9fc0c5cc895367291fc328dccae5f2e36606dd503b5721d449bc33eb8"
+    sha256 sierra:        "98bcdee2e49d7e165a07ce6468d2c1a3030db7205472d015ba516e43f5a1e0fd"
+    sha256 x86_64_linux:  "e3ef74b022310ffe3742480791e140ee05b61b315cfcb7de9fa6ebdac77a7b92"
   end
 
-  option "with-default-names", "Do not prepend 'g' to the binary"
-
-  deprecated_option "default-names" => "with-default-names"
-
   depends_on "gettext"
+
+  uses_from_macos "texinfo" => :build
 
   def install
     args = %W[
@@ -27,20 +29,40 @@ class GnuIndent < Formula
       --mandir=#{man}
     ]
 
-    args << "--program-prefix=g" if build.without? "default-names"
-
+    on_macos do
+      args << "--program-prefix=g"
+    end
     system "./configure", *args
     system "make", "install"
 
-    if build.without? "default-names"
+    on_macos do
       (libexec/"gnubin").install_symlink bin/"gindent" => "indent"
       (libexec/"gnuman/man1").install_symlink man1/"gindent.1" => "indent.1"
+    end
+
+    libexec.install_symlink "gnuman" => "man"
+  end
+
+  def caveats
+    on_macos do
+      <<~EOS
+        GNU "indent" has been installed as "gindent".
+        If you need to use it as "indent", you can add a "gnubin" directory
+        to your PATH from your bashrc like:
+
+            PATH="#{opt_libexec}/gnubin:$PATH"
+      EOS
     end
   end
 
   test do
     (testpath/"test.c").write("int main(){ return 0; }")
-    system "#{bin}/gindent", "test.c"
+    on_macos do
+      system "#{bin}/gindent", "test.c"
+    end
+    on_linux do
+      system "#{bin}/indent", "test.c"
+    end
     assert_equal File.read("test.c"), <<~EOS
       int
       main ()

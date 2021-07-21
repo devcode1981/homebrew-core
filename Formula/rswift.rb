@@ -1,41 +1,27 @@
 class Rswift < Formula
   desc "Get strong typed, autocompleted resources like images, fonts and segues"
   homepage "https://github.com/mac-cain13/R.swift"
-
-  stable do
-    url "https://github.com/mac-cain13/R.swift.git",
-        :tag      => "v4.0.0",
-        :revision => "0306ec185ad0f7753e9ea44fefdbf268d9e62184"
-
-    depends_on :xcode => "9.0"
-
-    patch do
-      url "https://github.com/mac-cain13/R.swift/commit/082adb3a4fb3835507e61de15dabd2e9e1b547fb.diff?full_index=1"
-      sha256 "6ebaeaeb0ad29ad94f1919683cc064455837a9d0e7b2cad83bc9011d60e6cf2f"
-    end
-  end
+  url "https://github.com/mac-cain13/R.swift/releases/download/v5.4.0/rswift-v5.4.0-source.tar.gz"
+  sha256 "5153e7d122412ced4f04b6fc92c10dad0a861900858543a77ce1bf11850d4184"
+  license "MIT"
+  head "https://github.com/mac-cain13/R.swift.git"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "89e99e0639822565f5f91d400b7f78a08a49d87c950b8a75ecd9bda0efa09d35" => :mojave
-    sha256 "97c9578ab704ab2ded67969b5648c4d06410f86d976ffec7338196aa6d8f5bf2" => :high_sierra
-    sha256 "8b65c8330b314a454a8c4304d585c5c5142557ef5d98bafcc9ccb40ea3655130" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "b07728bea1baa0568381b1f41a34d66bbc283e7a1c5813e7078faf30a1c6a102"
+    sha256 cellar: :any_skip_relocation, big_sur:       "495500a61dc7f30d7f00f19a1c427a43990c1beb8cf99bee2b50c373c7d7eab7"
+    sha256 cellar: :any_skip_relocation, catalina:      "4776447ac9845ebd27c5ac2ab8bec3c50e79c8c7105e8702f67393da5a609747"
+    sha256 cellar: :any_skip_relocation, mojave:        "8c46754db5932ecefafee7b4fb665a8697fe72dadf86c6262458946e64e4265c"
   end
 
-  head do
-    url "https://github.com/mac-cain13/R.swift.git"
-
-    depends_on :xcode => "10.0"
-  end
+  depends_on xcode: "10.2"
 
   def install
-    system "swift", "build", "--disable-sandbox", "-c", "release", "-Xswiftc",
-           "-static-stdlib"
+    system "swift", "build", "--disable-sandbox", "-c", "release"
     bin.install ".build/release/rswift"
   end
 
   test do
     assert_match version.to_s, shell_output("#{bin}/rswift --version")
+    assert_match "[R.swift] Failed to write out", shell_output("#{bin}/rswift generate #{testpath} 2>1&")
   end
 end

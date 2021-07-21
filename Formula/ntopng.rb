@@ -1,29 +1,30 @@
 class Ntopng < Formula
   desc "Next generation version of the original ntop"
   homepage "https://www.ntop.org/products/traffic-analysis/ntop/"
+  license "GPL-3.0-only"
+  revision 1
 
   stable do
-    url "https://github.com/ntop/ntopng/archive/3.6.1.tar.gz"
-    sha256 "3b2949d04d2b9a625f8ddfee24f5b0345fa648e135e8f947a389b599eb7117d0"
+    url "https://github.com/ntop/ntopng/archive/4.2.tar.gz"
+    sha256 "c7ce8d0c7b4251aef276038ec3324530312fe232d38d7ad99de21575dc888e8b"
 
     resource "nDPI" do
-      url "https://github.com/ntop/nDPI/archive/2.4.tar.gz"
-      sha256 "5243e16b1c4a2728e9487466b2b496d8ffef18a44ff7ee6dfdc21e72008c6d29"
+      url "https://github.com/ntop/nDPI/archive/3.4.tar.gz"
+      sha256 "dc9b291c7fde94edb45fb0f222e0d93c93f8d6d37f4efba20ebd9c655bfcedf9"
     end
   end
 
   bottle do
-    sha256 "d9070a2ff65e1ec34243718f4b34ee9553c19ce71a79f5d8bd570c4bbce41bef" => :mojave
-    sha256 "4ea92032db7726e6852c63bd494fd9037cf726cd3628ad83c0dd13f0b4d271bc" => :high_sierra
-    sha256 "c25c7c8f23a1d1f01c0bd1a170ccb0c295272716da1bcf9885a59292ca654962" => :sierra
-    sha256 "5da4764c214a070d75364d2f240c100271d886b0f2b31847a68ea369a4fddc8f" => :el_capitan
+    sha256 big_sur:  "9ed198be1700ad11126a1cb91851be862da39e5a546cf22be6bfcaf1ad73a2b4"
+    sha256 catalina: "d471e223fc0de4f2bbd993e5ed1691b9f4b1618b60dd22d1d4bce44b5bb500af"
+    sha256 mojave:   "3cb2eb698b63537009d7c94fb5a5192ac9c0645934477057d2a135842b02479e"
   end
 
   head do
-    url "https://github.com/ntop/ntopng.git", :branch => "dev"
+    url "https://github.com/ntop/ntopng.git", branch: "dev"
 
     resource "nDPI" do
-      url "https://github.com/ntop/nDPI.git", :branch => "dev"
+      url "https://github.com/ntop/nDPI.git", branch: "dev"
     end
   end
 
@@ -32,12 +33,12 @@ class Ntopng < Formula
   depends_on "gnutls" => :build
   depends_on "json-glib" => :build
   depends_on "libtool" => :build
+  depends_on "lua" => :build
   depends_on "pkg-config" => :build
   depends_on "zeromq" => :build
   depends_on "geoip"
   depends_on "json-c"
   depends_on "libmaxminddb"
-  depends_on "lua"
   depends_on "mysql-client"
   depends_on "redis"
   depends_on "rrdtool"
@@ -55,6 +56,19 @@ class Ntopng < Formula
   end
 
   test do
-    system "#{bin}/ntopng", "-V"
+    redis_port = free_port
+    redis_bin = Formula["redis"].bin
+    fork do
+      exec redis_bin/"redis-server", "--port", redis_port.to_s
+    end
+    sleep 3
+
+    mkdir testpath/"ntopng"
+    fork do
+      exec bin/"ntopng", "-i", test_fixtures("test.pcap"), "-d", testpath/"ntopng", "-r", "localhost:#{redis_port}"
+    end
+    sleep 15
+
+    assert_match "list", shell_output("#{redis_bin}/redis-cli -p #{redis_port} TYPE ntopng.trace")
   end
 end

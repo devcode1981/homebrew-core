@@ -1,20 +1,28 @@
 class Dbus < Formula
-  # releases: even (1.10.x) = stable, odd (1.11.x) = development
+  # releases: even (1.12.x) = stable, odd (1.13.x) = development
   desc "Message bus system, providing inter-application communication"
   homepage "https://wiki.freedesktop.org/www/Software/dbus"
-  url "https://dbus.freedesktop.org/releases/dbus/dbus-1.12.10.tar.gz"
-  mirror "https://mirrors.ocf.berkeley.edu/debian/pool/main/d/dbus/dbus_1.12.10.orig.tar.gz"
-  sha256 "4b693d24976258c3f2fa9cc33ad9288c5fbfa7a16481dbd9a8a429f7aa8cdcf7"
+  url "https://dbus.freedesktop.org/releases/dbus/dbus-1.12.20.tar.gz"
+  mirror "https://deb.debian.org/debian/pool/main/d/dbus/dbus_1.12.20.orig.tar.gz"
+  sha256 "f77620140ecb4cdc67f37fb444f8a6bea70b5b6461f12f1cbe2cec60fa7de5fe"
+  license any_of: ["AFL-2.1", "GPL-2.0-or-later"]
+
+  livecheck do
+    url "https://dbus.freedesktop.org/releases/dbus/"
+    regex(/href=.*?dbus[._-]v?(\d+\.\d*?[02468](?:\.\d+)*)\.t/i)
+  end
 
   bottle do
-    sha256 "b1d6af78d432ecd6f19c263241e56db3a13ef5cd259de11d0d737342721aa271" => :mojave
-    sha256 "5c87cb594f4601155728d50a8dfbebaa1f11c790ed251131f38aa9ac2ccf69bf" => :high_sierra
-    sha256 "e7e62579e173286de3cad5bfb2ecccaaac9f26e8dcbf3b0349f195a5ad7ddcd9" => :sierra
-    sha256 "0abbf97ba40e314370f5c7d325f770a27820ad73672109b818032241a8b45172" => :el_capitan
+    sha256 arm64_big_sur: "98319ca7d3dda690a932243a20a1ebaebe89e2386282bad7232f842f2abecbc5"
+    sha256 big_sur:       "e3ff464367ad79df35c0f81d70a58607a174e9fa63cd507b575f0988ec913b7d"
+    sha256 catalina:      "23513ea5d75203fe4374ab37cc4226f23f34ec604449ef572fd6a2b48a612ff3"
+    sha256 mojave:        "912da7c3211a981762dc45e4f67fbedd1afd379459a40244340c83caa4134382"
+    sha256 high_sierra:   "6c98efff3cb8fdbba552351a2953f85953f053e12a8af891461118d37affdb73"
+    sha256 x86_64_linux:  "21857954e349d0ff49abec1ed39f574cb7c2dce10587a085030c30a8cf98cabc"
   end
 
   head do
-    url "https://anongit.freedesktop.org/git/dbus/dbus.git"
+    url "https://gitlab.freedesktop.org/dbus/dbus.git"
 
     depends_on "autoconf" => :build
     depends_on "autoconf-archive" => :build
@@ -22,37 +30,49 @@ class Dbus < Formula
     depends_on "libtool" => :build
   end
 
+  depends_on "pkg-config" => :build
   depends_on "xmlto" => :build
 
-  # Patch applies the config templating fixed in https://bugs.freedesktop.org/show_bug.cgi?id=94494
-  # Homebrew pr/issue: 50219
-  patch do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/0a8a55872e/d-bus/org.freedesktop.dbus-session.plist.osx.diff"
-    sha256 "a8aa6fe3f2d8f873ad3f683013491f5362d551bf5d4c3b469f1efbc5459a20dc"
+  uses_from_macos "expat"
+
+  on_macos do
+    # Patch applies the config templating fixed in https://bugs.freedesktop.org/show_bug.cgi?id=94494
+    # Homebrew pr/issue: 50219
+    patch do
+      url "https://raw.githubusercontent.com/Homebrew/formula-patches/0a8a55872e/d-bus/org.freedesktop.dbus-session.plist.osx.diff"
+      sha256 "a8aa6fe3f2d8f873ad3f683013491f5362d551bf5d4c3b469f1efbc5459a20dc"
+    end
   end
 
   def install
     # Fix the TMPDIR to one D-Bus doesn't reject due to odd symbols
     ENV["TMPDIR"] = "/tmp"
-
-    # macOS doesn't include a pkg-config file for expat
-    ENV["EXPAT_CFLAGS"] = "-I#{MacOS.sdk_path}/usr/include"
-    ENV["EXPAT_LIBS"] = "-lexpat"
-
     ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
 
     system "./autogen.sh", "--no-configure" if build.head?
-    system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}",
-                          "--localstatedir=#{var}",
-                          "--sysconfdir=#{etc}",
-                          "--enable-xml-docs",
-                          "--disable-doxygen-docs",
-                          "--enable-launchd",
-                          "--with-launchd-agent-dir=#{prefix}",
-                          "--without-x",
-                          "--disable-tests"
+
+    args = [
+      "--disable-dependency-tracking",
+      "--prefix=#{prefix}",
+      "--localstatedir=#{var}",
+      "--sysconfdir=#{etc}",
+      "--enable-xml-docs",
+      "--disable-doxygen-docs",
+      "--without-x",
+      "--disable-tests",
+    ]
+
+    on_macos do
+      args << "--enable-launchd"
+      args << "--with-launchd-agent-dir=#{prefix}"
+    end
+
+    system "./configure", *args
     system "make", "install"
+  end
+
+  def plist_name
+    "org.freedesktop.dbus-session"
   end
 
   def post_install

@@ -1,11 +1,21 @@
 class Naturaldocs < Formula
   desc "Extensible, multi-language documentation generator"
   homepage "https://www.naturaldocs.org/"
-  url "https://downloads.sourceforge.net/project/naturaldocs/Stable%20Releases/2.0.2/Natural_Docs_2.0.2.zip"
-  sha256 "4a8be89d1c749fa40611193404556d408f414e03df8c397b970e045b57a54d4d"
+  url "https://downloads.sourceforge.net/project/naturaldocs/Stable%20Releases/2.1.1/Natural_Docs_2.1.1.zip"
+  mirror "https://naturaldocs.org/download/natural_docs/2.1.1/Natural_Docs_2.1.1.zip"
+  sha256 "00ebfee968c4b88ebd213d1e48be37686d717d938dfa6c739c23b769bdf03c1f"
+  license "AGPL-3.0-only"
 
-  bottle :unneeded
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/Natural.?Docs[._-]v?(\d+(?:\.\d+)+)\.(?:t|zip)}i)
+  end
 
+  bottle do
+    sha256 cellar: :any, all: "b3f1bd9379493b6a369f464f0af31524da2c7182bfd5f5076c1384813da98c28"
+  end
+
+  depends_on arch: :x86_64 # mono does not have ARM support yet
   depends_on "mono"
 
   def install

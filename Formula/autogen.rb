@@ -1,29 +1,37 @@
 class Autogen < Formula
   desc "Automated text file generator"
   homepage "https://autogen.sourceforge.io"
-  url "https://ftp.gnu.org/gnu/autogen/rel5.18.12/autogen-5.18.12.tar.xz"
-  mirror "https://ftpmirror.gnu.org/autogen/rel5.18.12/autogen-5.18.12.tar.xz"
-  sha256 "be3ba62e883185b6ee8475edae97d7197d701d6b9ad9c3d2df53697110c1bfd8"
+  url "https://ftp.gnu.org/gnu/autogen/rel5.18.16/autogen-5.18.16.tar.xz"
+  mirror "https://ftpmirror.gnu.org/autogen/rel5.18.16/autogen-5.18.16.tar.xz"
+  sha256 "f8a13466b48faa3ba99fe17a069e71c9ab006d9b1cfabe699f8c60a47d5bb49a"
   revision 1
 
+  livecheck do
+    url :stable
+    regex(%r{href=.*?rel(\d+(?:\.\d+)+)/?["' >]}i)
+  end
+
   bottle do
-    sha256 "bf05048f02504d4dd73f5204abcfd7b880dca3ef65ed6c1a11a2836fed1efd80" => :mojave
-    sha256 "c9835af12e309b7992918e64fc766f59ca50ff3f4e846434d74141859d638cd8" => :high_sierra
-    sha256 "c80dbb65f3afee35378aadaf766cd3d772d39256ec6d48b9864ecab018a931e9" => :sierra
-    sha256 "ff8c66ca7d86c309e884dad0fcc49aadf65a830768a0551c5711cba2f6d6a046" => :el_capitan
+    sha256 arm64_big_sur: "5058d3eb0e5520f98914d8d3cc37d941ff260e36d7ccb2733b2b0dd8d7026ad8"
+    sha256 big_sur:       "f648b54769e2022a5801ba90716855fee7c1266b906b8f768934bde0063c05ea"
+    sha256 catalina:      "fa3818d518a214d9798a514e90c461d3a6be2c6fc0758c85ad4ad6b134a28851"
+    sha256 mojave:        "76df021218eb1d338cb8ee2a18c04e1d120166991c94ba64055537beac0e68fb"
+    sha256 high_sierra:   "45fb9e222b8c21729659821aa5565010df9c3f347fae4bc2f0e5fc01680a2c1a"
+    sha256 x86_64_linux:  "459c36573772600aab0085300e551ecbbe224a8b036bc10c15d48db1719a5a52"
   end
 
+  depends_on "coreutils" => :build
   depends_on "pkg-config" => :build
-  depends_on "guile"
+  depends_on "guile@2"
 
-  # Allow guile 2.2 to be used
-  patch do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/0de886b/autogen/allow-guile-2.2.diff"
-    sha256 "438fe673432c96d5da449b84daa4d1c6ad238ea0b4ccd13491872df8c51fa978"
-  end
+  uses_from_macos "libxml2"
 
   def install
-    system "./configure", "--disable-debug",
+    # Uses GNU-specific mktemp syntax: https://sourceforge.net/p/autogen/bugs/189/
+    inreplace %w[agen5/mk-stamps.sh build-aux/run-ag.sh config/mk-shdefs.in], "mktemp", "gmktemp"
+    # Upstream bug regarding "stat" struct: https://sourceforge.net/p/autogen/bugs/187/
+    system "./configure", "ac_cv_func_utimensat=no",
+                          "--disable-debug",
                           "--disable-dependency-tracking",
                           "--disable-silent-rules",
                           "--prefix=#{prefix}"

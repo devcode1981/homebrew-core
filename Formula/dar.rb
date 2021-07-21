@@ -1,32 +1,34 @@
 class Dar < Formula
   desc "Backup directory tree and files"
   homepage "http://dar.linux.free.fr/doc/index.html"
-  url "https://downloads.sourceforge.net/project/dar/dar/2.5.16/dar-2.5.16.tar.gz"
-  sha256 "e957c97101a17dc91dca00078457f225d2fa375d0db0ead7a64035378d4fc33b"
+  url "https://downloads.sourceforge.net/project/dar/dar/2.7.1/dar-2.7.1.tar.gz"
+  sha256 "76dade8adbeb817ffc78bf592c8200487ab5650234cf539539a9cbc5d346beef"
+  license "GPL-2.0-or-later"
 
-  bottle do
-    sha256 "ade6a894717bc00148d259f5c48b19172f12a307b84d2003f9a56ee95017d0a4" => :mojave
-    sha256 "b8e79c81345db6df1b985d0b05d7fef3f0f72c3a0dfd356cd048de5e483f31ed" => :high_sierra
-    sha256 "235d95dab2ef03ef746019989ca0939602903d79505bc3767d974f411996bb6b" => :sierra
-    sha256 "0f3d68d33877c3d98b9d8fbacdbd52c54569ccc1a46130ecec244415c58c5c73" => :el_capitan
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/dar[._-]v?(\d+(?:\.\d+)+)\.t}i)
   end
 
-  depends_on :macos => :el_capitan # needs thread-local storage
+  bottle do
+    sha256 cellar: :any, big_sur:  "89f145997e301eb51ed6fadbd3c0583113499204f56fdf9032b016c4020fa947"
+    sha256 cellar: :any, catalina: "af73f8c79627e84c8d36cb079dfd598d943278f0b73fd68b873f45872124409c"
+    sha256 cellar: :any, mojave:   "ef0298ac3f4143f7b15d3ca7a0e2e873d6ee0b28cb1d0066c9ff46e4fd2144a6"
+  end
 
-  needs :cxx11
+  depends_on "upx" => :build
+  depends_on "libgcrypt"
+  depends_on "lzo"
 
   def install
-    ENV.cxx11
+    # Need to set due to upstream issue: https://github.com/Edrusb/DAR/issues/29
+    ENV.append "CXXFLAGS", "-std=c++14"
 
     system "./configure", "--prefix=#{prefix}",
                           "--disable-build-html",
                           "--disable-dar-static",
-                          "--disable-debug",
                           "--disable-dependency-tracking",
-                          "--disable-libgcrypt-linking",
-                          "--disable-liblzo2-linking",
                           "--disable-libxz-linking",
-                          "--disable-upx",
                           "--enable-mode=64"
     system "make", "install"
   end

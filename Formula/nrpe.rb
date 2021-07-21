@@ -1,19 +1,25 @@
 class Nrpe < Formula
   desc "Nagios remote plugin executor"
   homepage "https://www.nagios.org/"
-  url "https://downloads.sourceforge.net/project/nagios/nrpe-3.x/nrpe-3.2.1.tar.gz"
-  sha256 "8ad2d1846ab9011fdd2942b8fc0c99dfad9a97e57f4a3e6e394a4ead99c0f1f0"
+  url "https://downloads.sourceforge.net/project/nagios/nrpe-4.x/nrpe-4.0.3/nrpe-4.0.3.tar.gz"
+  sha256 "f907ba15381adfc6eef211508abd027f8e1973116080faa4534a1191211c0340"
+  license "GPL-2.0"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/nrpe[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "d17a16f0cac16d2c1e075df0834a6c77e4a3489339185e0dc645250597f69cbf" => :mojave
-    sha256 "98eb09fe948052448134155aad5cc16892f9cffeba075cfc9afeb38219047806" => :high_sierra
-    sha256 "d589496fa3b62e1425f93ebf928234bcfec81cf342837e7b741c9def56ea3e28" => :sierra
-    sha256 "50cafb3e1545d93f0ad248a2696b83b90fa3fbb6e5afc731d72779ddab0bf6a0" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "a99f092298108c70af8bd3fd66b6aaae9003bd60c47e0dc26ce925761495362b"
+    sha256 cellar: :any, big_sur:       "f51a26831737214a41367dd9332df6a333ee07a7e8e6e0ac75061dc161b5c82b"
+    sha256 cellar: :any, catalina:      "6ef7387202f3b9afda335fd77f16a268a82bed7a9f6ef856faa83741b308d8f2"
+    sha256 cellar: :any, mojave:        "90463f41b64e1ac2149dd917d536e406ed22ba9cef8a27e06618bab53c4e673e"
+    sha256 cellar: :any, high_sierra:   "e109e63ca7f6f5386eae058d19e510c5d3a5deb2633f8ef014df1ac24d414cb9"
   end
 
   depends_on "nagios-plugins"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
 
   def install
     user  = `id -un`.chomp
@@ -27,15 +33,15 @@ class Nrpe < Formula
                           "--with-nrpe-group=#{group}",
                           "--with-nagios-user=#{user}",
                           "--with-nagios-group=#{group}",
-                          "--with-ssl=#{Formula["openssl"].opt_prefix}",
+                          "--with-ssl=#{Formula["openssl@1.1"].opt_prefix}",
                           # Set both or it still looks for /usr/lib
-                          "--with-ssl-lib=#{Formula["openssl"].opt_lib}",
+                          "--with-ssl-lib=#{Formula["openssl@1.1"].opt_lib}",
                           "--enable-ssl",
                           "--enable-command-args"
 
     inreplace "src/Makefile" do |s|
       s.gsub! "$(LIBEXECDIR)", "$(SBINDIR)"
-      s.gsub! "$(DESTDIR)/usr/local/sbin", "$(SBINDIR)"
+      s.gsub! "$(DESTDIR)#{HOMEBREW_PREFIX}/sbin", "$(SBINDIR)"
     end
 
     system "make", "all"
@@ -46,31 +52,32 @@ class Nrpe < Formula
     (var/"run").mkpath
   end
 
-  plist_options :manual => "nrpe -n -c #{HOMEBREW_PREFIX}/etc/nrpe.cfg -d"
+  plist_options manual: "nrpe -n -c #{HOMEBREW_PREFIX}/etc/nrpe.cfg -d"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>Label</key>
-      <string>org.nrpe.agent</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/nrpe</string>
-        <string>-c</string>
-        <string>#{etc}/nrpe.cfg</string>
-        <string>-d</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>ServiceDescription</key>
-      <string>Homebrew NRPE Agent</string>
-      <key>Debug</key>
-      <true/>
-    </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>Label</key>
+        <string>org.nrpe.agent</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/nrpe</string>
+          <string>-c</string>
+          <string>#{etc}/nrpe.cfg</string>
+          <string>-d</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>ServiceDescription</key>
+        <string>Homebrew NRPE Agent</string>
+        <key>Debug</key>
+        <true/>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do
@@ -81,7 +88,7 @@ class Nrpe < Formula
 
     begin
       output = shell_output("netstat -an")
-      assert_match /.*\*\.5666.*LISTEN/, output, "nrpe did not start"
+      assert_match(/.*\*\.5666.*LISTEN/, output, "nrpe did not start")
       pid_nrpe = shell_output("pgrep nrpe").to_i
     ensure
       Process.kill("SIGINT", pid_nrpe)

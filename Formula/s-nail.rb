@@ -1,26 +1,29 @@
 class SNail < Formula
   desc "Fork of Heirloom mailx"
   homepage "https://www.sdaoden.eu/code.html"
-  url "https://www.sdaoden.eu/downloads/s-nail-14.9.11.tar.gz"
-  sha256 "279202687409b8e7b4f267e178aed1bd4c68b79c01c10b80f07197f2f73d6695"
+  url "https://www.sdaoden.eu/downloads/s-nail-14.9.22.tar.xz"
+  sha256 "e5dfb7d5bcc5d2d1126f2e826569ee0f149aac3f2a8a6b7c23985ffc3a1def0b"
 
-  bottle do
-    sha256 "50017a1a58e325f6cf2bf442e69279334f97a3167160d09ce14803d115fb74ff" => :mojave
-    sha256 "39c79b2b08e58b4784fb16bdf8ff6133d8eb3b435bbc8e97e493001a16fd5f4c" => :high_sierra
-    sha256 "c1942ec66157c586e6648051d2461ccbd8aaa0b99ec7f4f757c982683c9c08aa" => :sierra
-    sha256 "4d137ea6f6ff75f6bd792584aa4d86ead5445f0e5df9c9ed7074d84df3b7fb0f" => :el_capitan
+  livecheck do
+    url :homepage
+    regex(/href=.*?s-nail[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
+  bottle do
+    sha256 arm64_big_sur: "b8bde9083dd42cef197e98608fc9ce2dc69b3d9cf56ff05268c565ba7acdb67b"
+    sha256 big_sur:       "20825afa468b7d368b71dfc73314412eb9e6930cecd5794f71b527422e63d28c"
+    sha256 catalina:      "e2dd4f1ede94f221fffffce676a2a605edb49235d5bf875e2cad917c9a4d6c73"
+    sha256 mojave:        "1c33bcd338bf27c5f7f3a61e9b6a4070a5cf9e9e7cfefd58afe178959dd35f5a"
+  end
+
+  depends_on "awk" => :build
   depends_on "libidn"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
 
   def install
-    system "make", "OPT_AUTOCC=no",
-                   "CC=#{ENV.cc}",
-                   "cc_maxtopt=1",
-                   "OPT_NOMEMBDBG=1",
-                   "C_INCLUDE_PATH=#{Formula["openssl"].opt_include}",
-                   "LDFLAGS=-L#{Formula["openssl"].opt_lib}",
+    system "make", "CC=#{ENV.cc}",
+                   "C_INCLUDE_PATH=#{Formula["openssl@1.1"].opt_include}",
+                   "LDFLAGS=-L#{Formula["openssl@1.1"].opt_lib}",
                    "VAL_PREFIX=#{prefix}",
                    "OPT_DOTLOCK=no",
                    "config"
@@ -31,8 +34,8 @@ class SNail < Formula
   test do
     ENV["SOURCE_DATE_EPOCH"] = "844221007"
 
-    date1 = Utils.popen_read("date", "-r", "844221007", "+%a %b %e %T %Y")
-    date2 = Utils.popen_read("date", "-r", "844221007", "+%a, %d %b %Y %T %z")
+    date1 = shell_output("date -r 844221007 '+%a %b %e %T %Y'")
+    date2 = shell_output("date -r 844221007 '+%a, %d %b %Y %T %z'")
 
     expected = <<~EOS
       From reproducible_build #{date1.chomp}

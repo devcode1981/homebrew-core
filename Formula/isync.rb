@@ -1,75 +1,77 @@
 class Isync < Formula
   desc "Synchronize a maildir with an IMAP server"
   homepage "https://isync.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/isync/isync/1.3.0/isync-1.3.0.tar.gz"
-  sha256 "8d5f583976e3119705bdba27fa4fc962e807ff5996f24f354957178ffa697c9c"
+  url "https://downloads.sourceforge.net/project/isync/isync/1.4.2/isync-1.4.2.tar.gz"
+  sha256 "1935e7ed412fd6b5928aaea656f290aa8d3222c5feda31534903934ce4755343"
+  license "GPL-2.0"
+  head "https://git.code.sf.net/p/isync/isync.git"
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "5ca6cc97dfcd4ddc10cd9f6425c5f917425e7c7fb2584e909974423f09b7b90b" => :mojave
-    sha256 "4804cd78586b11ba9316db5522fd7d91c171ec3c6936f74f3c8cbbd8f8b27d56" => :high_sierra
-    sha256 "01d975dae7bf0b92d9fb4bb92846b45e1d60a1c5b16421f051f9212ba6ac1959" => :sierra
-    sha256 "6a0679dee26c5534d12801897339b1d0fb8cd82f907917900ffb632a42b0c8e0" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "f688e67a5685b88980d6012df7870bffd4b6db77d39edc5a43625992f6b55fff"
+    sha256 cellar: :any,                 big_sur:       "ed5ca308f6e8bee6fbb4bdd145e9bba1c4e0e8ab8eab5ea41e87053add6e0c5e"
+    sha256 cellar: :any,                 catalina:      "e9201a38ab8e0f109897709929eaef91eb184f381024875e35951e6108ffe211"
+    sha256 cellar: :any,                 mojave:        "79b70d1af2227f9142a638f12dfc6986e0cc709241946548546fcaa8cf8cce35"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "2ac272f41af1c58cf2884a44840501dbf7f3dd245d6ffe0ff321057964821814"
   end
 
-  head do
-    url "https://git.code.sf.net/p/isync/isync.git"
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "berkeley-db"
+  depends_on "openssl@1.1"
 
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-  end
-
-  depends_on "openssl"
-  depends_on "berkeley-db" => :optional
+  uses_from_macos "zlib"
 
   def install
-    system "./autogen.sh" if build.head?
+    # Regenerated for HEAD, and because of our patch
+    if build.head?
+      system "./autogen.sh"
+    else
+      system "autoreconf", "-fiv"
+    end
 
     args = %W[
       --disable-dependency-tracking
       --prefix=#{prefix}
       --disable-silent-rules
     ]
-    args << "ac_cv_berkdb4=no" if build.without? "berkeley-db"
 
     system "./configure", *args
     system "make", "install"
   end
 
-  plist_options :manual => "isync"
+  plist_options manual: "isync"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>EnvironmentVariables</key>
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
         <dict>
-          <key>PATH</key>
-          <string>/usr/bin:/bin:/usr/sbin:/sbin:#{HOMEBREW_PREFIX}/bin</string>
+          <key>EnvironmentVariables</key>
+          <dict>
+            <key>PATH</key>
+            <string>/usr/bin:/bin:/usr/sbin:/sbin:#{HOMEBREW_PREFIX}/bin</string>
+          </dict>
+          <key>KeepAlive</key>
+          <false/>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_bin}/mbsync</string>
+            <string>-a</string>
+          </array>
+          <key>StartInterval</key>
+          <integer>300</integer>
+          <key>RunAtLoad</key>
+          <true />
+          <key>StandardErrorPath</key>
+          <string>/dev/null</string>
+          <key>StandardOutPath</key>
+          <string>/dev/null</string>
         </dict>
-        <key>KeepAlive</key>
-        <false/>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/mbsync</string>
-          <string>-a</string>
-          <string>Periodic</string>
-        </array>
-        <key>StartInterval</key>
-        <integer>300</integer>
-        <key>RunAtLoad</key>
-        <true />
-        <key>StandardErrorPath</key>
-        <string>/dev/null</string>
-        <key>StandardOutPath</key>
-        <string>/dev/null</string>
-      </dict>
-    </plist>
-  EOS
+      </plist>
+    EOS
   end
 
   test do

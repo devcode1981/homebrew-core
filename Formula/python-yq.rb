@@ -1,30 +1,41 @@
 class PythonYq < Formula
   desc "Command-line YAML and XML processor that wraps jq"
-  homepage "https://yq.readthedocs.io/"
-  url "https://files.pythonhosted.org/packages/56/5f/d60ffaba376257b60304a8ee9fafdc0be4852a4bcdeece48d931e6b36487/yq-2.6.0.tar.gz"
-  sha256 "c64f763e8409ed55eb055793c26fc347b5a6666b303d49e9d2f8d7cea979df73"
+  homepage "https://kislyuk.github.io/yq/"
+  url "https://files.pythonhosted.org/packages/c0/1b/fe6b9ab599384e95c9b7a63e4801409170fccfc107d03573cc4bb5df49f0/yq-2.12.2.tar.gz"
+  sha256 "2f156d0724b61487ac8752ed4eaa702a5737b804d5afa46fa55866951cd106d2"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "ca6ade4e6bdf9cc0897ea3c58bd5460fbf010b2bfed250aff40d9543ea04cac2" => :mojave
-    sha256 "7365858d49340df37abf5fb5236ebef2516effacfdb748f89890121250786f38" => :high_sierra
-    sha256 "7365858d49340df37abf5fb5236ebef2516effacfdb748f89890121250786f38" => :sierra
-    sha256 "7365858d49340df37abf5fb5236ebef2516effacfdb748f89890121250786f38" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "6f7369da386d517f765231a0f2c44950821857474f745c5093a640681efc7257"
+    sha256 cellar: :any_skip_relocation, big_sur:       "3598941278045e43a5129d58e81f112ea35f3871a7354c8247bf598f7435d797"
+    sha256 cellar: :any_skip_relocation, catalina:      "3598941278045e43a5129d58e81f112ea35f3871a7354c8247bf598f7435d797"
+    sha256 cellar: :any_skip_relocation, mojave:        "3598941278045e43a5129d58e81f112ea35f3871a7354c8247bf598f7435d797"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "ad5bf3abe58df999077d0441fe0d2fe2f7ca597913fef62b21af9719abbef934"
   end
 
   depends_on "jq"
-  depends_on "python"
+  depends_on "python@3.9"
 
-  conflicts_with "yq", :because => "both install `yq` executables"
+  conflicts_with "yq", because: "both install `yq` executables"
+
+  resource "argcomplete" do
+    url "https://files.pythonhosted.org/packages/6a/b4/3b1d48b61be122c95f4a770b2f42fc2552857616feba4d51f34611bd1352/argcomplete-1.12.3.tar.gz"
+    sha256 "2c7dbffd8c045ea534921e63b0be6fe65e88599990d8dc408ac8c542b72a5445"
+  end
 
   resource "PyYAML" do
-    url "https://files.pythonhosted.org/packages/9e/a3/1d13970c3f36777c583f136c136f804d70f500168edc1edea6daa7200769/PyYAML-3.13.tar.gz"
-    sha256 "3ef3092145e9b70e3ddd2c7ad59bdd0252a94dfe3949721633e41344de00a6bf"
+    url "https://files.pythonhosted.org/packages/a0/a4/d63f2d7597e1a4b55aa3b4d6c5b029991d3b824b5bd331af8d4ab1ed687d/PyYAML-5.4.1.tar.gz"
+    sha256 "607774cbba28732bfa802b54baa7484215f530991055bb562efbed5b2f20a45e"
+  end
+
+  resource "toml" do
+    url "https://files.pythonhosted.org/packages/be/ba/1f744cdc819428fc6b5084ec34d9b30660f6f9daaf70eead706e3203ec3c/toml-0.10.2.tar.gz"
+    sha256 "b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"
   end
 
   resource "xmltodict" do
-    url "https://files.pythonhosted.org/packages/57/17/a6acddc5f5993ea6eaf792b2e6c3be55e3e11f3b85206c818572585f61e1/xmltodict-0.11.0.tar.gz"
-    sha256 "8f8d7d40aa28d83f4109a7e8aa86e67a4df202d9538be40c0cb1d70da527b0df"
+    url "https://files.pythonhosted.org/packages/58/40/0d783e14112e064127063fbf5d1fe1351723e5dfe9d6daad346a305f6c49/xmltodict-0.12.0.tar.gz"
+    sha256 "50d8c638ed7ecb88d90561beedbf720c9b4e851a9fa6c47ebd64e99d166d8a21"
   end
 
   def install
@@ -43,8 +54,8 @@ class PythonYq < Formula
 
     bin.install Dir[libexec/"bin/*"]
     env = {
-      :PATH       => "#{Formula["jq"].opt_bin}:$PATH",
-      :PYTHONPATH => ENV["PYTHONPATH"],
+      PATH:       "#{Formula["jq"].opt_bin}:$PATH",
+      PYTHONPATH: ENV["PYTHONPATH"],
     }
     bin.env_script_all_files(libexec/"bin", env)
   end

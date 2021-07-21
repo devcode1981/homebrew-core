@@ -1,15 +1,15 @@
 class Libsbol < Formula
   desc "Read and write files in the Synthetic Biology Open Language (SBOL)"
   homepage "https://synbiodex.github.io/libSBOL"
-  url "https://github.com/SynBioDex/libSBOL/archive/v2.3.0.0.tar.gz"
-  sha256 "a8092390b5df1d3dc8df7b403ec4757c55039ccec40ca8088150e27a4a00c41b"
+  url "https://github.com/SynBioDex/libSBOL/archive/v2.3.2.tar.gz"
+  sha256 "c85de13b35dec40c920ff8a848a91c86af6f7c7ee77ed3c750f414bbbbb53924"
+  license "Apache-2.0"
+  revision 1
 
   bottle do
-    cellar :any
-    sha256 "974ce842996ac65fcb31874389e0659451fe6cabc06a1b3c679e6fff9a2a27a0" => :mojave
-    sha256 "ee8e8a563435076bdee91fafe19832750ec91f25d0a32d727cdb505d7c437c3a" => :high_sierra
-    sha256 "cfe93d1e977048c7502a5aa1b43514deca305dc66451aafb386f68a304c12492" => :sierra
-    sha256 "61efb175a5ae38717e9f939c172e9a249e9138bfa3531e71471d6314c7b61b16" => :el_capitan
+    sha256 cellar: :any, catalina:    "69d13417a5f365bda9b5da5097f0b253fc76a9c237ac733ef7b684db1a3e01d6"
+    sha256 cellar: :any, mojave:      "2d81b55c1e379756aaf37667757273a6581ee98083ac6b87c0d2392020249b19"
+    sha256 cellar: :any, high_sierra: "cc6aca556487165bf44a40d159428652cae3b60e04f685281a5662b5ced42d2c"
   end
 
   depends_on "cmake" => :build
@@ -18,6 +18,9 @@ class Libsbol < Formula
   depends_on "raptor"
 
   def install
+    # upstream issue: https://github.com/SynBioDex/libSBOL/issues/215
+    inreplace "source/CMakeLists.txt", "measure.h", "measurement.h"
+
     system "cmake", ".", "-DCMAKE_CXX_FLAGS=-I/System/Library/Frameworks/Python.framework/Headers",
                          "-DSBOL_BUILD_SHARED=TRUE",
                          "-DSBOL_BUILD_STATIC=FALSE",
@@ -40,8 +43,10 @@ class Libsbol < Formula
     system ENV.cxx, "test.cpp", "-o", "test", "-std=c++11",
                     "-I/System/Library/Frameworks/Python.framework/Headers",
                     "-I#{Formula["raptor"].opt_include}/raptor2",
-                    "-I#{include}", "-L#{lib}", "-ljsoncpp", "-lcurl",
-                    "-lraptor2", "-lsbol"
+                    "-I#{include}", "-L#{lib}",
+                    "-L#{Formula["jsoncpp"].opt_lib}",
+                    "-L#{Formula["raptor"].opt_lib}",
+                    "-ljsoncpp", "-lcurl", "-lraptor2", "-lsbol"
     system "./test"
   end
 end

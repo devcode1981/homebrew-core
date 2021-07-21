@@ -1,14 +1,15 @@
 class Pgformatter < Formula
   desc "PostgreSQL syntax beautifier"
   homepage "https://sqlformat.darold.net/"
-  url "https://github.com/darold/pgFormatter/archive/v3.3.tar.gz"
-  sha256 "f56ff7d7b8d59e85ac325a4b954d98b6aeae8369da74970f7948c7f4a1448ffa"
+  url "https://github.com/darold/pgFormatter/archive/v5.0.tar.gz"
+  sha256 "1bb5b2e2b4ca27789d617456e1a0301a0c2e3c4a32f93ccbf71bdf1ff0219217"
+  license "PostgreSQL"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "f93a3e3df7309520df02fb29f5ff386f52a6f081b6fec33e66d6ffa928b5e875" => :mojave
-    sha256 "812ff63ece606b2edf98ae23afc75f00ea2ffd59f49eb67e6fd59d11000222ef" => :high_sierra
-    sha256 "812ff63ece606b2edf98ae23afc75f00ea2ffd59f49eb67e6fd59d11000222ef" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "0ed20e16efad36d589a80538e78ddcfa9b71f02b56bf32f9415e803eb8cbd537"
+    sha256 cellar: :any_skip_relocation, big_sur:       "83a175025f66104c66f735201a15852b8b7e210d8dc5185b004822f0032fdd9e"
+    sha256 cellar: :any_skip_relocation, catalina:      "81895f455d9c400ed7de8e8cb2ebc1fa55147be0fe6cd4e9faae3f61a44b8040"
+    sha256 cellar: :any_skip_relocation, mojave:        "330e956df52c371e9d403e3eb5b9b46a0a5e415d1ceea6156fd2e2036aa046e4"
   end
 
   def install

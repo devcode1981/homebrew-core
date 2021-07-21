@@ -1,32 +1,29 @@
 class Graphene < Formula
   desc "Thin layer of graphic data types"
   homepage "https://ebassi.github.io/graphene/"
-  url "https://download.gnome.org/sources/graphene/1.8/graphene-1.8.2.tar.xz"
-  sha256 "b3fcf20996e57b1f4df3941caac10f143bb29890a42f7a65407cd19271fc89f7"
+  url "https://github.com/ebassi/graphene/releases/download/1.10.6/graphene-1.10.6.tar.xz"
+  sha256 "80ae57723e4608e6875626a88aaa6f56dd25df75024bd16e9d77e718c3560b25"
+  license "MIT"
 
   bottle do
-    sha256 "c01711d7053a1f6afdbf3a7c7897fecfac381c5c6e3bdb70d17d7022a7ba8c2a" => :mojave
-    sha256 "bc7565a6e02e0b73b4eda321b6a473c6999e6cdfb26c68b97ac0c1926d97c2fd" => :high_sierra
-    sha256 "370975de026735c02592df6f779e2b2599f331352cd951877ef28441ba83390a" => :sierra
-    sha256 "37754eee73a297cefd43828934cfccbe4098016f2b0aee02f9d32297717ec1d9" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "64f77c528bc4e693aef3a747f76eb2c63a1a25f37e730d46fda139c002271301"
+    sha256 cellar: :any,                 big_sur:       "20b41dfc4c7bf01973d14f33129db71d7968509e8dc0761f640e36400ae8127e"
+    sha256 cellar: :any,                 catalina:      "9a39689fd7d593fc8d5b86b077d153d863c51b470703e87dfd8cfd1ee157d742"
+    sha256 cellar: :any,                 mojave:        "d6e6d695f0b7c04b6b8b0b09a18a9cd39bd25ba0e64d5843fa12c0a56100ea06"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6345068270ee59e4b48206f62bed5d258f361aa273f7a20c3847d23daa67b46c"
   end
 
   depends_on "gobject-introspection" => :build
-  depends_on "meson-internal" => :build
+  depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
   depends_on "glib"
 
-  patch :DATA
-
   def install
-    ENV.refurbish_args
-
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", ".."
-      system "ninja"
-      system "ninja", "install"
+      system "meson", *std_meson_args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
     end
   end
 
@@ -54,21 +51,3 @@ class Graphene < Formula
     system "./test"
   end
 end
-
-__END__
-diff --git a/meson.build b/meson.build
-index 0736994..5932028 100644
---- a/meson.build
-+++ b/meson.build
-@@ -112,11 +112,6 @@ if host_system == 'linux' and cc.get_id() == 'gcc'
-   common_ldflags = [ '-Wl,-Bsymbolic-functions', '-Wl,-z,relro', '-Wl,-z,now', ]
- endif
-
--# Maintain compatibility with Autotools on macOS
--if host_system == 'darwin'
--  common_ldflags += [ '-compatibility_version 1', '-current_version 1.0', ]
--endif
--
- # Required dependencies
- mathlib = cc.find_library('m', required: false)
- threadlib = dependency('threads')

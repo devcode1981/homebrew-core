@@ -1,15 +1,17 @@
 class Gdl < Formula
   desc "GNOME Docking Library provides docking features for GTK+ 3"
   homepage "https://developer.gnome.org/gdl/"
-  url "https://download.gnome.org/sources/gdl/3.28/gdl-3.28.0.tar.xz"
-  sha256 "52cc98ecc105148467b3b2b4e0d27ae484b1b6710d53413f771ed07ef1b737b6"
-  revision 1
+  url "https://download.gnome.org/sources/gdl/3.34/gdl-3.34.0.tar.xz"
+  sha256 "858b30f0cdce4c4cb3e8365a7d54ce57c388beff38ea583be5449bc78dda8d02"
+  revision 2
 
   bottle do
-    sha256 "5143863d01c94bc6eb765615922b302de5d73f8d3ea40982b9ad29b3221b7e19" => :mojave
-    sha256 "7395131d564a60d6b225c82f109403aa92bbc5f75a59eccd1ec3f98a13052f6f" => :high_sierra
-    sha256 "9267cd085c7e131ffb16b13a3c4f6b39ae5b3093fd16f77925263ea305b3536b" => :sierra
-    sha256 "c366de7b473f8af12cbb38b4a2fabbde7438d76915a8f06663ef1e0703548e6b" => :el_capitan
+    sha256                               arm64_big_sur: "ef295dc3cfd05bf245b94552e008acc047e03e2806e93374879e7881b5c94871"
+    sha256                               big_sur:       "30164281abee8e2047138cddc735d9a9e1ec520f673d468a601b6cfbc988cdd3"
+    sha256                               catalina:      "5acba250d8c77d17be5ff312bf11d6aa33cb609c4c351b2a1cd1bf565e73e81a"
+    sha256                               mojave:        "2e2e04543eaf7ee02a791433fbab570d3b5f44651cec8dd56a40a519c2a38d24"
+    sha256                               high_sierra:   "abd9360935baecd914847697e5a21e7b7d91b94c0d5878509921cdb2ba72799c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "a8c6f276a6341d271f31979ee5f8b88216d08c2b51495187f621be0fe8d151a9"
   end
 
   depends_on "gobject-introspection" => :build
@@ -19,6 +21,12 @@ class Gdl < Formula
   depends_on "libxml2"
 
   def install
+    on_linux do
+      # Needed to find intltool (xml::parser)
+      ENV.prepend_path "PERL5LIB", Formula["intltool"].libexec/"lib/perl5"
+      ENV["INTLTOOL_PERL"] = Formula["perl"].bin/"perl"
+    end
+
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
                           "--prefix=#{prefix}"
@@ -43,6 +51,7 @@ class Gdl < Formula
     gettext = Formula["gettext"]
     glib = Formula["glib"]
     gtkx3 = Formula["gtk+3"]
+    harfbuzz = Formula["harfbuzz"]
     libepoxy = Formula["libepoxy"]
     libpng = Formula["libpng"]
     pango = Formula["pango"]
@@ -58,6 +67,7 @@ class Gdl < Formula
       -I#{glib.opt_include}/glib-2.0
       -I#{glib.opt_lib}/glib-2.0/include
       -I#{gtkx3.opt_include}/gtk-3.0
+      -I#{harfbuzz.opt_include}/harfbuzz
       -I#{include}/libgdl-3.0
       -I#{libepoxy.opt_include}
       -I#{libpng.opt_include}/libpng16
@@ -82,10 +92,12 @@ class Gdl < Formula
       -lglib-2.0
       -lgobject-2.0
       -lgtk-3
-      -lintl
       -lpango-1.0
       -lpangocairo-1.0
     ]
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end

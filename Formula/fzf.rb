@@ -1,27 +1,25 @@
 class Fzf < Formula
   desc "Command-line fuzzy finder written in Go"
   homepage "https://github.com/junegunn/fzf"
-  url "https://github.com/junegunn/fzf/archive/0.17.5.tar.gz"
-  sha256 "de3b39758e01b19bbc04ee0d5107e14052d3a32ce8f40d4a63d0ed311394f7ee"
+  url "https://github.com/junegunn/fzf/archive/0.27.2.tar.gz"
+  sha256 "7798a9e22fc363801131456dc21026ccb0f037aed026d17df60b1178b3f24111"
+  license "MIT"
   head "https://github.com/junegunn/fzf.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "fbef178808dd3cee3b36ea3256579bc759e6516f87c4b8b2be00ad404ce14d4f" => :mojave
-    sha256 "7307a392d1869453b5dbfa86b4b0bb4b1e8e6178d12fd928b82e9f8cfde3926d" => :high_sierra
-    sha256 "490018ace4f9d99a470af3be3a409c793c1551fe72a6be2ad6e766dd594fa282" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "ae9fddf6be0736d872e48199d3f59517b48e4d5fa9fe609e61c6ca9f4dc2e582"
+    sha256 cellar: :any_skip_relocation, big_sur:       "47ca85feb2e71a465580b5dd0912ed365c1015de175c81570309045abb847c96"
+    sha256 cellar: :any_skip_relocation, catalina:      "47ca85feb2e71a465580b5dd0912ed365c1015de175c81570309045abb847c96"
+    sha256 cellar: :any_skip_relocation, mojave:        "47ca85feb2e71a465580b5dd0912ed365c1015de175c81570309045abb847c96"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e2f76540decf6dff782146c728f007651b2b2c150ab7e06373ebdeec3522270e"
   end
 
-  depends_on "glide" => :build
   depends_on "go" => :build
 
+  uses_from_macos "ncurses"
+
   def install
-    ENV["GLIDE_HOME"] = buildpath/"glide_home"
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/junegunn").mkpath
-    ln_s buildpath, buildpath/"src/github.com/junegunn/fzf"
-    system "glide", "install"
-    system "go", "build", "-o", bin/"fzf", "-ldflags", "-X main.revision=brew"
+    system "go", "build", *std_go_args, "-ldflags", "-s -w -X main.version=#{version} -X main.revision=brew"
 
     prefix.install "install", "uninstall"
     (prefix/"shell").install %w[bash zsh fish].map { |s| "shell/key-bindings.#{s}" }
@@ -31,13 +29,14 @@ class Fzf < Formula
     bin.install "bin/fzf-tmux"
   end
 
-  def caveats; <<~EOS
-    To install useful keybindings and fuzzy completion:
-      #{opt_prefix}/install
+  def caveats
+    <<~EOS
+      To install useful keybindings and fuzzy completion:
+        #{opt_prefix}/install
 
-    To use fzf in Vim, add the following line to your .vimrc:
-      set rtp+=#{opt_prefix}
-  EOS
+      To use fzf in Vim, add the following line to your .vimrc:
+        set rtp+=#{opt_prefix}
+    EOS
   end
 
   test do

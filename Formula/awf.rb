@@ -3,16 +3,21 @@ class Awf < Formula
   homepage "https://github.com/valr/awf"
   url "https://github.com/valr/awf/archive/v1.4.0.tar.gz"
   sha256 "bb14517ea3eed050b3fec37783b79c515a0f03268a55dfd0b96a594b5b655c78"
-  revision 1
+  license "GPL-3.0"
+  revision 2
   head "https://github.com/valr/awf.git"
 
   bottle do
-    cellar :any
-    sha256 "d64d7cc69ccc6bfab256afed30c89d7ce25234ada80afd33475bba4b7263b163" => :mojave
-    sha256 "50dae601b8135cc9bb01e62c4268812f5c6cc935f0c326e0e66cdc66a3337186" => :high_sierra
-    sha256 "6685282a4c03f247e2e619bd4ba4b531c73e867f34708def93cdc13fc3e9ec7b" => :sierra
-    sha256 "18761ce847fb96be9dbf1339a683ce65695a76c1e3508d2f3f6d60cb80218481" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "60373a676e554ca3b82465ff01d7bfbde233fad9e7d1ec115656903c90336a29"
+    sha256 cellar: :any,                 big_sur:       "a272cb4694d49e897a17250d13b9f534bb9020189711bd982f34392e666c9b9e"
+    sha256 cellar: :any,                 catalina:      "cb84883afc611eacadc474b10407dee6b7177758054fbc2eaa65f21ba7d96f9f"
+    sha256 cellar: :any,                 mojave:        "b0290ffc5c750f924cbf96a2a5398215a41137a69211d262387789e399aba9d8"
+    sha256 cellar: :any,                 high_sierra:   "090ec40bbd96bea15714d411b9c89e6b06ca9723050252f00623b49c61da1497"
+    sha256 cellar: :any,                 sierra:        "417806f1ab0aa5d1c2e2e0302dd2c3c4cdaaf2957ac18fbfe1f9a2ced72947bd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "201df4351ed6f6f8dd3da0f2ca51ca64b494ded6aac9a96489e0c41361e480fd"
   end
+
+  deprecate! date: "2021-05-24", because: :repo_archived
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build

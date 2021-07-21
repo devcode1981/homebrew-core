@@ -1,20 +1,32 @@
 class Libu2fHost < Formula
   desc "Host-side of the Universal 2nd Factor (U2F) protocol"
   homepage "https://developers.yubico.com/libu2f-host/"
-  url "https://developers.yubico.com/libu2f-host/Releases/libu2f-host-1.1.6.tar.xz"
-  sha256 "4da0bb9e32cab230e63bf65252076f9a4b5e40eb9ec2ddaf9376bcef30e7bda7"
+  url "https://developers.yubico.com/libu2f-host/Releases/libu2f-host-1.1.10.tar.xz"
+  sha256 "4265789ec59555a1f383ea2d75da085f78ee4cf1cd7c44a2b38662de02dd316f"
+  license "GPL-3.0"
+  revision 1
 
   bottle do
-    cellar :any
-    sha256 "35901ea7122dc9fa0eca2c95b2c368932b9f1a2ee25f6432035a45c4f299aeec" => :mojave
-    sha256 "1c8bf3998672c1067e4bbd2a17de18e8634b78a2ddd9ab8899c9f1af6e8b44fe" => :high_sierra
-    sha256 "563bb00b2ffae07102b045c388033b6e1eb452efb206c208976299da3ce30446" => :sierra
-    sha256 "964fa246d7a086ba9bca40c062e6c4e27fd2dc8251d419ff69a4d646cc54498a" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "052b140ee60b38b731fe05d9d4bd0ba81765e9bac7ccc25125ba93596534fe14"
+    sha256 cellar: :any,                 big_sur:       "4c6f6729349bce13f6710e5edf040411b78c36e6815258f54a4c8c52f907109b"
+    sha256 cellar: :any,                 catalina:      "461c37c919d585c8abca2fbff636332c27462cc8f10c04d5762e357c453f7066"
+    sha256 cellar: :any,                 mojave:        "deed9f64b0e078130c5618ce98580b9b1b284c531cfb04e6296a8d5b259b6a81"
+    sha256 cellar: :any,                 high_sierra:   "376aa8fc3a98d4aab29ba7d284a58bf07308fda51aa30da72e068f8a6206505e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d8371ab9b3837d3cd9d784cf3b346aa8d2d88ab28d9a69f8035fefc1cb4b81ef"
   end
+
+  # See: https://github.com/Yubico/libu2f-host
+  deprecate! date: "2021-05-25", because: :repo_archived
 
   depends_on "pkg-config" => :build
   depends_on "hidapi"
   depends_on "json-c"
+
+  # Compatibility with json-c 0.14. Remove with the next release.
+  patch do
+    url "https://github.com/Yubico/libu2f-host/commit/840f01135d2892f45e71b9e90405de587991bd03.patch?full_index=1"
+    sha256 "6752463ca79fb312d4524f39d2ac02707ef6c182450d631e35f02bb49565c651"
+  end
 
   def install
     system "./configure", "--prefix=#{prefix}"

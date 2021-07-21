@@ -1,17 +1,19 @@
 class Lasi < Formula
   desc "C++ stream output interface for creating Postscript documents"
   homepage "https://www.unifont.org/lasi/"
-  url "https://downloads.sourceforge.net/project/lasi/lasi/1.1.2%20Source/libLASi-1.1.2.tar.gz"
-  sha256 "448c6e52263a1e88ac2a157f775c393aa8b6cd3f17d81fc51e718f18fdff5121"
-  revision 1
-  head "http://svn.code.sf.net/p/lasi/code/trunk"
+  url "https://downloads.sourceforge.net/project/lasi/lasi/1.1.3%20Source/libLASi-1.1.3.tar.gz"
+  sha256 "5e5d2306f7d5a275949fb8f15e6d79087371e2a1caa0d8f00585029d1b47ba3b"
+  license "GPL-2.0-or-later"
+  revision 2
+  head "https://svn.code.sf.net/p/lasi/code/trunk"
 
   bottle do
-    cellar :any
-    sha256 "70047a220f5761a9269d7aa9bc9130c9a048b62966efbcd78bef6b4011e254ce" => :mojave
-    sha256 "3046c6587163febbdc84a38059fc87bb9bbee3c07ec092786b0f5565a914d759" => :high_sierra
-    sha256 "31c08380140531a70f3fa53d7026ff8b356508c8643ec1751e26261f1d663438" => :sierra
-    sha256 "85883793893dce87446ac03902394857c5b945b90c42a66eccc48366c5868401" => :el_capitan
+    rebuild 2
+    sha256 cellar: :any,                 arm64_big_sur: "f6f4ac7da7af9beba184fff05fd4419335c07710beb3a2e3646afdde31745770"
+    sha256 cellar: :any,                 big_sur:       "d4d9a1f05e4acef822930f62b4dd5b5f87f815e01523eb41b91df079af35b69b"
+    sha256 cellar: :any,                 catalina:      "9c9b3d4df3fef9c27ccc60f51583976cfb7093c5ea345c0dced428e0539b7ede"
+    sha256 cellar: :any,                 mojave:        "95eed6a78b95300f4b496bdba60b0542c9b66e5ce96ca7c8fcd081e76eebc675"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "a81717d41a1ac50a3f35199b82877d62fce7abb1da670c98cd2abb762e2a1b8b"
   end
 
   depends_on "cmake" => :build
@@ -20,10 +22,18 @@ class Lasi < Formula
   depends_on "pango"
 
   def install
-    # None is valid, but lasi's CMakeFiles doesn't think so for some reason
-    args = std_cmake_args - %w[-DCMAKE_BUILD_TYPE=None]
+    args = std_cmake_args.dup
 
-    system "cmake", ".", "-DCMAKE_BUILD_TYPE=Release", *args
+    # std_cmake_args tries to set CMAKE_INSTALL_LIBDIR to a prefix-relative
+    # directory, but lasi's cmake scripts don't like that
+    args.map! { |x| x.start_with?("-DCMAKE_INSTALL_LIBDIR=") ? "-DCMAKE_INSTALL_LIBDIR=#{lib}" : x }
+
+    # If we build/install examples they result in shim/cellar paths in the
+    # installed files.  Instead we don't build them at all.
+    inreplace "CMakeLists.txt", "add_subdirectory(examples)", ""
+
+    system "cmake", ".", *args
+
     system "make", "install"
   end
 end

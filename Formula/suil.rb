@@ -1,24 +1,41 @@
 class Suil < Formula
   desc "Lightweight C library for loading and wrapping LV2 plugin UIs"
   homepage "https://drobilla.net/software/suil/"
-  url "https://download.drobilla.net/suil-0.10.0.tar.bz2"
-  sha256 "9895c531f80c7e89a2b4b47de589d73b70bf48db0b0cfe56e5d54237ea4b8848"
+  url "https://download.drobilla.net/suil-0.10.10.tar.bz2"
+  sha256 "750f08e6b7dc941a5e694c484aab02f69af5aa90edcc9fb2ffb4fb45f1574bfb"
+  license "ISC"
   revision 1
+  head "https://gitlab.com/lv2/suil.git"
+
+  livecheck do
+    url "https://download.drobilla.net/"
+    regex(/href=.*?suil[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "9c4394af565bb5bceadf67d921c6ee9434b12ba3c7c053168422b926a61b3711" => :mojave
-    sha256 "836f6d8ad66cca4de66cd78c45205829627ee370b5485c0ef878bc9473d24ba6" => :high_sierra
-    sha256 "babe1c998fd93f29b86a767e01ad1518b95e74e17769b517c092ed4cbc0878bf" => :sierra
-    sha256 "639934ea8fd85b8968cf33838be1f399b7479e844fef972d4fca0ba2ab8a4bf4" => :el_capitan
+    sha256 arm64_big_sur: "11af96a8cd470b08da0bd49cb3b620ae81d89e9589c5ed44a533e2cb93d5133f"
+    sha256 big_sur:       "02a8eed42b15c099954dce4741c71b0e5f9ae652fce48921e4920a3efc779e01"
+    sha256 catalina:      "4a74f4c1cbf9b1e67c7fbda45e5ca67b5163757b70ee62c33a7e66b136a2d4c1"
+    sha256 mojave:        "2bc87e39cf2cb0a66c983c01834d39c2f1cccdddbe4db28331e0dcb6cf64c3fb"
   end
 
   depends_on "pkg-config" => :build
+  depends_on "gtk+"
+  depends_on "gtk+3"
   depends_on "lv2"
-  depends_on "gtk+" => :recommended
-  depends_on :x11 => :optional
+  depends_on "qt@5"
+
+  # Disable qt5_in_gtk3 because it depends upon X11
+  # Can be removed if https://gitlab.com/lv2/suil/-/merge_requests/1 is merged
+  patch do
+    url "https://gitlab.com/lv2/suil/-/commit/33ea47e18ddc1eb384e75622c0e75164d351f2c0.diff"
+    sha256 "2f335107e26c503460965953f94410e458c5e8dd86a89ce039f65c4e3ae16ba7"
+  end
 
   def install
-    system "./waf", "configure", "--prefix=#{prefix}"
+    ENV.cxx11
+    system "./waf", "configure", "--prefix=#{prefix}", "--no-x11",
+        "--gtk2-lib-name=#{shared_library("libgtk-quartz-2.0.0")}", "--gtk3-lib-name=#{shared_library("libgtk-3.0")}"
     system "./waf", "install"
   end
 

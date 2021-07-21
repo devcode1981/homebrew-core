@@ -1,17 +1,16 @@
 class Mjpegtools < Formula
   desc "Record and playback videos and perform simple edits"
   homepage "https://mjpeg.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/mjpeg/mjpegtools/2.1.0/mjpegtools-2.1.0.tar.gz"
-  sha256 "864f143d7686377f8ab94d91283c696ebd906bf256b2eacc7e9fb4dddcedc407"
-  revision 2
+  url "https://downloads.sourceforge.net/project/mjpeg/mjpegtools/2.2.0/mjpegtools-2.2.0.tar.bz2"
+  sha256 "a84349839471052db1ef691134aacf905b314dfce8762d47e10edcc9ab5f97d8"
+  license "GPL-2.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "c8a22d895e9835274994bdf72b0ca6f3c0df523e5dc8e281ed7d1fd7ae3b41eb" => :mojave
-    sha256 "7f47c9df784de38ee02726c1381b42a5924754c7702003ee8fafbae296302638" => :high_sierra
-    sha256 "9f5c0eb81540bf70ff8b2352a8ea21117a75c6dbdac58ea8d04d0da47a639cb9" => :sierra
-    sha256 "2793d05c642305daeb9cceb10f08484ce57d5210a3918121ab04be1f89224142" => :el_capitan
-    sha256 "ba1ec63066197a9bb7fc53f075b17d66f739936b151e90e39a741b33f19eaa9f" => :yosemite
+    sha256 cellar: :any,                 arm64_big_sur: "4e6e97aa6b84f1269e344708cc2fa5b4fd4cadf7c27da94a1a450a5d7fef45fa"
+    sha256 cellar: :any,                 big_sur:       "cb977ade8f3c1a4949029932bd55be08ffa562b3404dd5594d63885296504f32"
+    sha256 cellar: :any,                 catalina:      "535d927e3f9bbb2bee320d5d254242491b500d01cd7619f10a81a77df4fa4f6a"
+    sha256 cellar: :any,                 mojave:        "d7a3825d1a3fa3b3863ecdf95d88ff17758f61f8d1ef0ea27b38f3a6fa7d165e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e005dd2e68a1392fc0e62bfbd8fb1d1c9ae304e8fa41674c4b52f1975896f217"
   end
 
   depends_on "pkg-config" => :build

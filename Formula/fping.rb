@@ -1,14 +1,16 @@
 class Fping < Formula
   desc "Scriptable ping program for checking if multiple hosts are up"
   homepage "https://fping.org/"
-  url "https://fping.org/dist/fping-4.1.tar.gz"
-  sha256 "2733e2a18cc2b5b935c4e3b5b84ccf2080c38043f1864d7c43326e8048ddab73"
+  url "https://fping.org/dist/fping-5.0.tar.gz"
+  sha256 "ed38c0b9b64686a05d1b3bc1d66066114a492e04e44eef1821d43b1263cd57b8"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "0ccb78b1ee2a43b5742bbdc65c8113681ed264365c547e36449435464e24b135" => :mojave
-    sha256 "1a97d2982df8c7c3561ee1f50206c91fb9674c732e41c71e29ab28279f5ed312" => :high_sierra
-    sha256 "6150a9003ce556789a252dc3fa73c6125b392887f35fe4a313cda41e74071342" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "65a1a6e1fee0af28a38006e2ce05f71915080907cacc8bb7ef4373ae041e75f2"
+    sha256 cellar: :any_skip_relocation, big_sur:       "012cad012acbaf32885f1d260cfa464478a0a71ad396f0711813c7f2b183112d"
+    sha256 cellar: :any_skip_relocation, catalina:      "bd1255921afca543ba440bbf84f86f7c3b0b10db4bbf1aa659a2aa686496e4d5"
+    sha256 cellar: :any_skip_relocation, mojave:        "47f38d4902f03da1e407331848e1f3a75a2b8692e4366d8a0a341e66f36962f1"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "e2d14a6c1de9032a244f7185ba8a629d61f8ed2964b96490890c87336ff4d521"
   end
 
   head do

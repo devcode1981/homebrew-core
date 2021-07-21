@@ -1,23 +1,35 @@
 class Less < Formula
   desc "Pager program similar to more"
-  homepage "http://www.greenwoodsoftware.com/less/index.html"
-  url "https://ftp.gnu.org/gnu/less/less-530.tar.gz"
-  mirror "https://ftpmirror.gnu.org/less/less-530.tar.gz"
-  sha256 "503f91ab0af4846f34f0444ab71c4b286123f0044a4964f1ae781486c617f2e2"
+  homepage "https://www.greenwoodsoftware.com/less/index.html"
+  url "https://www.greenwoodsoftware.com/less/less-590.tar.gz"
+  sha256 "6aadf54be8bf57d0e2999a3c5d67b1de63808bb90deb8f77b028eafae3a08e10"
+  license "GPL-3.0-or-later"
 
-  bottle do
-    sha256 "6e0881558623d909107e5ebfab32772d164a772863b54cebec8144352ce66ccf" => :mojave
-    sha256 "edec3486e523a601dfe978a8a9524c8cef7a161c8e892d3154cd578623e866a7" => :high_sierra
-    sha256 "10c47d26e0f2e1f9c2e46a6bd61b2d07e1104caaa58c188b4b81b7fe0cd948d1" => :sierra
-    sha256 "0e98c6e82ecf7adb2d5288f3f4913ffa238469438b325211adf56eff9b260876" => :el_capitan
+  livecheck do
+    url :homepage
+    regex(/less[._-]v?(\d+(?:\.\d+)*).+?released.+?general use/i)
   end
 
-  depends_on "pcre" => :optional
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "bc5f182ccbe6676c1647939b2dd1b66e4f66eb920bb865f94d041fccdb2bd493"
+    sha256 cellar: :any,                 big_sur:       "7b8ea7c58b438ef80d6b13fd988061543ab3413a40113cd30644cb22fa6f1081"
+    sha256 cellar: :any,                 catalina:      "ccbcf747eac1e0a8338be43a6be0e4f3fb241394a6bc0c921b6e51b4ca32c042"
+    sha256 cellar: :any,                 mojave:        "916e88216d17654f290affa519d85ad295696dc6c753d3311ed71fb4cc2f9268"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "1d3b89016d59864389e96b2c234f9f8e98254374c1b1d20847a03a8fa8bce6d2"
+  end
+
+  head do
+    url "https://github.com/gwsw/less.git"
+    depends_on "autoconf" => :build
+    uses_from_macos "perl" => :build
+  end
+
+  depends_on "ncurses"
+  depends_on "pcre2"
 
   def install
-    args = ["--prefix=#{prefix}"]
-    args << "--with-regex=pcre" if build.with? "pcre"
-    system "./configure", *args
+    system "make", "-f", "Makefile.aut", "distfiles" if build.head?
+    system "./configure", "--prefix=#{prefix}", "--with-regex=pcre2"
     system "make", "install"
   end
 

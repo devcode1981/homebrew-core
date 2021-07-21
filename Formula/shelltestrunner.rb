@@ -1,26 +1,25 @@
-require "language/haskell"
-
 class Shelltestrunner < Formula
-  include Language::Haskell::Cabal
-
   desc "Portable command-line tool for testing command-line programs"
   homepage "https://github.com/simonmichael/shelltestrunner"
   url "https://hackage.haskell.org/package/shelltestrunner-1.9/shelltestrunner-1.9.tar.gz"
   sha256 "cbc4358d447e32babe4572cda0d530c648cc4c67805f9f88002999c717feb3a8"
+  license "GPL-3.0-or-later"
+  revision 1
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "de0ba4e228df9e3b290ce49af7b0bbe1f3983306a2b7af418ca84a628e9e08f7" => :mojave
-    sha256 "e6c941fb8a8b18e51789a9523fab1d1e8ab312d6c0ce93af72f2caf495a54870" => :high_sierra
-    sha256 "3ddd0cf1e9baf4f31e667bb1477af3e7a7b905071041569bb1bd6031118a377b" => :sierra
-    sha256 "2f954da156e2d7aea6059738913124883a78797d1118ba11b8366bc4b7dd03dd" => :el_capitan
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "58f03249e05d5808baff4da11f784b37bd818f35c3243855bdc467562526ff76"
+    sha256 cellar: :any_skip_relocation, big_sur:       "e42bf02d5f462aca20fe7a9b80ba6e2431b15940b81f5304ff1611665a29bac0"
+    sha256 cellar: :any_skip_relocation, catalina:      "d425959bf27c059fb22a6e2f916f839645c0e79f180903b2c99c189ba52f4d96"
+    sha256 cellar: :any_skip_relocation, mojave:        "15ccce4fe40fe20c6f9c97442fb37079a6925351f725d4e6840541004375520c"
   end
 
   depends_on "cabal-install" => :build
   depends_on "ghc" => :build
 
   def install
-    install_cabal_package :using => ["happy"]
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args
   end
 
   test do

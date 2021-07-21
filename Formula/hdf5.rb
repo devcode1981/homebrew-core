@@ -1,31 +1,44 @@
 class Hdf5 < Formula
   desc "File format designed to store large amounts of data"
   homepage "https://www.hdfgroup.org/HDF5"
-  url "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.4/src/hdf5-1.10.4.tar.bz2"
-  sha256 "1267ff06aaedc04ca25f7c6026687ea2884b837043431195f153401d942b28df"
+  url "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-1.12.1/src/hdf5-1.12.1.tar.bz2"
+  sha256 "aaf9f532b3eda83d3d3adc9f8b40a9b763152218fa45349c3bc77502ca1f8f1c"
+  license "BSD-3-Clause"
 
-  bottle do
-    sha256 "ac1b242a49c884c9572c95089f589243637dab9992f11f120218f7e9c1207e13" => :mojave
-    sha256 "207bb10e9ee432b9e3e71790b2be25efb4fa57a95a30d2a47997ad460d3ae7d7" => :high_sierra
-    sha256 "34af9edb3db5e46887106f70a7f6c7c3e4988c135e739089f5f13e0960edee3a" => :sierra
+  # This regex isn't matching filenames within href attributes (as we normally
+  # do on HTML pages) because this page uses JavaScript to handle the download
+  # buttons and the HTML doesn't contain the related URLs.
+  livecheck do
+    url "https://www.hdfgroup.org/downloads/hdf5/source-code/"
+    regex(/>\s*hdf5[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  option "with-mpi", "Enable parallel support"
-
-  deprecated_option "enable-parallel" => "with-mpi"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "d049cea334b8a8c27cc83f58dc69a795f66b59f7b395666d4128ca457ab69e50"
+    sha256 cellar: :any,                 big_sur:       "6c31504f6a44ef682977a38ef9327efce7e6ba9264add1965b1a76e8fddc2647"
+    sha256 cellar: :any,                 catalina:      "aa4930768cb12d3a2a82e3670c0d9c5cf4089e487d0cbf4865880a5520b375d0"
+    sha256 cellar: :any,                 mojave:        "d2bc09835f0613bff558588829f2e48d8c2ed32386976ac18ff1c0f8eef3ed36"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "13147222b63eafbf633e6c71cfc4d68894753a08227d6511dbecaa2a1f911de3"
+  end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
   depends_on "libtool" => :build
   depends_on "gcc" # for gfortran
-  depends_on "open-mpi" if build.with? "mpi"
   depends_on "szip"
 
-  def install
-    inreplace %w[c++/src/h5c++.in fortran/src/h5fc.in tools/src/misc/h5cc.in],
-      "${libdir}/libhdf5.settings", "#{pkgshare}/libhdf5.settings"
+  uses_from_macos "zlib"
 
-    inreplace "src/Makefile.am", "settingsdir=$(libdir)", "settingsdir=#{pkgshare}"
+  conflicts_with "hdf5-mpi", because: "hdf5-mpi is a variant of hdf5, one can only use one or the other"
+
+  def install
+    inreplace %w[c++/src/h5c++.in fortran/src/h5fc.in bin/h5cc.in],
+      "${libdir}/libhdf5.settings",
+      "#{pkgshare}/libhdf5.settings"
+
+    inreplace "src/Makefile.am",
+              "settingsdir=$(libdir)",
+              "settingsdir=#{pkgshare}"
 
     system "autoreconf", "-fiv"
 
@@ -36,23 +49,20 @@ class Hdf5 < Formula
       --with-szlib=#{Formula["szip"].opt_prefix}
       --enable-build-mode=production
       --enable-fortran
+      --enable-cxx
     ]
-
-    if build.without?("mpi")
-      args << "--enable-cxx"
-    else
-      args << "--disable-cxx"
-    end
-
-    if build.with? "mpi"
-      ENV["CC"] = "mpicc"
-      ENV["CXX"] = "mpicxx"
-      ENV["FC"] = "mpif90"
-
-      args << "--enable-parallel"
+    on_linux do
+      args << "--with-zlib=#{Formula["zlib"].opt_prefix}"
     end
 
     system "./configure", *args
+
+    # Avoid shims in settings file
+    inreplace "src/libhdf5.settings", %r{#{HOMEBREW_SHIMS_PATH}/[^/]+/super/#{ENV.cc}}, ENV.cc
+    on_linux do
+      inreplace "src/libhdf5.settings", %r{#{HOMEBREW_SHIMS_PATH}/[^/]+/super/#{Regexp.escape(ENV.cxx)}}, ENV.cxx
+    end
+
     system "make", "install"
   end
 

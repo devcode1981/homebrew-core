@@ -1,16 +1,16 @@
 class Libidn < Formula
   desc "International domain name library"
   homepage "https://www.gnu.org/software/libidn/"
-  url "https://ftp.gnu.org/gnu/libidn/libidn-1.35.tar.gz"
-  mirror "https://ftpmirror.gnu.org/libidn/libidn-1.35.tar.gz"
-  sha256 "f11af1005b46b7b15d057d7f107315a1ad46935c7fcdf243c16e46ec14f0fe1e"
+  url "https://ftp.gnu.org/gnu/libidn/libidn-1.37.tar.gz"
+  mirror "https://ftpmirror.gnu.org/libidn/libidn-1.37.tar.gz"
+  sha256 "3c8e970d5cd80a8cb56f59c61611535336343942e3f1c81b0190c69993a692c2"
 
   bottle do
-    cellar :any
-    sha256 "d3741facdecc039b53d64392b6f8f4377a01d38bd0ce388db1d4d3606c7d5da9" => :mojave
-    sha256 "94e508f0b66a0c37c7a05dad6fff49542439a05cf913980caff4142e58ae998f" => :high_sierra
-    sha256 "ddbdf99759b5bf8840afdf4b50de61b3770fab70d26e08c0cd54c8df54c7da7d" => :sierra
-    sha256 "11f95f7689146cda4ee3960295cd39f9ec5c613871e35c27d0260c7bd8eeb199" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "79692bf3eba59bf205124de0cce8170c209b0f1f107b100e5f5e0c3147aa8234"
+    sha256 cellar: :any, big_sur:       "87d313494a3bc28a705bb14a7786cd4fe67396138420847f9847cfd3b946a460"
+    sha256 cellar: :any, catalina:      "0666177059ee07be7e9e05a61111e6366771a1cc4816d601726e77e0cc366275"
+    sha256 cellar: :any, mojave:        "037373c763773d8205caf3123f3e4d6bc5ca42099888e786525174f864ac544e"
+    sha256               x86_64_linux:  "b48720fbdd73cdfae3bbcda6cd18dbe00c2d8511df485ca52ee13321ee1282dc"
   end
 
   depends_on "pkg-config" => :build

@@ -1,17 +1,24 @@
 class Plank < Formula
   desc "Framework for generating immutable model objects"
   homepage "https://pinterest.github.io/plank/"
-  url "https://github.com/pinterest/plank/archive/v1.4.1.tar.gz"
-  sha256 "021889470c1568364fb12e3c704ab98e74c5992749a244a1ef785dd870cad57b"
+  url "https://github.com/pinterest/plank/archive/v1.6.tar.gz"
+  sha256 "6a233120905ff371b5c06a23b3fc7dd67e96355dd4d992a58ac087db22c500ef"
+  license "Apache-2.0"
+  head "https://github.com/pinterest/plank.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "a8ef5d8f039de6c40a87101d69a0fea96a151008fc72796be3d1eb1598d465c8" => :mojave
-    sha256 "b5731e67f8155038764e927d6363c16f04cce69edc3c25bff78d9c39beaae4f9" => :high_sierra
-    sha256 "374262fdc60398fdf217c8bb2e458641ce683eb5dc6c5979cea84f0a5a4adc82" => :sierra
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
-  depends_on :xcode => ["9.0", :build]
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "ba560dc8f11ecdeef3e745cc00a0b7f6cae8074d4cfff100f43227e548c5db7a"
+    sha256 cellar: :any_skip_relocation, big_sur:       "ea5dbcccb44df98be951af22f29b81b24bdba7731f88a472708fe7c5bc3d53e3"
+    sha256 cellar: :any_skip_relocation, catalina:      "fc6838079a8a975c9bb77d17a050aa722d8446fcf9f62ca9fe09c8822d8651b4"
+    sha256 cellar: :any_skip_relocation, mojave:        "04d2dddb094914fa219304fea8f6e5aa3315c2e51b63ef4077fcf25a54c8b268"
+  end
+
+  depends_on xcode: ["11.3", :build]
 
   def install
     system "make", "install", "PREFIX=#{prefix}"

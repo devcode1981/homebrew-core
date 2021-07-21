@@ -1,15 +1,21 @@
 class Di < Formula
   desc "Advanced df-like disk information utility"
   homepage "https://gentoo.com/di/"
-  url "https://gentoo.com/di/di-4.47.tar.gz"
-  sha256 "b5031c1f3b98536eee95fb91634fe700cec5e08a3cf38e14fffc47f969bf8a7e"
+  url "https://downloads.sourceforge.net/project/diskinfo-di/di-4.50.tar.gz"
+  sha256 "82f08b6c2549fd6ab2e9cb596135a70883ffd4136d176466ae0ec9ba67a3492a"
+  license "Zlib"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/di[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "fff63e3d3c7b90005d39cb7ff0ee142758a28828f28e5ebeaca2c32bcc0c59f6" => :mojave
-    sha256 "ade98ec67db4be6998cf0cf62a99d58cb67e357eac09c1b9590be4980050f742" => :high_sierra
-    sha256 "b41b06335b72784f20a71e8932f58c751ad15496508a7362953b51c210a435ad" => :sierra
-    sha256 "9f684e70615dde634dd78feaa4b32e03b203301c4ef888b12816182416e2817f" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d4135217bb9c6a8141be9af407c421299441c2bd4d0e3304c45b3a9203ba57dc"
+    sha256 cellar: :any_skip_relocation, big_sur:       "2ea8c9f4d3cc6f05716b53fce8686536e9cbcb873e915227cba240e8e0ae81f6"
+    sha256 cellar: :any_skip_relocation, catalina:      "250f47d6e8b6ffe545cc3bf5421bde97e342f901e66ac4deb4b59aeaf1c5c308"
+    sha256 cellar: :any_skip_relocation, mojave:        "c0c124d45daab04a22e0d831b0288d39141ad7cd335fb60fea8662c6992f8b9b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f606218c445edbf9da34b9b8cc0a72f892e6d8c4ebb173bbfd4e3540bc4a4edd"
   end
 
   def install

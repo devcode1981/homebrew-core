@@ -1,18 +1,24 @@
 class Swimat < Formula
   desc "Command-line tool to help format Swift code"
   homepage "https://github.com/Jintin/Swimat"
-  url "https://github.com/Jintin/Swimat/archive/v1.6.tar.gz"
-  sha256 "44ff6d7642b36ec8e784c1ce1801ad8e9915cda65728e6684f4ca272aee8acbf"
+  url "https://github.com/Jintin/Swimat/archive/1.7.0.tar.gz"
+  sha256 "ba18b628de8b0a679b9215fb77e313155430fbecd21b15ed5963434223b10046"
+  license "MIT"
   head "https://github.com/Jintin/Swimat.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "12ffe4eee9c6d9abe8e84abf777f74ed7ab276206ad9f06dca801f4cdbcbca52" => :mojave
-    sha256 "fc96c111dfbe508667feb7611c9c7d313fa8409c84d5a98d6bcfd99ef67e76d1" => :high_sierra
-    sha256 "7a14a1bb3c7d1b7421b2bef0d24bf23c98375fa2dfbfd866c7bdc9517162bdbb" => :sierra
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
-  depends_on :xcode => "9.0"
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "5474723b7d13050f04c03a9ba5dc7bf0d962b13ff384f82fd9cf5f47754fdb7a"
+    sha256 cellar: :any_skip_relocation, big_sur:       "f4099d895297155fe34b95ff66e214c31fcf2990e03aeaad8e1680061fb580a9"
+    sha256 cellar: :any_skip_relocation, catalina:      "6ee6f59882dcec7188ef4684fcada0d22edf68470023fffb73b610f2dbe44112"
+    sha256 cellar: :any_skip_relocation, mojave:        "6b9a5174b6050250d0dfe5721102c5455997f2abcef1f2dc6a82686af11117fd"
+  end
+
+  depends_on xcode: ["10.2", :build]
 
   def install
     xcodebuild "-target", "CLI",

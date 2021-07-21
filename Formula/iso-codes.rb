@@ -1,33 +1,30 @@
 class IsoCodes < Formula
   desc "Provides lists of various ISO standards"
   homepage "https://salsa.debian.org/iso-codes-team/iso-codes"
-  url "https://mirrors.ocf.berkeley.edu/debian/pool/main/i/iso-codes/iso-codes_4.1.orig.tar.xz"
-  mirror "https://mirrorservice.org/sites/ftp.debian.org/debian/pool/main/i/iso-codes/iso-codes_4.1.orig.tar.xz"
-  sha256 "67117fb76f32c8fb5e37d2d60bce238f1f8e865cc7b569a57cbc3017ca15488a"
+  url "https://deb.debian.org/debian/pool/main/i/iso-codes/iso-codes_4.6.0.orig.tar.xz"
+  sha256 "41c672c18554e979e6191f950f454cdf1bfb67a6369fffe2997ff68e34845409"
+  license "LGPL-2.1-or-later"
   head "https://salsa.debian.org/iso-codes-team/iso-codes.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "dbff19319e650b2b21b786b6e1910cde017061d4d3b8f94b00536c4ed5b952aa" => :mojave
-    sha256 "efd955789c4db00603c3f408efe76a1b022481e8a3195a64374367e361f78daa" => :high_sierra
-    sha256 "efd955789c4db00603c3f408efe76a1b022481e8a3195a64374367e361f78daa" => :sierra
-    sha256 "efd955789c4db00603c3f408efe76a1b022481e8a3195a64374367e361f78daa" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "3720db3c8b9004255cdd38b9922a551dd13050102fede5691b0aaec6ac5a916f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b187032bee03cffb5e57f2a609f31010b3572a7dc20e74863f5058fe084a59c2"
+    sha256 cellar: :any_skip_relocation, catalina:      "e842954d1e655188d47362cabce2af5585dd5f9f7687f6d70c14e951374918b2"
+    sha256 cellar: :any_skip_relocation, mojave:        "172c9bad5734b7fa56f77c1f2a73e9db2f7d9492c3b40a11941b57b294cc554a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5c1c30e3cc2b1f15d09b4d71f1631bc577d987e016031b72df4672f0c44d3ecd"
   end
 
   depends_on "gettext" => :build
-  depends_on "pkg-config"
-  depends_on "python"
+  depends_on "python@3.9" => :build
 
   def install
     system "./configure", "--prefix=#{prefix}"
     system "make"
-    system "make", "check"
     system "make", "install"
   end
 
   test do
-    pkg_config = Formula["pkg-config"].opt_bin/"pkg-config"
-    output = shell_output("#{pkg_config} --variable=domains iso-codes")
+    output = shell_output("grep domains #{share}/pkgconfig/iso-codes.pc")
     assert_match "iso_639-2 iso_639-3 iso_639-5 iso_3166-1", output
   end
 end

@@ -1,19 +1,33 @@
 class MariadbAT101 < Formula
   desc "Drop-in replacement for MySQL"
   homepage "https://mariadb.org/"
-  url "https://downloads.mariadb.org/f/mariadb-10.1.37/source/mariadb-10.1.37.tar.gz"
-  sha256 "8cd516b0a7f7aa36a7c1d6e687dbbad8c0b08c92d5fd60c6e691b19a6cab4d46"
+  url "https://downloads.mariadb.org/f/mariadb-10.1.48/source/mariadb-10.1.48.tar.gz"
+  sha256 "069d58b1e2c06bb1e6c31249eda34138f41fb8ae3dec7ecaeba8035812c87cf9"
+  license "GPL-2.0-only"
 
   bottle do
-    sha256 "3193eb2dcde51ce90e7c1cdeaac162c15065ea572c5a862c40af3197a1df3e09" => :mojave
-    sha256 "1a20fa76e3e8a26bb357fc5f224e2328036966eeb83319aff10b8c3bbee772ac" => :high_sierra
-    sha256 "2636c01dd44a76fc4e575a3c9ffbafc46b0eb21affed3f570cf3b6503affda61" => :sierra
+    rebuild 1
+    sha256 big_sur:  "589a7ef3e92f6dc2d4c5e5db501286a839b747a37b454bdd81231a4ed7531a43"
+    sha256 catalina: "fcc29400068999b2b5126af489d88dcc4af98169b9132d6aeb99876247b1a412"
+    sha256 mojave:   "f568cbdbc7a6f86d08251456e6eb4d22e16c065a68865ce83b7c2c1f0d2b61f6"
   end
 
   keg_only :versioned_formula
 
+  # See: https://mariadb.com/kb/en/changes-improvements-in-mariadb-101/
+  deprecate! date: "2020-10-01", because: :unsupported
+
   depends_on "cmake" => :build
-  depends_on "openssl"
+  depends_on "pkg-config" => :build
+  depends_on "groonga"
+  depends_on "openssl@1.1"
+
+  uses_from_macos "bzip2"
+  uses_from_macos "ncurses"
+
+  on_linux do
+    depends_on "linux-pam"
+  end
 
   def install
     # Set basedir and ldata so that mysql_install_db can find the server
@@ -23,6 +37,9 @@ class MariadbAT101 < Formula
       s.change_make_var! "basedir", "\"#{prefix}\""
       s.change_make_var! "ldata", "\"#{var}/mysql\""
     end
+
+    # Use brew groonga
+    rm_r "storage/mroonga/vendor/groonga"
 
     # -DINSTALL_* are relative to prefix
     args = %W[
@@ -48,6 +65,9 @@ class MariadbAT101 < Formula
     system "cmake", ".", *std_cmake_args, *args
     system "make"
     system "make", "install"
+
+    # Avoid references to the Homebrew shims directory
+    inreplace bin/"mysqlbug", HOMEBREW_SHIMS_PATH/"mac/super/", ""
 
     # Fix my.cnf to point to #{etc} instead of /etc
     (etc/"my.cnf.d").mkpath
@@ -97,6 +117,10 @@ class MariadbAT101 < Formula
   def post_install
     # Make sure the var/mysql directory exists
     (var/"mysql").mkpath
+
+    # Don't initialize database, it clashes when testing other MySQL-like implementations.
+    return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+
     unless File.exist? "#{var}/mysql/mysql/user.frm"
       ENV["TMPDIR"] = nil
       system "#{bin}/mysql_install_db", "--verbose", "--user=#{ENV["USER"]}",
@@ -104,43 +128,58 @@ class MariadbAT101 < Formula
     end
   end
 
-  def caveats; <<~EOS
-    A "/etc/my.cnf" from another install may interfere with a Homebrew-built
-    server starting up correctly.
+  def caveats
+    <<~EOS
+      A "/etc/my.cnf" from another install may interfere with a Homebrew-built
+      server starting up correctly.
 
-    MySQL is configured to only allow connections from localhost by default
+      MySQL is configured to only allow connections from localhost by default
 
-    To connect:
-        mysql -uroot
-  EOS
+      To connect:
+          mysql -uroot
+    EOS
   end
 
-  plist_options :manual => "#{HOMEBREW_PREFIX}/opt/mariadb@10.1/bin/mysql.server start"
+  plist_options manual: "#{HOMEBREW_PREFIX}/opt/mariadb@10.1/bin/mysql.server start"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>KeepAlive</key>
-      <true/>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/mysqld_safe</string>
-        <string>--datadir=#{var}/mysql</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>WorkingDirectory</key>
-      <string>#{var}</string>
-    </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>KeepAlive</key>
+        <true/>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/mysqld_safe</string>
+          <string>--datadir=#{var}/mysql</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>WorkingDirectory</key>
+        <string>#{var}</string>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do
-    system bin/"mysqld", "--version"
+    (testpath/"mysql").mkpath
+    (testpath/"tmp").mkpath
+    system bin/"mysql_install_db", "--no-defaults", "--user=#{ENV["USER"]}",
+      "--basedir=#{prefix}", "--datadir=#{testpath}/mysql", "--tmpdir=#{testpath}/tmp",
+      "--auth-root-authentication-method=normal"
+    port = free_port
+    fork do
+      system "#{bin}/mysqld", "--no-defaults", "--user=#{ENV["USER"]}",
+        "--datadir=#{testpath}/mysql", "--port=#{port}", "--tmpdir=#{testpath}/tmp"
+    end
+    sleep 5
+    assert_match "information_schema",
+      shell_output("#{bin}/mysql --port=#{port} --user=root --password= --execute='show databases;'")
+    system "#{bin}/mysqladmin", "--port=#{port}", "--user=root", "--password=", "shutdown"
   end
 end

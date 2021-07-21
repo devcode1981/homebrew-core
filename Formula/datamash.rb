@@ -1,16 +1,18 @@
 class Datamash < Formula
   desc "Tool to perform numerical, textual & statistical operations"
   homepage "https://www.gnu.org/software/datamash"
-  url "https://ftp.gnu.org/gnu/datamash/datamash-1.3.tar.gz"
-  mirror "https://ftpmirror.gnu.org/datamash/datamash-1.3.tar.gz"
-  sha256 "eebb52171a4353aaad01921384098cf54eb96ebfaf99660e017f6d9fc96657a6"
+  url "https://ftp.gnu.org/gnu/datamash/datamash-1.7.tar.gz"
+  mirror "https://ftpmirror.gnu.org/datamash/datamash-1.7.tar.gz"
+  sha256 "574a592bb90c5ae702ffaed1b59498d5e3e7466a8abf8530c5f2f3f11fa4adb3"
+  license "GPL-3.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "2f62847e83bb67f3637a924ed2f9bac2704c4b2694855a38ff5cc7bb8f9aaa7b" => :mojave
-    sha256 "46375109fe618b238ce55f363a4ff37e1f02519446272b1164feacf7bd5614a4" => :high_sierra
-    sha256 "9e2c6fb923dae81c0969ec63851c520c9b74fc9160a2b884a228e23afccee9c7" => :sierra
-    sha256 "e8cee270f739abd46bea4dde5ae139b858e49cabacd4265b4d39b41a4c03eb1a" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d808354a764a06427e4768aa451493e111c5324e36fde94fbbab4d7fb41f2055"
+    sha256 cellar: :any_skip_relocation, big_sur:       "50590b93f6f3a25e3e2724ddad696e6ed8a168f840fafe887be423f5020ce86c"
+    sha256 cellar: :any_skip_relocation, catalina:      "f592c4bda737ef924fb4c1642fb381db54c9ce246eb51d03a145dd28a8391406"
+    sha256 cellar: :any_skip_relocation, mojave:        "6533f0decc607d6e3ce1ad1fdb7f5b30f99bbbcbacbba1bcd880486eef648189"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "b6100d066c3cf9d91b2bd4a8d8bcdc5fa453c6eb6a28d7cacb06659baa358e46"
+    sha256                               x86_64_linux:  "5bff297fd208a9f97975ffabe9c15b701d8dcafb8ac9a8d552c3c288c7d86dc3"
   end
 
   head do

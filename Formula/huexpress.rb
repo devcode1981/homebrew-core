@@ -3,15 +3,18 @@ class Huexpress < Formula
   homepage "https://github.com/kallisti5/huexpress"
   url "https://github.com/kallisti5/huexpress/archive/3.0.4.tar.gz"
   sha256 "76589f02d1640fc5063d48a47f017077c6b7557431221defe9e38679d86d4db8"
+  license "GPL-2.0"
   revision 1
   head "https://github.com/kallisti5/huexpress.git"
 
   bottle do
-    cellar :any
-    sha256 "e7086c5229f7e2e9434f648de9fe1b1564e9a56ee7936a2bb247e1d21f1974ab" => :mojave
-    sha256 "82e99480094c372b83088649696ee110b20b1f71c11d08f45125c03a7de28a17" => :high_sierra
-    sha256 "0f2ad080284a6cf9076293a4f1f7afa7ca6461f9cb215d618a56a8f9101c2a2e" => :sierra
-    sha256 "61d7da52fc3ad3e4a83b57e81dc66233a211bd7a850008ac2c7c3226d75b7071" => :el_capitan
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "7aa4fc9db666d6682f0bead431fd814310b04db7d3cfbe303577cc6a1d5904d5"
+    sha256 cellar: :any, big_sur:       "2305939ce9b39eb229e0ce01ad26a777411639c1fc5893298e3fa590fe3c7728"
+    sha256 cellar: :any, catalina:      "a17fe6ae136f94e859edbe7d65fc15466645c1d569fdbf363c841ec85477fa1d"
+    sha256 cellar: :any, mojave:        "f395a18b662d16c84b18e4594f67516a43e7a692879d68289c08ee652cedc651"
+    sha256 cellar: :any, high_sierra:   "53eec3fc474a553bdd70ad1c8dcb63714db5d059839748dcbc80b86380c81d4c"
+    sha256 cellar: :any, sierra:        "31ffed8cb0c04131abefe50aa06aa8154e3cf8e49fa24ebe5f4e6d456f6b3d9b"
   end
 
   depends_on "pkg-config" => :build
@@ -22,11 +25,11 @@ class Huexpress < Formula
   depends_on "sdl2_mixer"
 
   def install
-    scons
+    system "scons"
     bin.install ["src/huexpress", "src/hucrc"]
   end
 
   test do
-    assert_match /Version #{version}$/, shell_output("#{bin}/huexpress -h", 1)
+    assert_match(/Version #{version}$/, shell_output("#{bin}/huexpress -h", 1))
   end
 end

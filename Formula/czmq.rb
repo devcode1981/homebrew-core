@@ -1,15 +1,16 @@
 class Czmq < Formula
   desc "High-level C binding for ZeroMQ"
   homepage "http://czmq.zeromq.org/"
-  url "https://github.com/zeromq/czmq/releases/download/v4.1.1/czmq-4.1.1.tar.gz"
-  sha256 "f00ff419881dc2a05d0686c8467cd89b4882677fc56f31c0e2cc81c134cbb0c0"
+  url "https://github.com/zeromq/czmq/releases/download/v4.2.0/czmq-4.2.0.tar.gz"
+  sha256 "cfab29c2b3cc8a845749758a51e1dd5f5160c1ef57e2a41ea96e4c2dcc8feceb"
+  license "MPL-2.0"
 
   bottle do
-    cellar :any
-    sha256 "38d2b6120f6d06c9a45c895f52949a2ddd01f72d7e91d3ff83cd39c954492300" => :mojave
-    sha256 "1e414d17fd6c0a4dd9939e84091b5073c23d2477569d12b0ee08d6a425abea14" => :high_sierra
-    sha256 "c0b2b82ae2edfa4dc97f48789ed87050dc0fb602e85a2b510fee6336afe17a5c" => :sierra
-    sha256 "d6966061fd61f2440713473c4f65bb9fd541be2f3be78e1d3f56ca54d366202e" => :el_capitan
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "f8b5ef84a357ca7fbd03d2a0a5fc5f5714cf28dc5321479f0dc715c348df75c9"
+    sha256 cellar: :any, big_sur:       "b457eb58a8684ba745af98d60a4207aef695bb33531206f2f7c0287523cd9a2a"
+    sha256 cellar: :any, catalina:      "c20bd8fd5e9c223824b1b50e829fb6c1ff1096951b20379f5f070b300d7e67d8"
+    sha256 cellar: :any, mojave:        "e64d0f79d6a05b5648695e3d06331bb34e8b85ae5920f429f3b44b7eee23cf5e"
   end
 
   head do
@@ -20,21 +21,27 @@ class Czmq < Formula
     depends_on "libtool" => :build
   end
 
-  option "with-drafts", "Build and install draft classes and methods"
-
   depends_on "asciidoc" => :build
   depends_on "pkg-config" => :build
   depends_on "xmlto" => :build
+  depends_on :macos # Due to Python 2
   depends_on "zeromq"
+
+  # These two patches together fix https://github.com/zeromq/czmq/issues/2125
+  patch do
+    url "https://github.com/zeromq/czmq/commit/ace06a41da51b1196eef411669343cdf7e8665e2.patch?full_index=1"
+    sha256 "d5e8ed6d96ba63ebb8128032cc4ffef2cbd49b9af9692ad60b89bb3bcf6b2b4c"
+  end
+  patch do
+    url "https://github.com/zeromq/czmq/commit/0c7cac3be12707225d03888a6047e5133d926751.patch?full_index=1"
+    sha256 "62e6b211018a837ad1b8aed82c14740b87c13509e4a444a9cfeb5a50188eaf5e"
+  end
 
   def install
     ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
 
-    args = ["--disable-dependency-tracking", "--prefix=#{prefix}"]
-    args << "--enable-drafts" if build.with? "drafts"
-
     system "./autogen.sh" if build.head?
-    system "./configure", *args
+    system "./configure", "--disable-dependency-tracking", "--prefix=#{prefix}"
     system "make"
     system "make", "ZSYS_INTERFACE=lo0", "check-verbose"
     system "make", "install"

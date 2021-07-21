@@ -1,24 +1,32 @@
 class Libetonyek < Formula
   desc "Interpret and import Apple Keynote presentations"
   homepage "https://wiki.documentfoundation.org/DLP/Libraries/libetonyek"
-  url "https://dev-www.libreoffice.org/src/libetonyek/libetonyek-0.1.8.tar.xz"
-  sha256 "9dc92347aee0cc9ed57b175a3e21f9d96ebe55d30fecb10e841d1050794ed82d"
+  url "https://dev-www.libreoffice.org/src/libetonyek/libetonyek-0.1.10.tar.xz"
+  sha256 "b430435a6e8487888b761dc848b7981626eb814884963ffe25eb26a139301e9a"
+
+  livecheck do
+    url "https://dev-www.libreoffice.org/src/"
+    regex(/href=["']?libetonyek[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "f03b400c57d53246843f5bb960be851bbb7a4386174f3fe08d762bf12a3cb806" => :high_sierra
-    sha256 "4118f35b50634d104c481539e3746d824f31a045538a70881ca6869ecabab784" => :sierra
-    sha256 "d811b416c6cc4cee0c770d476a993ab2b2ad9917068f31bb772a0ad3704cdcc1" => :el_capitan
+    sha256               arm64_big_sur: "8ca7825177d98f44ac9f3d6ad409eb3bc79d4621cb6c75aea43f60ca66234d0f"
+    sha256 cellar: :any, big_sur:       "c0d419840c9454c6fe46fcffe7e27d57a8a5ea6a26a9bdd75ab6756f9399b2d0"
+    sha256 cellar: :any, catalina:      "d40376bdfb4527e035ec8c0c1d65927303f81a456d02ce9fb0503a41f5e9ee60"
+    sha256 cellar: :any, mojave:        "1d30b4258651cc6edbd2e7e39d6af095a25f52994baa3ed34e2be0e2f606ecf2"
   end
 
   depends_on "boost" => :build
+  depends_on "glm" => :build
+  depends_on "mdds" => :build
   depends_on "pkg-config" => :build
-  depends_on "glm"
   depends_on "librevenge"
-  depends_on "mdds"
+
+  uses_from_macos "libxml2"
 
   resource "liblangtag" do
-    url "https://bitbucket.org/tagoh/liblangtag/downloads/liblangtag-0.6.2.tar.bz2"
-    sha256 "d6242790324f1432fb0a6fae71b6851f520b2c5a87675497cf8ea14c2924d52e"
+    url "https://bitbucket.org/tagoh/liblangtag/downloads/liblangtag-0.6.3.tar.bz2"
+    sha256 "1f12a20a02ec3a8d22e54dedb8b683a43c9c160bda1ba337bf1060607ae733bd"
   end
 
   def install
@@ -36,7 +44,7 @@ class Libetonyek < Formula
                           "--disable-werror",
                           "--disable-tests",
                           "--prefix=#{prefix}",
-                          "--with-mdds=1.2"
+                          "--with-mdds=1.5"
     system "make", "install"
   end
 

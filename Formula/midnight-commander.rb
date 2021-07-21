@@ -1,24 +1,39 @@
 class MidnightCommander < Formula
   desc "Terminal-based visual file manager"
   homepage "https://www.midnight-commander.org/"
-  url "https://www.midnight-commander.org/downloads/mc-4.8.21.tar.xz"
-  sha256 "8f37e546ac7c31c9c203a03b1c1d6cb2d2f623a300b86badfd367e5559fe148c"
-  head "https://github.com/MidnightCommander/mc.git"
+  url "https://www.midnight-commander.org/downloads/mc-4.8.26.tar.xz"
+  mirror "https://ftp.osuosl.org/pub/midnightcommander/mc-4.8.26.tar.xz"
+  sha256 "c6deadc50595f2d9a22dc6c299a9f28b393e358346ebf6ca444a8469dc166c27"
+  license "GPL-3.0-or-later"
+
+  livecheck do
+    url "https://ftp.osuosl.org/pub/midnightcommander/"
+    regex(/href=.*?mc[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    rebuild 1
-    sha256 "f3d9cb2444cf1f8f757afe0c70a7c4b737718144bd667926f49fbbd35a7a290f" => :mojave
-    sha256 "d810c0aed2f4007b94776895822c9dd79242a10c6bd6bc6507b6f46c4bb5a9fb" => :high_sierra
-    sha256 "08bd22ecf0dd7183e36f01f44d6c5fd7c8ee759c08121ecaed1be19d87017247" => :sierra
+    sha256 arm64_big_sur: "e0dcbb747b0ed2e44c42ac024a42ac657da5b8d3898d1caa6d1bc029cbca13cb"
+    sha256 big_sur:       "2035ff99bbb38fe1f12f4cf5c311b453c89d295a988ff570a5c4cab2834a4232"
+    sha256 catalina:      "9de49345aabc060d430d444b0b94b7e00593253ac1f21a3718c483303621abdf"
+    sha256 mojave:        "959dfb0d8538524172c68cb394046fb4c3be78803e8307a759bdc564ff86b783"
+    sha256 x86_64_linux:  "e346f397da1f25b9eef69eb7e5011742d1cb59c091832f4080aec8ceee2fb485"
+  end
+
+  head do
+    url "https://github.com/MidnightCommander/mc.git"
+
+    depends_on "autoconf" => :build
+    depends_on "automake" => :build
+    depends_on "libtool" => :build
   end
 
   depends_on "pkg-config" => :build
   depends_on "glib"
   depends_on "libssh2"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
   depends_on "s-lang"
 
-  conflicts_with "minio-mc", :because => "Both install a `mc` binary"
+  conflicts_with "minio-mc", because: "both install an `mc` binary"
 
   def install
     args = %W[
@@ -34,7 +49,7 @@ class MidnightCommander < Formula
     # Fix compilation bug on macOS 10.13 by pretending we don't have utimensat()
     # https://github.com/MidnightCommander/mc/pull/130
     ENV["ac_cv_func_utimensat"] = "no" if MacOS.version >= :high_sierra
-
+    system "./autogen.sh" if build.head?
     system "./configure", *args
     system "make", "install"
   end

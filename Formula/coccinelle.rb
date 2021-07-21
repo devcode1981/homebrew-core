@@ -1,39 +1,67 @@
 class Coccinelle < Formula
   desc "Program matching and transformation engine for C code"
   homepage "http://coccinelle.lip6.fr/"
-  url "http://coccinelle.lip6.fr/distrib/coccinelle-1.0.6.tgz"
-  sha256 "8452ed265c209dae99cbb33b67bc7912e72f8bca1e24f33f1a88ba3d7985e909"
+  url "https://github.com/coccinelle/coccinelle.git",
+      tag:      "1.1.0",
+      revision: "25e7cee77b4b6efbabf60ffaa8bccd72500ba8bd"
+  license "GPL-2.0-only"
   revision 1
+  head "https://github.com/coccinelle/coccinelle.git"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
     rebuild 1
-    sha256 "ee482fedbe053e43b24930b0fd568db3c94f1179b6ce796c6445a75f13dad858" => :high_sierra
-    sha256 "00da6a22f987eb816c239e5852a423fdccf8c077143358eb623d4cf933ce0a7d" => :sierra
-    sha256 "96f2460057f45cc77e03c1980edff643cdc26a2d2cced838567c798d3ee89748" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "73d90cfa6837ada22b780c32a9140f390f4c1edf75efaead1611451e499af0a2"
+    sha256 cellar: :any, big_sur:       "93341040702939158171021a18b27284b50c44b61df0b23aa61f9bf86cba771c"
+    sha256 cellar: :any, catalina:      "3033a6317a08b4816a46c61d2b07ceeabde0a24ff226634ce4c206af2b718b7a"
+    sha256 cellar: :any, mojave:        "ee53ae5fa8349a8d1c26bc21fdfd073586c83cf0831eec4880558b0c5f743a68"
   end
 
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
   depends_on "hevea" => :build
+  depends_on "ocaml-findlib" => :build
   depends_on "opam" => :build
-  depends_on "camlp4"
+  depends_on "pkg-config" => :build
   depends_on "ocaml"
+  depends_on "pcre"
+
+  # Bootstap resource for Ocaml 4.12 compatibility.
+  # Remove when Coccinelle supports Ocaml 4.12 natively
+  resource "stdcompat" do
+    url "https://github.com/thierry-martinez/stdcompat/releases/download/v15/stdcompat-15.tar.gz"
+    sha256 "5e746f68ffe451e7dabe9d961efeef36516b451f35a96e174b8f929a44599cf5"
+  end
 
   def install
-    ENV["OCAMLPARAM"] = "safe-string=0,_" # OCaml 4.06.0 compat
+    resource("stdcompat").stage do
+      system "./configure", "--prefix=#{buildpath}/bootstrap"
+      ENV.deparallelize { system "make" }
+      system "make", "install"
+    end
+    ENV.prepend_path "OCAMLPATH", buildpath/"bootstrap/lib"
 
-    opamroot = buildpath/"opamroot"
-    ENV["OPAMROOT"] = opamroot
-    ENV["OPAMYES"] = "1"
-    system "opam", "init", "--no-setup"
-    system "opam", "install", "ocamlfind"
-    system "./configure", "--disable-dependency-tracking",
-                          "--enable-release",
-                          "--enable-ocaml",
-                          "--enable-opt",
-                          "--enable-ocaml",
-                          "--with-pdflatex=no",
-                          "--prefix=#{prefix}"
-    system "opam", "config", "exec", "--", "make"
-    system "make", "install"
+    Dir.mktmpdir("opamroot") do |opamroot|
+      ENV["OPAMROOT"] = opamroot
+      ENV["OPAMYES"] = "1"
+      ENV["OPAMVERBOSE"] = "1"
+      system "opam", "init", "--no-setup", "--disable-sandboxing"
+      system "./autogen"
+      system "opam", "config", "exec", "--", "./configure",
+                            "--disable-dependency-tracking",
+                            "--enable-release",
+                            "--enable-ocaml",
+                            "--enable-opt",
+                            "--with-pdflatex=no",
+                            "--prefix=#{prefix}"
+      ENV.deparallelize
+      system "opam", "config", "exec", "--", "make"
+      system "make", "install"
+    end
 
     pkgshare.install "demos/simple.cocci", "demos/simple.c"
   end

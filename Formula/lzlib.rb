@@ -1,15 +1,21 @@
 class Lzlib < Formula
   desc "Data compression library"
   homepage "https://www.nongnu.org/lzip/lzlib.html"
-  url "https://download.savannah.gnu.org/releases/lzip/lzlib/lzlib-1.10.tar.gz"
-  sha256 "1d6ab7800a5b43e56fd20607fd2cfda9e550350dc95f5beb6a4ce14f85b41043"
+  url "https://download.savannah.gnu.org/releases/lzip/lzlib/lzlib-1.12.tar.gz"
+  mirror "https://download-mirror.savannah.gnu.org/releases/lzip/lzlib/lzlib-1.12.tar.gz"
+  sha256 "8e5d84242eb52cf1dcc98e58bd9ba8ef1aefa501431abdd0273a22bf4ce337b1"
+
+  livecheck do
+    url "https://download.savannah.gnu.org/releases/lzip/lzlib/"
+    regex(/href=.*?lzlib[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "3639281cb395e26811025ffdf00cd566eacd79ad757b3673ee6d2774f8f25c2e" => :mojave
-    sha256 "1b9d3e525a8823275e39404117fcd0f28fe2279db0856811d84e3ea49ed08a55" => :high_sierra
-    sha256 "8cac78b70d001bdda26c268c42022482af48ba6ffae0231a1f404827336b208a" => :sierra
-    sha256 "73730cde2726e217793b2724e2e15ec1b0e21d10eccd769706010a56c379a6d3" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "06e131d4c75dc18d8aa6571d4b80ff302c9e0b4c5487d661c9d9d0cd34d93100"
+    sha256 cellar: :any_skip_relocation, big_sur:       "ebdc6759b366c12f7884ab27af11752c4d0348b91c3dfdd23f29d3e470dc94fa"
+    sha256 cellar: :any_skip_relocation, catalina:      "bd80163e5b149eff8a652ee79b8551af09bba6410d9549c481d680ffb6c5dcb9"
+    sha256 cellar: :any_skip_relocation, mojave:        "d351d2530ffa16a75df2afaf35cad291acca3a8a9374ab0b7b3edfcf1bd4f64d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b006ac595f6da4ef6ed21289317b78d69e3bb615f20906cf7eb9874ce30b0ae1"
   end
 
   def install

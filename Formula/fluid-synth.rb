@@ -1,35 +1,51 @@
 class FluidSynth < Formula
   desc "Real-time software synthesizer based on the SoundFont 2 specs"
-  homepage "http://www.fluidsynth.org"
-  url "https://github.com/FluidSynth/fluidsynth/archive/v1.1.11.tar.gz"
-  sha256 "da8878ff374d12392eecf87e96bad8711b8e76a154c25a571dd8614d1af80de8"
+  homepage "https://www.fluidsynth.org"
+  url "https://github.com/FluidSynth/fluidsynth/archive/v2.2.2.tar.gz"
+  sha256 "695aedbfd53160fef7a9a1f66cd6d5cc8a5da0fd472eee458d82b848b6065f9a"
+  license "LGPL-2.1-or-later"
+  head "https://github.com/FluidSynth/fluidsynth.git"
 
   bottle do
-    sha256 "7ddf078779748766cdf075e72bc5c9c4bd3df2abe93b3886fd804cb0490fa0d3" => :mojave
-    sha256 "6c2210c1599c19c1fa1a8ceb5a043cd6a8b598475cc3f500c9cb0b341d0a0288" => :high_sierra
-    sha256 "b4b6a73a0c1eaf23df645973f4d951eca4ef4921b59af02d9fa986d0a4a27089" => :sierra
-    sha256 "d86f4c855c358ebf7d8fb766774e698e78af1022b90edb930bb9657a41d1481a" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "8fe2aca69644b92a6af1d741d1fe9b22676b5410ac19fc6c1a720de4a6d9663d"
+    sha256 cellar: :any, big_sur:       "fc6be35f952494164dbed22d99b3be8a3271e45cba3cef64f1b4125d401d49ab"
+    sha256 cellar: :any, catalina:      "b151673f02fe9138e5b9eb47d6064b45ad81ca81db355fae45648a49233f0fd7"
+    sha256 cellar: :any, mojave:        "ab830fe18dcde94ad7c7bb87c64b94f46a6f617549bf9f19b1d3e78988a747c4"
   end
 
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
   depends_on "glib"
-  depends_on "libsndfile" => :optional
-  depends_on "portaudio" => :optional
+  depends_on "libsndfile"
+  depends_on "portaudio"
+
+  resource "example_midi" do
+    url "https://upload.wikimedia.org/wikipedia/commons/6/61/Drum_sample.mid"
+    sha256 "a1259360c48adc81f2c5b822f221044595632bd1a76302db1f9d983c44f45a30"
+  end
 
   def install
-    args = std_cmake_args
-    args << "-Denable-framework=OFF" << "-DLIB_SUFFIX="
-    args << "-Denable-portaudio=ON" if build.with? "portaudio"
-    args << "-Denable-libsndfile=OFF" if build.without? "libsndfile"
+    args = std_cmake_args + %w[
+      -Denable-framework=OFF
+      -Denable-portaudio=ON
+      -DLIB_SUFFIX=
+      -Denable-dbus=OFF
+      -Denable-sdl2=OFF
+    ]
 
     mkdir "build" do
       system "cmake", "..", *args
       system "make", "install"
     end
+
+    pkgshare.install "sf2"
   end
 
   test do
-    assert_match /#{version}/, shell_output("#{bin}/fluidsynth --version")
+    # Synthesize wav file from example midi
+    resource("example_midi").stage testpath
+    wavout = testpath/"Drum_sample.wav"
+    system bin/"fluidsynth", "-F", wavout, pkgshare/"sf2/VintageDreamsWaves-v2.sf2", testpath/"Drum_sample.mid"
+    assert_predicate wavout, :exist?
   end
 end

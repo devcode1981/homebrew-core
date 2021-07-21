@@ -3,27 +3,24 @@ class Gflags < Formula
   homepage "https://gflags.github.io/gflags/"
   url "https://github.com/gflags/gflags/archive/v2.2.2.tar.gz"
   sha256 "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any
-    sha256 "82fe53e7e195d7a2c72243c357c8f3120eb8fa79b06e9a1c0928849b7cf60260" => :mojave
-    sha256 "51a508dc83e6213a1726509c0fc1761e5b7a79b220f4c86f8ace660799caaec8" => :high_sierra
-    sha256 "44b0ad9e8d8ce61431d959b1c6197e121f8369acc777a8010aabce2adb8eb4db" => :sierra
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "3c47ffe18412eab890f339191cfe1b9142d7eb9d499d68ac4ac55db2707e6f3b"
+    sha256 cellar: :any,                 big_sur:       "013d34b7e3e9ef0b1ebae5c0bad9661cf1462a4fddec2e31c27dbacb5e8697b9"
+    sha256 cellar: :any,                 catalina:      "ebc7b6a9b5c14419f01a763f8b5d178525231d0fb4f5a4768673745a893f3b0b"
+    sha256 cellar: :any,                 mojave:        "e3176e449321b1e2070a9fabc796e6820f2f0f1f4db1c3916f58e6cdd52e510e"
+    sha256 cellar: :any,                 high_sierra:   "4beffa84f47bdfd9a1a90d9e591d9af4616db464d63046018ef0c58936d58366"
+    sha256 cellar: :any,                 sierra:        "6f06466ca55f2174daecbc935e0bca1f2aed9bfb94a92f21d52fb4db1e07cd4a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "abf5d21a3d9ebed989bc047eec0c14b0b22a53ca0f1140149e158a89cd06a31f"
   end
-
-  option "with-static", "Build gflags as a static (instead of shared) library."
 
   depends_on "cmake" => :build
 
   def install
-    args = std_cmake_args
-    if build.with? "static"
-      args << "-DBUILD_SHARED_LIBS=OFF"
-    else
-      args << "-DBUILD_SHARED_LIBS=ON"
-    end
     mkdir "buildroot" do
-      system "cmake", "..", *args
+      system "cmake", "..", *std_cmake_args, "-DBUILD_SHARED_LIBS=ON"
       system "make", "install"
     end
   end
@@ -53,7 +50,7 @@ class Gflags < Formula
         return 0;
       }
     EOS
-    system ENV.cxx, "-L#{lib}", "-lgflags", "test.cpp", "-o", "test"
+    system ENV.cxx, "test.cpp", "-L#{lib}", "-lgflags", "-o", "test"
     assert_match "Hello world!", shell_output("./test")
     assert_match "Foo bar!", shell_output("./test --message='Foo bar!'")
   end

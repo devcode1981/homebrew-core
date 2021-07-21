@@ -3,17 +3,20 @@ class GlibOpenssl < Formula
   homepage "https://launchpad.net/glib-networking"
   url "https://download.gnome.org/sources/glib-openssl/2.50/glib-openssl-2.50.8.tar.xz"
   sha256 "869f08e4e9a719c1df411c2fb5554400f6b24a9db0cb94c4359db8dad18d185f"
+  revision 3
 
   bottle do
-    sha256 "4f3163fb50a273e93a19b7136f1235517da5450d610c7d304591060f447eb93e" => :mojave
-    sha256 "7e79387127349d9976e104c0580b0efaf836865e15ede603232ecd5b80f3edb8" => :high_sierra
-    sha256 "2c6f6a96f2643fdfdc772c460ca7e9ec08783bf02f89a6312a02624dbba1a82a" => :sierra
-    sha256 "5f808a52d9c9fcebeb8143701c0e4dae92260f7c1233795069972b80718ac841" => :el_capitan
+    sha256 arm64_big_sur: "3ff9db75ad58b19fe3b0c364cc0d8e1c7e570e6edd3eab8e7145f50ecdb2d237"
+    sha256 big_sur:       "3ed8dc7e291495db26d893b673e7c665972569efa1fdbe0a3cf1ae39c1c2da50"
+    sha256 catalina:      "d3e3d452515afbf8ab39555e7c9e4add50f28aa89252321bee6ca021c7cb88a9"
+    sha256 mojave:        "10b207a9c340bc6710e1df7f47ef4a0dba5a941c0cdb3330255718cf1884276c"
+    sha256 high_sierra:   "04107ac3e021e4dd11feb50a3ac4024f3c73dd2b805f171ccfc22c1d7e3a665e"
+    sha256 x86_64_linux:  "4b583a88e518cdf39efb461edfd35d58fa8d549859a3cb112fee7beffb4705e0"
   end
 
   depends_on "pkg-config" => :build
   depends_on "glib"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
 
   def install
     # Install files to `lib` instead of `HOMEBREW_PREFIX/lib`.
@@ -22,7 +25,7 @@ class GlibOpenssl < Formula
                           "--disable-silent-rules",
                           "--disable-static",
                           "--prefix=#{prefix}",
-                          "--with-ca-certificates=#{etc}/openssl/cert.pem"
+                          "--with-ca-certificates=#{Formula["openssl@1.1"].pkgetc}/cert.pem"
     system "make", "install"
 
     # Delete the cache, will regenerate it in post_install
@@ -61,8 +64,10 @@ class GlibOpenssl < Formula
       -lgio-2.0
       -lgobject-2.0
       -lglib-2.0
-      -lintl
     ]
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "gtls-test.c", "-o", "gtls-test", *flags
     system "./gtls-test"
   end

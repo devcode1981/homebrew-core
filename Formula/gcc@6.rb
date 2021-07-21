@@ -4,40 +4,55 @@ class GccAT6 < Formula
   url "https://ftp.gnu.org/gnu/gcc/gcc-6.5.0/gcc-6.5.0.tar.xz"
   mirror "https://ftpmirror.gnu.org/gcc/gcc-6.5.0/gcc-6.5.0.tar.xz"
   sha256 "7ef1796ce497e89479183702635b14bb7a46b53249209a5e0f999bebf4740945"
+  license all_of: [
+    "LGPL-2.1-or-later",
+    "GPL-3.0-or-later" => { with: "GCC-exception-3.1" },
+  ]
+  revision 7
+
+  livecheck do
+    url :stable
+    regex(%r{href=.*?gcc[._-]v?(6(?:\.\d+)+)(?:/?["' >]|\.t)}i)
+  end
 
   bottle do
-    sha256 "c4547a5c70b310be136aa3ae73a2dda4f0ef8a63b0759edd3849fbddb0770eb6" => :mojave
-    sha256 "accf373b135a7706229b43ebd4700fb624b97e808b1e5a89ad909c09bf665bac" => :high_sierra
-    sha256 "48ddb4694880979a3ba4b5850eae61a072df5caf6caa1944da43662697b43edc" => :sierra
+    sha256 big_sur:      "9fae646d3b49a384c6c524620f128ee5d7ee06811d5b2c9e67a06baa6e45201b"
+    sha256 catalina:     "8b18ff45d42f712a6b384a75e0850b6c6a9a369cc186e8ec31e766742a86d4eb"
+    sha256 mojave:       "9bec2c923e6cdcefc18b4c716b1b2bd93ce18ea30e8327aff93c0aaa3465c8b5"
+    sha256 x86_64_linux: "61e54a4996eff5e7cde22c4f74c731a01adc699622cae5a239b307dc1ef33065"
   end
 
   # The bottles are built on systems with the CLT installed, and do not work
   # out of the box on Xcode-only systems due to an incorrect sysroot.
-  pour_bottle? do
-    reason "The bottle needs the Xcode CLT to be installed."
-    satisfy { MacOS::CLT.installed? }
-  end
+  pour_bottle? only_if: :clt_installed
 
-  option "with-nls", "Build with native language support (localization)"
-  option "with-jit", "Build the jit compiler"
-
+  depends_on arch: :x86_64
   depends_on "gmp"
   depends_on "isl"
   depends_on "libmpc"
   depends_on "mpfr"
 
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "binutils"
+  end
+
   # GCC bootstraps itself, so it is OK to have an incompatible C++ stdlib
   cxxstdlib_check :skip
 
-  fails_with :gcc_4_0
+  def version_suffix
+    version.major.to_s
+  end
 
-  # Fix for libgccjit.so linkage on Darwin
-  # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=64089
-  # https://github.com/Homebrew/homebrew-core/issues/1872#issuecomment-225625332
-  # https://github.com/Homebrew/homebrew-core/issues/1872#issuecomment-225626490
-  patch do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/e9e0ee09389a54cc4c8fe1c24ebca3cd765ed0ba/gcc/6.1.0-jit.patch"
-    sha256 "863957f90a934ee8f89707980473769cff47ca0663c3906992da6afb242fb220"
+  # Patch for Xcode bug, taken from https://gcc.gnu.org/bugzilla/show_bug.cgi?id=89864#c43
+  # This should be removed in the next release of GCC if fixed by apple; this is an xcode bug,
+  # but this patch is a work around committed to GCC trunk
+  if MacOS::Xcode.version >= "10.2"
+    patch do
+      url "https://raw.githubusercontent.com/Homebrew/formula-patches/91d57ebe88e17255965fa88b53541335ef16f64a/gcc%406/gcc6-xcode10.2.patch"
+      sha256 "0f091e8b260bcfa36a537fad76823654be3ee8462512473e0b63ed83ead18085"
+    end
   end
 
   def install
@@ -46,19 +61,13 @@ class GccAT6 < Formula
 
     # C, C++, ObjC, Fortran compilers are always built
     languages = %w[c c++ objc obj-c++ fortran]
-    languages << "jit" if build.with? "jit"
-
-    version_suffix = version.to_s.slice(/\d/)
 
     # Even when suffixes are appended, the info pages conflict when
     # install-info is run so pretend we have an outdated makeinfo
     # to prevent their build.
     ENV["gcc_cv_prog_makeinfo_modern"] = "no"
 
-    osmajor = `uname -r`.chomp
-
     args = [
-      "--build=x86_64-apple-darwin#{osmajor}",
       "--prefix=#{prefix}",
       "--libdir=#{lib}/gcc/#{version_suffix}",
       "--enable-languages=#{languages.join(",")}",
@@ -68,7 +77,6 @@ class GccAT6 < Formula
       "--with-mpfr=#{Formula["mpfr"].opt_prefix}",
       "--with-mpc=#{Formula["libmpc"].opt_prefix}",
       "--with-isl=#{Formula["isl"].opt_prefix}",
-      "--with-system-zlib",
       "--enable-stage1-checking",
       "--enable-checking=release",
       "--enable-lto",
@@ -77,38 +85,49 @@ class GccAT6 < Formula
       "--with-build-config=bootstrap-debug",
       "--disable-werror",
       "--with-pkgversion=Homebrew GCC #{pkg_version} #{build.used_options*" "}".strip,
-      "--with-bugurl=https://github.com/Homebrew/homebrew-core/issues",
+      "--with-bugurl=#{tap.issues_url}",
+      "--disable-nls",
     ]
 
-    # The pre-Mavericks toolchain requires the older DWARF-2 debugging data
-    # format to avoid failure during the stage 3 comparison of object files.
-    # See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=45248
-    args << "--with-dwarf2" if MacOS.version <= :mountain_lion
+    on_macos do
+      args << "--build=x86_64-apple-darwin#{OS.kernel_version}"
+      args << "--with-system-zlib"
 
-    args << "--disable-nls" if build.without? "nls"
-    args << "--enable-host-shared" if build.with?("jit")
+      # Xcode 10 dropped 32-bit support
+      args << "--disable-multilib" if DevelopmentTools.clang_build_version >= 1000
 
-    # Xcode 10 dropped 32-bit support
-    args << "--disable-multilib" if DevelopmentTools.clang_build_version >= 1000
-
-    # Ensure correct install names when linking against libgcc_s;
-    # see discussion in https://github.com/Homebrew/homebrew/pull/34303
-    inreplace "libgcc/config/t-slibgcc-darwin", "@shlib_slibdir@", "#{HOMEBREW_PREFIX}/lib/gcc/#{version_suffix}"
-
-    mkdir "build" do
-      if !MacOS::CLT.installed?
-        # For Xcode-only systems, we need to tell the sysroot path
+      # System headers may not be in /usr/include
+      sdk = MacOS.sdk_path_if_needed
+      if sdk
         args << "--with-native-system-header-dir=/usr/include"
-        args << "--with-sysroot=#{MacOS.sdk_path}"
-      elsif MacOS.version >= :mojave
-        # System headers are no longer located in /usr/include
-        args << "--with-native-system-header-dir=/usr/include"
-        args << "--with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        args << "--with-sysroot=#{sdk}"
       end
 
+      # Ensure correct install names when linking against libgcc_s;
+      # see discussion in https://github.com/Homebrew/homebrew/pull/34303
+      inreplace "libgcc/config/t-slibgcc-darwin", "@shlib_slibdir@", "#{HOMEBREW_PREFIX}/lib/gcc/#{version_suffix}"
+    end
+
+    on_linux do
+      # Fix Linux error: gnu/stubs-32.h: No such file or directory.
+      args << "--disable-multilib"
+
+      # Change the default directory name for 64-bit libraries to `lib`
+      # http://www.linuxfromscratch.org/lfs/view/development/chapter06/gcc.html
+      inreplace "gcc/config/i386/t-linux64", "m64=../lib64", "m64="
+    end
+
+    mkdir "build" do
       system "../configure", *args
       system "make", "bootstrap"
-      system "make", "install"
+
+      on_macos do
+        system "make", "install"
+      end
+
+      on_linux do
+        system "make", "install-strip"
+      end
     end
 
     # Handle conflicts between GCC formulae and avoid interfering
@@ -126,6 +145,81 @@ class GccAT6 < Formula
     File.rename file, "#{dir}/#{base}-#{suffix}#{ext}"
   end
 
+  def post_install
+    on_linux do
+      gcc = bin/"gcc-#{version_suffix}"
+      libgcc = Pathname.new(Utils.safe_popen_read(gcc, "-print-libgcc-file-name")).parent
+      raise "command failed: #{gcc} -print-libgcc-file-name" if $CHILD_STATUS.exitstatus.nonzero?
+
+      glibc = Formula["glibc"]
+      glibc_installed = glibc.any_version_installed?
+
+      # Symlink crt1.o and friends where gcc can find it.
+      crtdir = if glibc_installed
+        glibc.opt_lib
+      else
+        Pathname.new(Utils.safe_popen_read("/usr/bin/cc", "-print-file-name=crti.o")).parent
+      end
+      ln_sf Dir[crtdir/"*crt?.o"], libgcc
+
+      # Create the GCC specs file
+      # See https://gcc.gnu.org/onlinedocs/gcc/Spec-Files.html
+
+      # Locate the specs file
+      specs = libgcc/"specs"
+      ohai "Creating the GCC specs file: #{specs}"
+      specs_orig = Pathname.new("#{specs}.orig")
+      rm_f [specs_orig, specs]
+
+      system_header_dirs = ["#{HOMEBREW_PREFIX}/include"]
+
+      if glibc_installed
+        # https://github.com/Linuxbrew/brew/issues/724
+        system_header_dirs << glibc.opt_include
+      else
+        # Locate the native system header dirs if user uses system glibc
+        target = Utils.safe_popen_read(gcc, "-print-multiarch").chomp
+        raise "command failed: #{gcc} -print-multiarch" if $CHILD_STATUS.exitstatus.nonzero?
+
+        system_header_dirs += ["/usr/include/#{target}", "/usr/include"]
+      end
+
+      # Save a backup of the default specs file
+      specs_string = Utils.safe_popen_read(gcc, "-dumpspecs")
+      raise "command failed: #{gcc} -dumpspecs" if $CHILD_STATUS.exitstatus.nonzero?
+
+      specs_orig.write specs_string
+
+      # Set the library search path
+      # For include path:
+      #   * `-isysroot #{HOMEBREW_PREFIX}/nonexistent` prevents gcc searching built-in
+      #     system header files.
+      #   * `-idirafter <dir>` instructs gcc to search system header
+      #     files after gcc internal header files.
+      # For libraries:
+      #   * `-nostdlib -L#{libgcc}` instructs gcc to use brewed glibc
+      #     if applied.
+      #   * `-L#{libdir}` instructs gcc to find the corresponding gcc
+      #     libraries. It is essential if there are multiple brewed gcc
+      #     with different versions installed.
+      #     Noted that it should only be passed for the `gcc@*` formulae.
+      #   * `-L#{HOMEBREW_PREFIX}/lib` instructs gcc to find the rest
+      #     brew libraries.
+      libdir = HOMEBREW_PREFIX/"lib/gcc/#{version_suffix}"
+      specs.write specs_string + <<~EOS
+        *cpp_unique_options:
+        + -isysroot #{HOMEBREW_PREFIX}/nonexistent #{system_header_dirs.map { |p| "-idirafter #{p}" }.join(" ")}
+
+        *link_libgcc:
+        #{glibc_installed ? "-nostdlib -L#{libgcc}" : "+"} -L#{libdir} -L#{HOMEBREW_PREFIX}/lib
+
+        *link:
+        + --dynamic-linker #{HOMEBREW_PREFIX}/lib/ld.so -rpath #{libdir} -rpath #{HOMEBREW_PREFIX}/lib
+
+      EOS
+    end
+  end
+
   test do
     (testpath/"hello-c.c").write <<~EOS
       #include <stdio.h>
@@ -135,7 +229,7 @@ class GccAT6 < Formula
         return 0;
       }
     EOS
-    system "#{bin}/gcc-6", "-o", "hello-c", "hello-c.c"
+    system "#{bin}/gcc-#{version.major}", "-o", "hello-c", "hello-c.c"
     assert_equal "Hello, world!\n", `./hello-c`
 
     (testpath/"hello-cc.cc").write <<~EOS
@@ -146,7 +240,7 @@ class GccAT6 < Formula
         return 0;
       }
     EOS
-    system "#{bin}/g++-6", "-o", "hello-cc", "hello-cc.cc"
+    system "#{bin}/g++-#{version.major}", "-o", "hello-cc", "hello-cc.cc"
     assert_equal "Hello, world!\n", `./hello-cc`
 
     fixture = <<~EOS
@@ -161,7 +255,7 @@ class GccAT6 < Formula
       end
     EOS
     (testpath/"in.f90").write(fixture)
-    system "#{bin}/gfortran-6", "-o", "test", "in.f90"
+    system "#{bin}/gfortran-#{version.major}", "-o", "test", "in.f90"
     assert_equal "done", `./test`.strip
   end
 end

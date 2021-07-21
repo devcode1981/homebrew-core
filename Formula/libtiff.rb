@@ -1,40 +1,39 @@
 class Libtiff < Formula
   desc "TIFF library and utilities"
-  homepage "http://libtiff.maptools.org/"
-  url "https://download.osgeo.org/libtiff/tiff-4.0.10.tar.gz"
-  mirror "https://fossies.org/linux/misc/tiff-4.0.10.tar.gz"
-  sha256 "2c52d11ccaf767457db0c46795d9c7d1a8d8f76f68b0b800a3dfe45786b996e4"
+  homepage "https://libtiff.gitlab.io/libtiff/"
+  url "https://download.osgeo.org/libtiff/tiff-4.3.0.tar.gz"
+  mirror "https://fossies.org/linux/misc/tiff-4.3.0.tar.gz"
+  sha256 "0e46e5acb087ce7d1ac53cf4f56a09b221537fc86dfc5daaad1c2e89e1b37ac8"
+  license "libtiff"
 
-  bottle do
-    cellar :any
-    sha256 "9fc324e360e2b5fe46ce13bd97bc1a338cf08c8d60dca4241bcc8c2efcadb99a" => :mojave
-    sha256 "59a22ff44e382d59b062a0cd03336f0ec4b8846a3eb8b1ca777150ca703dd0cd" => :high_sierra
-    sha256 "57c7e27e610ed62652678ccc9162dc27c5cc197aab4d16e0ea425acf8f33bb17" => :sierra
+  livecheck do
+    url "https://download.osgeo.org/libtiff/"
+    regex(/href=.*?tiff[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  option "with-xz", "Include support for LZMA compression"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "bd25355f2efb850a0e70c9ae208f0cd16caa0bfcaba8931d9ea9d374c5cf050a"
+    sha256 cellar: :any,                 big_sur:       "09f08e1168780c12c8f1526038eb4f4692624c85a9e78099b8ae2c58e39f5289"
+    sha256 cellar: :any,                 catalina:      "e413c1170e33242eb941683d14ae51de594a013b8c6e5151f53b3352358b26fe"
+    sha256 cellar: :any,                 mojave:        "06248bbf04ff5180541a90d60bae68246b5f1665d42909be471fdc9a6781a718"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e63441d702b567a622495e391564b7bc1f2352501fe982709469c6f609a6abb0"
+  end
 
   depends_on "jpeg"
-  depends_on "xz" => :optional
 
-  # Patches are taken from latest Fedora package, which is currently
-  # libtiff-4.0.10-1.fc30.src.rpm and whose changelog is available at
-  # https://apps.fedoraproject.org/packages/libtiff/changelog/
+  uses_from_macos "zlib"
 
   def install
     args = %W[
-      --disable-dependency-tracking
       --prefix=#{prefix}
-      --without-x
+      --disable-dependency-tracking
+      --disable-lzma
+      --disable-webp
+      --disable-zstd
       --with-jpeg-include-dir=#{Formula["jpeg"].opt_include}
       --with-jpeg-lib-dir=#{Formula["jpeg"].opt_lib}
+      --without-x
     ]
-    if build.with? "xz"
-      args << "--with-lzma-include-dir=#{Formula["xz"].opt_include}"
-      args << "--with-lzma-lib-dir=#{Formula["xz"].opt_lib}"
-    else
-      args << "--disable-lzma"
-    end
     system "./configure", *args
     system "make", "install"
   end

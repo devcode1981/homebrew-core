@@ -3,17 +3,18 @@ class Alot < Formula
 
   desc "Text mode MUA using notmuch mail"
   homepage "https://github.com/pazz/alot"
-  url "https://github.com/pazz/alot/archive/0.7.tar.gz"
-  sha256 "2d49a7d61241cfadc993a8456076605b2cfe264c51f5e3f18f337bad58f29a1c"
-  revision 1
+  url "https://github.com/pazz/alot/archive/0.9.1.tar.gz"
+  sha256 "ee2c1ab1b43d022a8fe2078820ed57d8d72aec260a7d750776dac4ee841d1de4"
+  license "GPL-3.0-only"
+  revision 2
   head "https://github.com/pazz/alot.git"
 
   bottle do
-    cellar :any
-    sha256 "adbbdac0378bf3c5a1d5cf86190b0bdd7bff2569fd7fb3d254fd2bd5bae1e7fe" => :mojave
-    sha256 "79c1bdd07fa75983d06f4a6c27e81741d0553e3635dd3836c65dc6f3c08c0954" => :high_sierra
-    sha256 "227895c908fda25c07555e5514b067d086d6d961f71a40c2098763cfd63deccd" => :sierra
-    sha256 "ba94977585c50e29025be7e592a31809d2f520d50fdb8f023a445dc78ca1bd9d" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "5f9ba3f7cc0858982386261853661c35eeaf4f0ecf928033345f5cf84005dcc7"
+    sha256 cellar: :any_skip_relocation, big_sur:       "96603eb0e2c1ff9195d760a15a5892f8b325b05ef504874ebc2c477d06bf4e99"
+    sha256 cellar: :any_skip_relocation, catalina:      "9957fe31c30e665b47efd1150e90288fc91f9a00fd0298d1a8e0e0d7dcfaffbe"
+    sha256 cellar: :any_skip_relocation, mojave:        "182143fbad21974b42e94c8432c80e395e53eeb7f0bbccffd36e687b67081c54"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b19f738d69314b171068f4318f1516c7351e76a9ce11f06156af0e49db6b4de0"
   end
 
   depends_on "sphinx-doc" => :build
@@ -21,16 +22,26 @@ class Alot < Formula
   depends_on "gpgme"
   depends_on "libmagic"
   depends_on "notmuch"
-  depends_on "python@2"
+  depends_on "python@3.9"
+
+  resource "wheel" do
+    url "https://files.pythonhosted.org/packages/ed/46/e298a50dde405e1c202e316fa6a3015ff9288423661d7ea5e8f22f589071/wheel-0.36.2.tar.gz"
+    sha256 "e11eefd162658ea59a60a0f6c7d493a7190ea4b9a85e335b33489d9f17e0245e"
+  end
 
   resource "Automat" do
-    url "https://files.pythonhosted.org/packages/de/05/b8e453085cf8a7f27bb1226596f4ccf5cc9e758377d60284f990bbdc592c/Automat-0.6.0.tar.gz"
-    sha256 "3c1fd04ecf08ac87b4dd3feae409542e9bf7827257097b2b6ed5692f69d6f6a8"
+    url "https://files.pythonhosted.org/packages/80/c5/82c63bad570f4ef745cc5c2f0713c8eddcd07153b4bee7f72a8dc9f9384b/Automat-20.2.0.tar.gz"
+    sha256 "7979803c74610e11ef0c0d68a2942b152df52da55336e0c9d58daf1831cbdf33"
+  end
+
+  resource "Twisted" do
+    url "https://files.pythonhosted.org/packages/c2/41/3f30da0f7025480eff8feb9ef0927c6db6bbbf6e64985cac77ee0210a903/Twisted-21.2.0.tar.gz"
+    sha256 "77544a8945cf69b98d2946689bbe0c75de7d145cdf11f391dd487eae8fc95a12"
   end
 
   resource "attrs" do
-    url "https://files.pythonhosted.org/packages/be/41/e909cb6d901e9689da947419505cc7fb7d242a08a62ee221fce6a009a523/attrs-17.2.0.tar.gz"
-    sha256 "5d4d1b99f94d69338f485984127e4473b3ab9e20f43821b0e546cc3b2302fd11"
+    url "https://files.pythonhosted.org/packages/f0/cb/80a4a274df7da7b8baf083249b0890a0579374c3d74b5ac0ee9291f912dc/attrs-20.3.0.tar.gz"
+    sha256 "832aa3cde19744e49938b91fea06d69ecb9e649c93ba974535d08ad92164f700"
   end
 
   resource "configobj" do
@@ -43,49 +54,49 @@ class Alot < Formula
     sha256 "586372eb92059873e29eba4f9dec8381541b4d3834660707faf8ba59146dfc35"
   end
 
-  resource "gpg" do
-    url "https://files.pythonhosted.org/packages/ef/86/c5a34243a932346c59cb25eb49a4d1dec227974209eb9b618d0ed57ea5be/gpg-1.10.0.tar.gz"
-    sha256 "349214a866c84aa548bc35ed14eccd2ec9085b3958d5753a63a19a71a1f523ca"
+  resource "hyperlink" do
+    url "https://files.pythonhosted.org/packages/3a/51/1947bd81d75af87e3bb9e34593a4cf118115a8feb451ce7a69044ef1412e/hyperlink-21.0.0.tar.gz"
+    sha256 "427af957daa58bc909471c6c40f74c5450fa123dd093fc53efd2e91d2705a56b"
   end
 
-  resource "hyperlink" do
-    url "https://files.pythonhosted.org/packages/83/df/3bdaf38f21f93429de02f04c6a967d2154955fc5b9a6a1a0b20a682edc13/hyperlink-17.3.1.tar.gz"
-    sha256 "bc4ffdbde9bdad204d507bd8f554f16bba82dd356f6130cb16f41422909c33bc"
+  resource "idna" do
+    url "https://files.pythonhosted.org/packages/9f/24/1444ee2c9aee531783c031072a273182109c6800320868ab87675d147a05/idna-3.1.tar.gz"
+    sha256 "c5b02147e01ea9920e6b0a3f1f7bb833612d507592c837a6c49552768f4054e1"
   end
 
   resource "incremental" do
-    url "https://files.pythonhosted.org/packages/8f/26/02c4016aa95f45479eea37c90c34f8fab6775732ae62587a874b619ca097/incremental-17.5.0.tar.gz"
-    sha256 "7b751696aaf36eebfab537e458929e194460051ccad279c72b755a167eebd4b3"
+    url "https://files.pythonhosted.org/packages/4f/c5/430765c697afc217c8491785de321a21fa4d983dda14bcd82feb965b0593/incremental-21.3.0.tar.gz"
+    sha256 "02f5de5aff48f6b9f665d99d48bfc7ec03b6e3943210de7cfc88856d755d6f57"
+  end
+
+  resource "mock" do
+    url "https://files.pythonhosted.org/packages/e2/be/3ea39a8fd4ed3f9a25aae18a1bff2df7a610bca93c8ede7475e32d8b73a0/mock-4.0.3.tar.gz"
+    sha256 "7d3fbbde18228f4ff2f1f119a45cdffa458b4c0dee32eb4d2bb2f82554bac7bc"
   end
 
   resource "python-magic" do
-    url "https://files.pythonhosted.org/packages/84/30/80932401906eaf787f2e9bd86dc458f1d2e75b064b4c187341f29516945c/python-magic-0.4.15.tar.gz"
-    sha256 "f3765c0f582d2dfc72c15f3b5a82aecfae9498bd29ca840d72f37d7bd38bfcd5"
+    url "https://files.pythonhosted.org/packages/26/60/6d45e0e7043f5a7bf15238ca451256a78d3c5fe02cd372f0ed6d888a16d5/python-magic-0.4.22.tar.gz"
+    sha256 "ca884349f2c92ce830e3f498c5b7c7051fe2942c3ee4332f65213b8ebff15a62"
   end
 
   resource "six" do
-    url "https://files.pythonhosted.org/packages/b3/b2/238e2590826bfdd113244a40d9d3eb26918bd798fc187e2360a8367068db/six-1.10.0.tar.gz"
-    sha256 "105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a"
-  end
-
-  resource "Twisted" do
-    url "https://files.pythonhosted.org/packages/a2/37/298f9547606c45d75aa9792369302cc63aa4bbcf7b5f607560180dd099d2/Twisted-17.9.0.tar.bz2"
-    sha256 "0da1a7e35d5fcae37bc9c7978970b5feb3bc82822155b8654ec63925c05af75c"
+    url "https://files.pythonhosted.org/packages/6b/34/415834bfdafca3c5f451532e8a8d9ba89a21c9743a0c59fbd0205c7f9426/six-1.15.0.tar.gz"
+    sha256 "30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"
   end
 
   resource "urwid" do
-    url "https://files.pythonhosted.org/packages/c7/90/415728875c230fafd13d118512bde3184d810d7bf798a631abc05fac09d0/urwid-2.0.1.tar.gz"
-    sha256 "644d3e3900867161a2fc9287a9762753d66bd194754679adb26aede559bcccbc"
+    url "https://files.pythonhosted.org/packages/94/3f/e3010f4a11c08a5690540f7ebd0b0d251cc8a456895b7e49be201f73540c/urwid-2.1.2.tar.gz"
+    sha256 "588bee9c1cb208d0906a9f73c613d2bd32c3ed3702012f51efe318a3f2127eae"
   end
 
   resource "urwidtrees" do
-    url "https://files.pythonhosted.org/packages/88/9d/981617fa083a75cf0b5ebb0ae47c3af6fb69183be1c74cc3ac6d9a0c5964/urwidtrees-1.0.1.1.tar.gz"
-    sha256 "08a66d0e76e94bc32bc590e35ed283e8a6b0c93adeb431dc576ec0a345f09bfd"
+    url "https://files.pythonhosted.org/packages/43/e1/ca5cf122cf1121b55acb39a1fb7e9fb1283c2eb0dc75fca751eb8c16b2f9/urwidtrees-1.0.3.tar.gz"
+    sha256 "50b19c06b03a5a73e561757a26d449cfe0c08afabe5c0f3cd4435596bdddaae9"
   end
 
   resource "zope.interface" do
-    url "https://files.pythonhosted.org/packages/bd/d2/25349ed41f9dcff7b3baf87bd88a4c82396cf6e02f1f42bb68657a3132af/zope.interface-4.4.3.tar.gz"
-    sha256 "d6d26d5dfbfd60c65152938fcb82f949e8dada37c041f72916fef6621ba5c5ce"
+    url "https://files.pythonhosted.org/packages/ae/58/e0877f58daa69126a5fb325d6df92b20b77431cd281e189c5ec42b722f58/zope.interface-5.4.0.tar.gz"
+    sha256 "5dba5f530fec3f0988d83b78cc591b58c0b6eb8431a85edd1569a0539a8a5a0e"
   end
 
   def install
@@ -112,7 +123,12 @@ class Alot < Formula
       pid = fork do
         $stdout.reopen("/dev/null")
         $stdin.reopen("/dev/null")
-        exec "script", "-q", "/dev/null", bin/"alot", "--logfile", testpath/"out.log"
+        on_macos do
+          exec "script", "-q", "/dev/null", bin/"alot", "--logfile", testpath/"out.log"
+        end
+        on_linux do
+          exec "script", "-q", "/dev/null", "-e", "-c", "#{bin}/alot --logfile #{testpath}/out.log"
+        end
       end
       sleep 10
     ensure

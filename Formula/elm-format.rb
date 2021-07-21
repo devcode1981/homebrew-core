@@ -1,32 +1,40 @@
-require "language/haskell"
-
 class ElmFormat < Formula
-  include Language::Haskell::Cabal
-
   desc "Elm source code formatter, inspired by gofmt"
   homepage "https://github.com/avh4/elm-format"
   url "https://github.com/avh4/elm-format.git",
-      :tag      => "0.8.1",
-      :revision => "e3f9eb711f05a460557ddae2530802c15ee94d90"
+      tag:      "0.8.4",
+      revision: "5bd4fbe591fe8b456160c180cb875ef60bc57890"
+  license "BSD-3-Clause"
   head "https://github.com/avh4/elm-format.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "723a1df0e7f4c28d99b245ca1222b1bfd24f728d4eba2fbc95244437a95ea8d0" => :mojave
-    sha256 "5b31e9ef6c2444befe736dfbde6253c6a259117f4458d5c2e04ec6d0a23a8877" => :high_sierra
-    sha256 "4af61266dd8e30c3a57be137916f164d2f51a74e6e6a35aa85a5271061f15572" => :sierra
+    sha256 cellar: :any_skip_relocation, big_sur:     "f7f6bb421efb3969733d33c7f6200af334bcd768d2128b14ba0280270b2fff30"
+    sha256 cellar: :any_skip_relocation, catalina:    "dca23c0c1e66cfc6208ff891611ba8c38fdddd1d90d2a8b32bafe69dc3701b91"
+    sha256 cellar: :any_skip_relocation, mojave:      "0e196d773546e0d476c079a434c57f1b49a2966410397bb33747fa2d9e57ffe1"
+    sha256 cellar: :any_skip_relocation, high_sierra: "a8f9aa324518559cdd5b7617f5453f629e90f6897cd72e38f5ab84165e7ddae0"
   end
 
   depends_on "cabal-install" => :build
-  depends_on "ghc" => :build
+  depends_on "ghc@8.8" => :build
+
+  def build_elm_format_conf
+    <<~EOS
+      module Build_elm_format where
+
+      gitDescribe :: String
+      gitDescribe = "#{version}"
+    EOS
+  end
 
   def install
+    defaults = buildpath/"generated/Build_elm_format.hs"
+    defaults.write(build_elm_format_conf)
+
     (buildpath/"elm-format").install Dir["*"]
 
-    cabal_sandbox do
-      cabal_sandbox_add_source "elm-format"
-      cabal_install "--only-dependencies", "elm-format"
-      cabal_install "--prefix=#{prefix}", "elm-format"
+    cd "elm-format" do
+      system "cabal", "v2-update"
+      system "cabal", "v2-install", *std_cabal_v2_args
     end
   end
 

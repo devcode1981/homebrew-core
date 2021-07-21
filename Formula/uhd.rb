@@ -1,43 +1,55 @@
 class Uhd < Formula
   desc "Hardware driver for all USRP devices"
   homepage "https://files.ettus.com/manual/"
-  url "https://github.com/EttusResearch/uhd/archive/v3.13.0.2.tar.gz"
-  sha256 "e18d0524cbf571be4847fd7f971dc30c37efd9e7a333761b74e1266a07cbd35b"
+  # The build system uses git to recover version information
+  url "https://github.com/EttusResearch/uhd.git",
+      tag:      "v4.0.0.0",
+      revision: "90ce6062b6b5df2eddeee723777be85108e4e7c7"
+  license all_of: ["GPL-3.0-or-later", "LGPL-3.0-or-later", "MIT", "BSD-3-Clause", "Apache-2.0"]
+  revision 2
   head "https://github.com/EttusResearch/uhd.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    sha256 "e19d53e9ed42c451958e696c15f0f2ab96e4d9c8ea308db31ab389447de21752" => :mojave
-    sha256 "48ee7b1d938d8506bff99c2186df4e34bc294d0e99d5f1996adbb427973fa15b" => :high_sierra
-    sha256 "b968c2eaf1d5b7891ed7d4ed83d63acd656afadf96608288b88d9d96c345e04c" => :sierra
+    sha256 arm64_big_sur: "6d7c30e045cd3c2db314798a440e9b6ef803f776efe61a1c43cec845eba345c7"
+    sha256 big_sur:       "8958921dbc42bfa6fa8280009f934beb86cffadf488e17cd433b7f6b2b79f744"
+    sha256 catalina:      "cea4d4a254b7ece640531c5c7a4e8555a512ba80a9a67c856ac880dd13d6c4e4"
+    sha256 mojave:        "36ce3765f122569d97f783b9e81718e8c03bbae8777f4f32d82085cd0c73787a"
   end
 
   depends_on "cmake" => :build
   depends_on "doxygen" => :build
+  depends_on "pkg-config" => :build
   depends_on "boost"
   depends_on "libusb"
-  depends_on "python@2"
+  depends_on "python@3.9"
 
   resource "Mako" do
-    url "https://files.pythonhosted.org/packages/eb/f3/67579bb486517c0d49547f9697e36582cd19dafb5df9e687ed8e22de57fa/Mako-1.0.7.tar.gz"
-    sha256 "4e02fde57bd4abb5ec400181e4c314f56ac3e49ba4fb8b0d50bba18cb27d25ae"
+    url "https://files.pythonhosted.org/packages/5c/db/2d2d88b924aa4674a080aae83b59ea19d593250bfe5ed789947c21736785/Mako-1.1.4.tar.gz"
+    sha256 "17831f0b7087c313c0ffae2bcbbd3c1d5ba9eeac9c38f2eb7b50e8c99fe9d5ab"
   end
 
   def install
-    ENV.prepend_create_path "PYTHONPATH", libexec/"vendor/lib/python2.7/site-packages"
+    xy = Language::Python.major_minor_version Formula["python@3.9"].opt_bin/"python3"
+    ENV.prepend_create_path "PYTHONPATH", libexec/"vendor/lib/python#{xy}/site-packages"
 
     resource("Mako").stage do
-      system "python", *Language::Python.setup_install_args(libexec/"vendor")
+      system Formula["python@3.9"].opt_bin/"python3",
+             *Language::Python.setup_install_args(libexec/"vendor")
     end
 
     mkdir "host/build" do
-      system "cmake", "..", *std_cmake_args
+      system "cmake", "..", *std_cmake_args, "-DENABLE_TESTS=OFF"
       system "make"
-      system "make", "test"
       system "make", "install"
     end
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/uhd_config_info --version")
+    assert_match version.major_minor_patch.to_s, shell_output("#{bin}/uhd_config_info --version")
   end
 end

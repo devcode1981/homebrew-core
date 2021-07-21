@@ -1,50 +1,69 @@
 class Simutrans < Formula
   desc "Transport simulator"
   homepage "https://www.simutrans.com/"
-  url "https://downloads.sourceforge.net/project/simutrans/simutrans/120-4/simutrans-src-120-4.zip"
-  version "120.4"
-  sha256 "cf0f364a26d178d9fbee8ec59196b308c811f1c1c69f45c05cdb554e58b61898"
+  url "svn://servers.simutrans.org/simutrans/trunk/", revision: "9274"
+  version "122.0"
+  license "Artistic-1.0"
   head "https://github.com/aburch/simutrans.git"
 
-  bottle do
-    cellar :any
-    sha256 "5a6c026584d0519b0b7adf626a4f7b0b7d7689615de27241232593569a906868" => :mojave
-    sha256 "d20fe9c5a2039bd438fd6f96e24979424acc9c1e7e442d9496ecd1a244640211" => :high_sierra
-    sha256 "e4ac8b4e3ece8ee265e46419db351cba744c6b66b89683d3443ab35e65b936cd" => :sierra
-    sha256 "0c7270b180b815014d92577de3e255d247f422ada4545e0c836bcaafa9a0b94b" => :el_capitan
+  livecheck do
+    url "https://sourceforge.net/projects/simutrans/files/simutrans/"
+    regex(%r{href=.*?/files/simutrans/(\d+(?:[.-]\d+)+)/}i)
+    strategy :page_match
   end
 
+  bottle do
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "aa133be9c3b1e7f1e9bec13b185159fe92b55825968025443628d45352e2f759"
+    sha256 cellar: :any, big_sur:       "70babab2113e9d818ef42dd1722f941ad0d70c2b368fea4de8a7122b18ed58e2"
+    sha256 cellar: :any, catalina:      "b95f8a5609030c0acc54aa67a09296a1ffdc74d13f3150d297ef98c22b6db4dd"
+    sha256 cellar: :any, mojave:        "1cbc8bb6590dcac8cef8b7894fa5fd607b1592f739a4fd5bbf69fda0c3684acf"
+  end
+
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "pkg-config" => :build
+  depends_on "freetype"
   depends_on "libpng"
-  depends_on :macos => :lion
   depends_on "sdl2"
 
-  resource "pak64" do
-    url "https://downloads.sourceforge.net/project/simutrans/pak64/120-4/simupak64-120-4.zip"
-    sha256 "b1dba2876838fcda6fb1b90c9b981e2aa490c1b0a81bab7c53b8bd50f59c0ffd"
-  end
+  uses_from_macos "curl"
+  uses_from_macos "unzip"
 
-  resource "text" do
-    url "https://simutrans-germany.com/translator/data/tab/language_pack-Base+texts.zip"
-    sha256 "44caa98599089f55d5cfef34d24f9b8ae362d0b41c784ca1b649270436cdea02"
+  resource "pak64" do
+    url "https://downloads.sourceforge.net/project/simutrans/pak64/122-0/simupak64-122-0.zip"
+    sha256 "ce2ebf0e4e0c8df5defa10be114683f65559d5a994d1ff6c96bdece7ed984b74"
   end
 
   def install
+    # These translations are dynamically generated.
+    system "./get_lang_files.sh"
+
     args = %w[
       BACKEND=sdl2
-      COLOUR_DEPTH=16
+      MULTI_THREAD=1
+      OPTIMISE=1
       OSTYPE=mac
+      USE_FREETYPE=1
+      USE_UPNP=0
+      USE_ZSTD=0
     ]
     args << "AV_FOUNDATION=1" if MacOS.version >= :sierra
-    system "make", *args
-    libexec.install "build/default/sim" => "simutrans"
+    system "autoreconf", "-ivf"
+    system "./configure", "--prefix=#{prefix}", "CC=#{ENV.cc}"
+    system "make", "all", *args
+    cd "themes.src" do
+      ln_s "../makeobj/makeobj", "makeobj"
+      system "./build_themes.sh"
+    end
+
+    libexec.install "sim" => "simutrans"
     libexec.install Dir["simutrans/*"]
     bin.write_exec_script libexec/"simutrans"
+    bin.install "makeobj/makeobj"
+    bin.install "nettools/nettool"
 
     libexec.install resource("pak64")
-    (libexec/"text").install resource("text")
-
-    system "make", "makeobj", *args
-    bin.install "build/default/makeobj/makeobj"
   end
 
   test do

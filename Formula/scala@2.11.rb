@@ -5,12 +5,17 @@ class ScalaAT211 < Formula
   mirror "https://downloads.typesafe.com/scala/2.11.12/scala-2.11.12.tgz"
   mirror "https://www.scala-lang.org/files/archive/scala-2.11.12.tgz"
   sha256 "b11d7d33699ca4f60bc3b2b6858fd953e3de2b8522c943f4cda4b674316196a8"
+  revision 1
 
-  bottle :unneeded
-
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "cdabefb6cb6bbb4d3d5b297fe0148488f3162c62d348647f0a07b8b06b63300d"
+  end
   keg_only :versioned_formula
 
-  depends_on :java => "1.8"
+  deprecate! date: "2017-11-09", because: :unsupported
+
+  depends_on arch: :x86_64 # openjdk@8 is not supported on ARM
+  depends_on "openjdk@8"
 
   def install
     rm_f Dir["bin/*.bat"]
@@ -36,9 +41,7 @@ class ScalaAT211 < Formula
       }
     EOS
 
-    out = shell_output("#{bin}/scala #{file}").strip
-    # Shut down the compile server so as not to break Travis
-    system bin/"fsc", "-shutdown"
+    out = shell_output("#{bin}/scala -nc #{file}").strip
 
     assert_equal "4", out
   end

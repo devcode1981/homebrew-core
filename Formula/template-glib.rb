@@ -1,29 +1,30 @@
 class TemplateGlib < Formula
   desc "GNOME templating library for GLib"
   homepage "https://gitlab.gnome.org/GNOME/template-glib"
-  url "https://download.gnome.org/sources/template-glib/3.30/template-glib-3.30.0.tar.xz"
-  sha256 "cf690d391bfc71036e31867df6da90315a3db83f739a8657f580b941b96e3649"
+  url "https://download.gnome.org/sources/template-glib/3.34/template-glib-3.34.0.tar.xz"
+  sha256 "216bef6ac3607666b8ca72b936467f7020ce6421c02755c301d079576c9c3dfd"
+  revision 2
 
   bottle do
-    sha256 "bc65703062e59b6f45e161ec7e3c6c050ed6961e046498880cf2de28bf2aa4bb" => :mojave
-    sha256 "f0f00da3b21f9e4899f833cd559c1ec1a010031212e639a1e1410bc50e4aafaf" => :high_sierra
-    sha256 "8f5560f08f8b609a77aec92fb6542350f69097242e695738d62bc9536aa43d37" => :sierra
-    sha256 "d1d5b7cf68a80849bc6d95c0a29093aac2b639aeb924b6d8061d31fbe458d772" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "2340864768d827293d86853d8d368d78ed1bb82b87311c3cd3e7c5b315bb3e47"
+    sha256 cellar: :any, big_sur:       "4ebcd5e2a6aa072fadc6f4ce54e78aba96cac605fac1ba312bb9d798add9d60d"
+    sha256 cellar: :any, catalina:      "9076cc6161b090edf56b7ffdb0dcb31f3590c5b359b3e74fb78c1c0119b2c256"
+    sha256 cellar: :any, mojave:        "b5cbd61d31bcf899a1940b0e0c00b2a788a6dc1316d90847a0668973525a6048"
+    sha256 cellar: :any, high_sierra:   "4e0560a1eb5ac91fdd4ea3dc89086f0b50cc65d68c32c3c8bb4fa49e0d05454d"
   end
 
   depends_on "bison" => :build # does not appear to work with system bison
-  depends_on "meson-internal" => :build
+  depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
   depends_on "glib"
   depends_on "gobject-introspection"
 
   def install
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", "-Dwith_vapi=false", ".."
-      system "ninja"
-      system "ninja", "install"
+      system "meson", *std_meson_args, "-Dwith_vapi=false", ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
     end
   end
 

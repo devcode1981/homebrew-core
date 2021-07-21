@@ -1,66 +1,58 @@
 class GitReview < Formula
+  include Language::Python::Virtualenv
+
   desc "Submit git branches to gerrit for review"
-  homepage "https://git.openstack.org/cgit/openstack-infra/git-review"
-  url "https://files.pythonhosted.org/packages/f9/d5/c4d61b4f44db860a0ec61da6c713e55eb037bd37c31ec834137b97e3e89e/git-review-1.27.0.tar.gz"
-  sha256 "7a30afdd3c62e1ef69ebda3f22c17efccd1a0a89c761b9b0d301108a11a37476"
-  head "https://git.openstack.org/openstack-infra/git-review.git"
+  homepage "https://opendev.org/opendev/git-review"
+  url "https://files.pythonhosted.org/packages/52/32/314cdb83186d43661a36d3e49390f818bce4e878b90a0bc980a3c70252bb/git-review-2.1.0.tar.gz"
+  sha256 "3a6c775645b1fa8c40c49fbfce6f8d7e225a1e797a0aa92912607b1d97e61ed6"
+  license "Apache-2.0"
+  head "https://opendev.org/opendev/git-review.git"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "c33e1f4874cab16140b3ba63dd1342f94e8da8aba2896812f631bf940cc350c9" => :mojave
-    sha256 "f83ed8708389cf83b000d906b185f7e7570cb488c4a0321d5f19ac64a0e5da9b" => :high_sierra
-    sha256 "1c5e52734db126e988157463ef77aa6b176c0bb1242829b94d23d466ab2c0049" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "496d650aae18c08a27c9a35b2af2402c06817acc44f317c7bb835b98640e38c5"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c0453ff5e5450402026b4480cab678f615673b5cbb7e0bdd066cc601418aff88"
+    sha256 cellar: :any_skip_relocation, catalina:      "c0453ff5e5450402026b4480cab678f615673b5cbb7e0bdd066cc601418aff88"
+    sha256 cellar: :any_skip_relocation, mojave:        "c0453ff5e5450402026b4480cab678f615673b5cbb7e0bdd066cc601418aff88"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5da052e738e69ae15c6ed1f71fb85fe77f31ad529b52ce4a69784408ea042fc2"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   resource "certifi" do
-    url "https://files.pythonhosted.org/packages/41/b6/4f0cefba47656583217acd6cd797bc2db1fede0d53090fdc28ad2c8e0716/certifi-2018.10.15.tar.gz"
-    sha256 "6d58c986d22b038c8c0df30d639f23a3e6d172a05c3583e766f4c0b785c0986a"
+    url "https://files.pythonhosted.org/packages/06/a9/cd1fd8ee13f73a4d4f491ee219deeeae20afefa914dfb4c130cfc9dc397a/certifi-2020.12.5.tar.gz"
+    sha256 "1a4995114262bffbc2413b159f2a1a480c969de6e6eb13ee966d470af86af59c"
   end
 
   resource "chardet" do
-    url "https://files.pythonhosted.org/packages/fc/bb/a5768c230f9ddb03acc9ef3f0d4a3cf93462473795d18e9535498c8f929d/chardet-3.0.4.tar.gz"
-    sha256 "84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae"
+    url "https://files.pythonhosted.org/packages/ee/2d/9cdc2b527e127b4c9db64b86647d567985940ac3698eeabc7ffaccb4ea61/chardet-4.0.0.tar.gz"
+    sha256 "0d6f53a15db4120f2b08c94f11e7d93d2c911ee118b6b30a04ec3ee8310179fa"
   end
 
   resource "idna" do
-    url "https://files.pythonhosted.org/packages/65/c4/80f97e9c9628f3cac9b98bfca0402ede54e0563b56482e3e6e45c43c4935/idna-2.7.tar.gz"
-    sha256 "684a38a6f903c1d71d6d5fac066b58d7768af4de2b832e426ec79c30daa94a16"
+    url "https://files.pythonhosted.org/packages/ea/b7/e0e3c1c467636186c39925827be42f16fee389dc404ac29e930e9136be70/idna-2.10.tar.gz"
+    sha256 "b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6"
   end
 
   resource "requests" do
-    url "https://files.pythonhosted.org/packages/97/10/92d25b93e9c266c94b76a5548f020f3f1dd0eb40649cb1993532c0af8f4c/requests-2.20.0.tar.gz"
-    sha256 "99dcfdaaeb17caf6e526f32b6a7b780461512ab3f1d992187801694cba42770c"
+    url "https://files.pythonhosted.org/packages/6b/47/c14abc08432ab22dc18b9892252efaf005ab44066de871e72a38d6af464b/requests-2.25.1.tar.gz"
+    sha256 "27973dd4a904a4f13b263a19c866c13b92a39ed1c964655f025f3f8d3d75b804"
   end
 
   resource "urllib3" do
-    url "https://files.pythonhosted.org/packages/a5/74/05ffd00b4b5c08306939c485869f5dc40cbc27357195b0a98b18e4c48893/urllib3-1.24.tar.gz"
-    sha256 "41c3db2fc01e5b907288010dec72f9d0a74e37d6994e6eb56849f59fea2265ae"
+    url "https://files.pythonhosted.org/packages/cb/cf/871177f1fc795c6c10787bc0e1f27bb6cf7b81dbde399fd35860472cecbc/urllib3-1.26.4.tar.gz"
+    sha256 "e7b021f7241115872f92f43c6508082facffbd1c048e3c6e2bb9c2a157e28937"
   end
 
   def install
-    xy = Language::Python.major_minor_version "python3"
-    ENV.prepend_create_path "PYTHONPATH", "#{libexec}/vendor/lib/python#{xy}/site-packages"
-    resources.each do |r|
-      r.stage do
-        system "python3", *Language::Python.setup_install_args(libexec/"vendor")
-      end
-    end
-
-    ENV.prepend_create_path "PYTHONPATH", "#{libexec}/lib/python#{xy}/site-packages"
-    system "python3", *Language::Python.setup_install_args(libexec)
-
+    virtualenv_install_with_resources
     man1.install gzip("git-review.1")
-
-    bin.install Dir[libexec/"bin/*"]
-    bin.env_script_all_files(libexec/"bin", :PYTHONPATH => ENV["PYTHONPATH"])
   end
 
   test do
     system "git", "init"
-    system "git", "remote", "add", "gerrit", "https://github.com/Homebrew/homebrew.github.io"
+    system "git", "config", "user.name", "BrewTestBot"
+    system "git", "config", "user.email", "BrewTestBot@test.com"
+    system "git", "remote", "add", "gerrit", "https://github.com/Homebrew/brew.sh"
     (testpath/".git/hooks/commit-msg").write "# empty - make git-review happy"
     (testpath/"foo").write "test file"
     system "git", "add", "foo"

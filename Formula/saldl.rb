@@ -1,16 +1,16 @@
 class Saldl < Formula
   desc "CLI downloader optimized for speed and early preview"
   homepage "https://saldl.github.io/"
-  url "https://github.com/saldl/saldl/archive/v40.tar.gz"
-  sha256 "1cb7950848517fb82ec39561bf36c8cbc0a0caf8fa85355a5b76cac0281346ce"
-  head "https://github.com/saldl/saldl.git", :shallow => false
+  url "https://github.com/saldl/saldl/archive/v41.tar.gz"
+  sha256 "fc9980922f1556fd54a8c04fd671933fdc5b1e6847c1493a5fec89e164722d8e"
+  license "AGPL-3.0"
+  head "https://github.com/saldl/saldl.git"
 
   bottle do
-    cellar :any
-    sha256 "1ee6fb03ae4d6f8268cbf63452d56657b3801bf98318d8d2877740401ce85707" => :mojave
-    sha256 "334bdb4450ab3325ad0b4d308a1b59ca452312335caee4f4a96a7258e523f266" => :high_sierra
-    sha256 "abfa30ca15849b2cc4a4ad592acef5123a736a0589f74a0719a0f61d4bcc9b85" => :sierra
-    sha256 "92835135c56b58d1902bc181e678d75e7175969894957ad67bdedcbf1b3059cc" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "2b965040a5e53c33801a86f8090a3339b8967903b1a11c3cc5b8bfca9e9de33c"
+    sha256 cellar: :any, big_sur:       "787ac1c4f96155b215ebc0eb06b6fbb404ac4dcca1cd88670c127ec1d504d709"
+    sha256 cellar: :any, catalina:      "9ac9aaa7e2882bcdb821c33c5bf7013b2ba1221242c1ad7d3da4e85d8febb324"
+    sha256 cellar: :any, mojave:        "3384921f2669ccb3e6021260c81b9494165ddf32f8f69dc0d4196910d4afe6be"
   end
 
   depends_on "asciidoc" => :build

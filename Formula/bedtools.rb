@@ -1,21 +1,29 @@
 class Bedtools < Formula
   desc "Tools for genome arithmetic (set theory on the genome)"
   homepage "https://github.com/arq5x/bedtools2"
-  url "https://github.com/arq5x/bedtools2/archive/v2.27.1.tar.gz"
-  sha256 "edcac089d84e63a51f85c3c189469daa7d42180272130b046856faad3cf79112"
+  url "https://github.com/arq5x/bedtools2/archive/v2.30.0.tar.gz"
+  sha256 "c575861ec746322961cd15d8c0b532bb2a19333f1cf167bbff73230a7d67302f"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d564e46ed6f3a6a559f829175d01780dd71162a9a83115c4e5022b7a095e0ae9" => :mojave
-    sha256 "ca1a234e9bcdb62f4c71aad27a12c1b286c0a0dd9101b22c8a55492c35b50a68" => :high_sierra
-    sha256 "96e8d3f30f6b0f542b2fa17ce324d82c7c2ed1c8c579007fd7138dbbae63188e" => :sierra
-    sha256 "56d2a63e1193f1326505c9a1829b7a4c6257261734a775fce0829cd7accb84f3" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "d43458d5a8f50a7db0f7f728ed82c0a980d9202126624d594d17c99c2c9ea76d"
+    sha256 cellar: :any,                 big_sur:       "6554348743d3efba64e47294f8cb229229f168902234dd7e0ee0b4dfa85bb4d7"
+    sha256 cellar: :any,                 catalina:      "32d302a56df9044ce36d44db851318fc4fb45676086e48a6d913f2286ae3a756"
+    sha256 cellar: :any,                 mojave:        "69b80814d21b11edf9d45d67de8536d5db965dd6743e56079e1f3d6cf77bb6d2"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b255c530815fd12473089bb12c3adfa1cb290dc40c802a8e4716b1ef434de4b5"
   end
 
+  depends_on "python@3.9" => :build
+  depends_on "xz"
+
+  uses_from_macos "bzip2"
+  uses_from_macos "zlib"
+
   def install
+    inreplace "Makefile", "python", "python3"
+
     system "make"
     system "make", "install", "prefix=#{prefix}"
-    prefix.install "RELEASE_HISTORY"
   end
 
   test do

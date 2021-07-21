@@ -1,10 +1,16 @@
 class Apktool < Formula
   desc "Tool for reverse engineering 3rd party, closed, binary Android apps"
   homepage "https://github.com/iBotPeaches/Apktool"
-  url "https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.3.4.jar"
-  sha256 "758b1bd58f9c9dd5ca85258d31c75f32e5878a502e3d75c66f3bfacf74b9dc1d"
+  url "https://github.com/iBotPeaches/Apktool/releases/download/v2.5.0/apktool_2.5.0.jar"
+  sha256 "b392d7cb99b592e9c5acc3c06f1b0f180edde96c66b86b3d6932b7c0c4079fe4"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "fea0563807b0211c31f9b5cc32b48dba850311bed253e507315fa2dd815a2bc5"
+  end
+
+  depends_on arch: :x86_64 # openjdk@8 doesn't support ARM
+  depends_on "openjdk@8"
 
   resource "sample.apk" do
     url "https://github.com/downloads/stephanenicolas/RoboDemo/robodemo-sample-1.0.1.apk"
@@ -13,7 +19,9 @@ class Apktool < Formula
 
   def install
     libexec.install "apktool_#{version}.jar"
-    bin.write_jar_script libexec/"apktool_#{version}.jar", "apktool"
+    (libexec/"bin").write_jar_script libexec/"apktool_#{version}.jar", "apktool"
+    (libexec/"bin/apktool").chmod 0755
+    (bin/"apktool").write_env_script libexec/"bin/apktool", Language::Java.java_home_env("1.8")
   end
 
   test do

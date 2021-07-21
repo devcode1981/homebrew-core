@@ -1,21 +1,26 @@
 class Flac < Formula
   desc "Free lossless audio codec"
   homepage "https://xiph.org/flac/"
-  url "https://downloads.xiph.org/releases/flac/flac-1.3.2.tar.xz"
-  mirror "https://downloads.sourceforge.net/project/flac/flac-src/flac-1.3.2.tar.xz"
-  sha256 "91cfc3ed61dc40f47f050a109b08610667d73477af6ef36dcad31c31a4a8d53f"
-  revision 1
+  url "https://downloads.xiph.org/releases/flac/flac-1.3.3.tar.xz"
+  mirror "https://ftp.osuosl.org/pub/xiph/releases/flac/flac-1.3.3.tar.xz"
+  sha256 "213e82bd716c9de6db2f98bcadbc4c24c7e2efe8c75939a1a84e28539c4e1748"
+
+  livecheck do
+    url "https://ftp.osuosl.org/pub/xiph/releases/flac/?C=M&O=D"
+    regex(/href=.*?flac[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "e3972de751c58d0b835ef606f5d21c4ef22bbac927b17f75440259fb2da06bd6" => :mojave
-    sha256 "b439d1a0321f9488ad0a2edfe3307402cca4e7f5e560a833078fa29561fadacd" => :high_sierra
-    sha256 "27aef309b675e9946f6ac4d090a0322d0888789087b2e38cbaaabc527eb3f22b" => :sierra
-    sha256 "17fb6eec1e71416a0000e507953babd4fca2a0204f48ae064d02b76b906dc096" => :el_capitan
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "0df3b501847bb370e70f11cd2758271048ad7caf9dd994e220bd2974fa162939"
+    sha256 cellar: :any, big_sur:       "2fd6b2eac2d88c39022752992baf18f4fa0deb43c1b27c57dc9d2349562c9514"
+    sha256 cellar: :any, catalina:      "3d33119f1e513ad58f20722e41498fc23315d756a834d8b346cee6842f45fea1"
+    sha256 cellar: :any, mojave:        "ffadc5a1825acd43aee92ea2523a1b46b3c63820f5cf59f61ee2972571454755"
+    sha256 cellar: :any, high_sierra:   "53562e93cd58b45d15fb5303938b1718298d69101a53612fd53075e881cbfc95"
   end
 
   head do
-    url "https://git.xiph.org/flac.git"
+    url "https://gitlab.xiph.org/xiph/flac.git"
 
     depends_on "autoconf" => :build
     depends_on "automake" => :build
@@ -25,11 +30,6 @@ class Flac < Formula
   depends_on "pkg-config" => :build
   depends_on "libogg"
 
-  fails_with :clang do
-    build 500
-    cause "Undefined symbols ___cpuid and ___cpuid_count"
-  end
-
   def install
     args = %W[
       --disable-dependency-tracking
@@ -37,16 +37,15 @@ class Flac < Formula
       --prefix=#{prefix}
       --enable-static
     ]
-
-    args << "--disable-asm-optimizations" if Hardware::CPU.is_32_bit?
-
     system "./autogen.sh" if build.head?
     system "./configure", *args
     system "make", "install"
   end
 
   test do
-    system "#{bin}/flac", "--decode", "--force-raw", "--endian=little", "--sign=signed", "--output-name=out.raw", test_fixtures("test.flac")
-    system "#{bin}/flac", "--endian=little", "--sign=signed", "--channels=1", "--bps=8", "--sample-rate=8000", "--output-name=out.flac", "out.raw"
+    system "#{bin}/flac", "--decode", "--force-raw", "--endian=little", "--sign=signed",
+                          "--output-name=out.raw", test_fixtures("test.flac")
+    system "#{bin}/flac", "--endian=little", "--sign=signed", "--channels=1", "--bps=8",
+                          "--sample-rate=8000", "--output-name=out.flac", "out.raw"
   end
 end

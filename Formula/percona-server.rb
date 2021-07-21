@@ -1,13 +1,20 @@
 class PerconaServer < Formula
   desc "Drop-in MySQL replacement"
   homepage "https://www.percona.com"
-  url "https://www.percona.com/downloads/Percona-Server-5.7/Percona-Server-5.7.24-26/source/tarball/percona-server-5.7.24-26.tar.gz"
-  sha256 "edc7f5fa1e8699ce1f91aaff34cc9d4d34395a85cb21702907f67754bb094a12"
+  url "https://www.percona.com/downloads/Percona-Server-8.0/Percona-Server-8.0.23-14/source/tarball/percona-server-8.0.23-14.tar.gz"
+  sha256 "613b8c110ede5cf67a7ac32e16556f4c67d8ad35263f4f8d6457ae0789074048"
+  license "BSD-3-Clause"
+
+  livecheck do
+    url "https://www.percona.com/downloads/Percona-Server-LATEST/"
+    regex(/value=.*?Percona-Server[._-]v?(\d+(?:\.\d+)+-\d+)["' >]/i)
+  end
 
   bottle do
-    sha256 "01f6974a168c79af93da9140ce756f6547e061ac92a97590cf83479dc32d9de6" => :mojave
-    sha256 "657fa456dfa99b1b8bb9852df861378b2ac3cbe2f123b89964c48fd701fa44bf" => :high_sierra
-    sha256 "2c377f9e407780fc3c672d4109dadc085f7dedf2c170a629baf82c832f0748b6" => :sierra
+    sha256 arm64_big_sur: "203f38588d3946e10b980ff4f2605daa3f7e796fc356382b07a08ea095a44f84"
+    sha256 big_sur:       "d011c254fc8c786d0733f15d13bac1def3cce54f7f4911f3136cff283aa882b4"
+    sha256 catalina:      "80c63a69c27d459ecc9a8cef46a863c26c214294fe53f864ed66e77f4b2364b5"
+    sha256 mojave:        "ac9341b8923f8d9bdfc4a673d71eac24d80314ddbb9c996140265c13bb4a5986"
   end
 
   pour_bottle? do
@@ -16,22 +23,36 @@ class PerconaServer < Formula
   end
 
   depends_on "cmake" => :build
-  # https://github.com/Homebrew/homebrew-core/issues/1475
-  # Needs at least Clang 3.3, which shipped alongside Lion.
-  # Note: MySQL themselves don't support anything below El Capitan.
-  depends_on :macos => :lion
-  depends_on "openssl"
+  depends_on "pkg-config" => :build
+  depends_on "icu4c"
+  depends_on "libevent"
+  depends_on "lz4"
+  depends_on "openssl@1.1"
+  depends_on "protobuf"
+  depends_on "zstd"
 
-  conflicts_with "mariadb", "mysql", "mysql-cluster",
-    :because => "percona, mariadb, and mysql install the same binaries."
-  conflicts_with "mysql-connector-c",
-    :because => "both install MySQL client libraries"
-  conflicts_with "mariadb-connector-c",
-    :because => "both install plugins"
+  uses_from_macos "curl"
+  uses_from_macos "libedit"
+  uses_from_macos "zlib"
 
+  on_linux do
+    depends_on "readline"
+  end
+
+  conflicts_with "mariadb", "mysql",
+    because: "percona, mariadb, and mysql install the same binaries"
+
+  # https://bugs.mysql.com/bug.php?id=86711
+  # https://github.com/Homebrew/homebrew-core/pull/20538
+  fails_with :clang do
+    build 800
+    cause "Wrong inlining with Clang 8.0, see MySQL Bug #86711"
+  end
+
+  # https://github.com/percona/percona-server/blob/Percona-Server-#{version}/cmake/boost.cmake
   resource "boost" do
-    url "https://downloads.sourceforge.net/project/boost/boost/1.59.0/boost_1_59_0.tar.bz2"
-    sha256 "727a932322d94287b62abb1bd2d41723eec4356a7728909e38adb65ca25241ca"
+    url "https://boostorg.jfrog.io/artifactory/main/release/1.73.0/source/boost_1_73_0.tar.bz2"
+    sha256 "4eb3b8d442b426dc35346235c8733b5ae35ba431690e38c6a8263dce9fcbb402"
   end
 
   # Where the database files should be located. Existing installs have them
@@ -42,26 +63,32 @@ class PerconaServer < Formula
   end
 
   def install
-    # Set HAVE_MEMSET_S flag to fix compilation
-    # https://bugs.launchpad.net/percona-server/+bug/1741647
-    ENV.prepend "CPPFLAGS", "-DHAVE_MEMSET_S=1"
-
-    # https://dev.mysql.com/doc/refman/5.7/en/source-configuration-options.html
     # -DINSTALL_* are relative to `CMAKE_INSTALL_PREFIX` (`prefix`)
     args = %W[
+      -DFORCE_INSOURCE_BUILD=1
       -DCOMPILATION_COMMENT=Homebrew
-      -DDEFAULT_CHARSET=utf8
-      -DDEFAULT_COLLATION=utf8_general_ci
+      -DDEFAULT_CHARSET=utf8mb4
+      -DDEFAULT_COLLATION=utf8mb4_0900_ai_ci
       -DINSTALL_DOCDIR=share/doc/#{name}
       -DINSTALL_INCLUDEDIR=include/mysql
       -DINSTALL_INFODIR=share/info
       -DINSTALL_MANDIR=share/man
       -DINSTALL_MYSQLSHAREDIR=share/mysql
-      -DINSTALL_PLUGINDIR=lib/plugin
+      -DINSTALL_PLUGINDIR=lib/percona-server/plugin
       -DMYSQL_DATADIR=#{datadir}
       -DSYSCONFDIR=#{etc}
+      -DENABLED_LOCAL_INFILE=1
+      -DWITH_EMBEDDED_SERVER=ON
+      -DWITH_INNODB_MEMCACHED=ON
+      -DWITH_UNIT_TESTS=OFF
       -DWITH_EDITLINE=system
-      -DWITH_SSL=yes
+      -DWITH_ICU=system
+      -DWITH_LIBEVENT=system
+      -DWITH_LZ4=system
+      -DWITH_PROTOBUF=system
+      -DWITH_SSL=#{Formula["openssl@1.1"].opt_prefix}
+      -DWITH_ZLIB=system
+      -DWITH_ZSTD=system
     ]
 
     # MySQL >5.7.x mandates Boost as a requirement to build & has a strict
@@ -78,14 +105,20 @@ class PerconaServer < Formula
     # https://bugs.launchpad.net/percona-server/+bug/1531446
     args.concat %w[-DWITHOUT_TOKUDB=1]
 
-    args << "-DWITH_UNIT_TESTS=OFF"
-
     system "cmake", ".", *std_cmake_args, *args
     system "make"
     system "make", "install"
 
     (prefix/"mysql-test").cd do
       system "./mysql-test-run.pl", "status", "--vardir=#{Dir.mktmpdir}"
+    end
+
+    on_macos do
+      # Remove libssl copies as the binaries use the keg anyway and they create problems for other applications
+      rm lib/"libssl.dylib"
+      rm lib/"libssl.1.1.dylib"
+      rm lib/"libcrypto.1.1.dylib"
+      rm lib/"libcrypto.dylib"
     end
 
     # Remove the tests directory
@@ -112,8 +145,12 @@ class PerconaServer < Formula
   end
 
   def post_install
-    # Make sure the datadir exists
-    datadir.mkpath
+    # Make sure the var/mysql directory exists
+    (var/"mysql").mkpath
+
+    # Don't initialize database, it clashes when testing other MySQL-like implementations.
+    return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+
     unless (datadir/"mysql/user.frm").exist?
       ENV["TMPDIR"] = nil
       system bin/"mysqld", "--initialize-insecure", "--user=#{ENV["USER"]}",
@@ -129,7 +166,7 @@ class PerconaServer < Formula
       To connect run:
           mysql -uroot
     EOS
-    if my_cnf = ["/etc/my.cnf", "/etc/mysql/my.cnf"].find { |x| File.exist? x }
+    if (my_cnf = ["/etc/my.cnf", "/etc/mysql/my.cnf"].find { |x| File.exist? x })
       s += <<~EOS
         A "#{my_cnf}" from another install may interfere with a Homebrew-built
         server starting up correctly.
@@ -138,49 +175,45 @@ class PerconaServer < Formula
     s
   end
 
-  plist_options :manual => "mysql.server start"
+  plist_options manual: "mysql.server start"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>KeepAlive</key>
-      <true/>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/mysqld_safe</string>
-        <string>--datadir=#{datadir}</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>WorkingDirectory</key>
-      <string>#{datadir}</string>
-    </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>KeepAlive</key>
+        <true/>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/mysqld_safe</string>
+          <string>--datadir=#{datadir}</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>WorkingDirectory</key>
+        <string>#{datadir}</string>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do
-    begin
-      # Expects datadir to be a completely clean dir, which testpath isn't.
-      dir = Dir.mktmpdir
-      system bin/"mysqld", "--initialize-insecure", "--user=#{ENV["USER"]}",
-      "--basedir=#{prefix}", "--datadir=#{dir}", "--tmpdir=#{dir}"
-
-      pid = fork do
-        exec bin/"mysqld", "--bind-address=127.0.0.1", "--datadir=#{dir}"
-      end
-      sleep 2
-
-      output = shell_output("curl 127.0.0.1:3306")
-      output.force_encoding("ASCII-8BIT") if output.respond_to?(:force_encoding)
-      assert_match version.to_s, output
-    ensure
-      Process.kill(9, pid)
-      Process.wait(pid)
+    (testpath/"mysql").mkpath
+    (testpath/"tmp").mkpath
+    system bin/"mysqld", "--no-defaults", "--initialize-insecure", "--user=#{ENV["USER"]}",
+      "--basedir=#{prefix}", "--datadir=#{testpath}/mysql", "--tmpdir=#{testpath}/tmp"
+    port = free_port
+    fork do
+      system "#{bin}/mysqld", "--no-defaults", "--user=#{ENV["USER"]}",
+        "--datadir=#{testpath}/mysql", "--port=#{port}", "--tmpdir=#{testpath}/tmp"
     end
+    sleep 5
+    assert_match "information_schema",
+      shell_output("#{bin}/mysql --port=#{port} --user=root --password= --execute='show databases;'")
+    system "#{bin}/mysqladmin", "--port=#{port}", "--user=root", "--password=", "shutdown"
   end
 end

@@ -1,24 +1,38 @@
 class Physfs < Formula
   desc "Library to provide abstract access to various archives"
   homepage "https://icculus.org/physfs/"
-  url "https://icculus.org/physfs/downloads/physfs-3.0.1.tar.bz2"
-  sha256 "b77b9f853168d9636a44f75fca372b363106f52d789d18a2f776397bf117f2f1"
-  head "https://hg.icculus.org/icculus/physfs/", :using => :hg
+  url "https://icculus.org/physfs/downloads/physfs-3.0.2.tar.bz2"
+  sha256 "304df76206d633df5360e738b138c94e82ccf086e50ba84f456d3f8432f9f863"
+  license "Zlib"
+  head "https://hg.icculus.org/icculus/physfs/", using: :hg
+
+  livecheck do
+    url "https://icculus.org/physfs/downloads/"
+    regex(/href=.*?physfs[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "4b2cf49af5b93bb1d0a0670ceccae84cb26c77a51c4e8230dd792c9da4dc0962" => :mojave
-    sha256 "03128f703af35b557fe9e6792dc93dec7b520e7d38a86b782cfdc5e00f850a71" => :high_sierra
-    sha256 "9549999aa9862efb9f59fd0448eef8bdfb458cef44367bad6a4fe436584e1977" => :sierra
-    sha256 "a8b9f8b640dc1aca30c1505fd738474f71f6122d86216bdaa33e4e3135d97367" => :el_capitan
+    rebuild 2
+    sha256 cellar: :any,                 arm64_big_sur: "065d120b86dd681aa4fb20c874456b1fbbae3b8428e2051cea9f49b9da01dceb"
+    sha256 cellar: :any,                 big_sur:       "f2348a828a9f32b6fdb78278c5ecd86c7f7bb4abf27032478b44cd4db6338b0c"
+    sha256 cellar: :any,                 catalina:      "be794e8986be384f98e3d4d14a4fe3830428084febea0caff4bba5c363e890c6"
+    sha256 cellar: :any,                 mojave:        "03f4a5a5ed440e3b39e91af11ac4470f07ce742f844d188bca3e58becfd24f3a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e9be8022f4ef1cc79e8bbf71a4df0c7589ace1162f316b6c481f49ce8c67d3dc"
   end
 
   depends_on "cmake" => :build
+
+  uses_from_macos "zip" => :test
+
+  on_linux do
+    depends_on "readline"
+  end
 
   def install
     mkdir "macbuild" do
       args = std_cmake_args
       args << "-DPHYSFS_BUILD_TEST=TRUE"
+      args << "-DCMAKE_INSTALL_RPATH=#{rpath}"
       args << "-DPHYSFS_BUILD_WX_TEST=FALSE" unless build.head?
       system "cmake", "..", *args
       system "make", "install"
@@ -32,6 +46,12 @@ class Physfs < Formula
       addarchive test.zip 1
       cat test.txt
     EOS
-    assert_match /Successful\.\nhomebrew/, shell_output("#{bin}/test_physfs < test 2>&1")
+    output = shell_output("#{bin}/test_physfs < test 2>&1")
+    on_macos do
+      assert_match "Successful.\nhomebrew", output
+    end
+    on_linux do
+      assert_match "Successful.\n> cat test.txt\nhomebrew", output
+    end
   end
 end

@@ -1,28 +1,52 @@
 class Visp < Formula
   desc "Visual Servoing Platform library"
   homepage "https://visp.inria.fr/"
-  url "https://gforge.inria.fr/frs/download.php/latestfile/475/visp-3.1.0.tar.gz"
-  sha256 "2a1df8195b06f9a057bd4c7d987697be2fdcc9d169e8d550fcf68e5d7f129d96"
-  revision 1
+  url "https://visp-doc.inria.fr/download/releases/visp-3.4.0.tar.gz"
+  sha256 "6c12bab1c1ae467c75f9e5831e01a1f8912ab7eae64249faf49d3a0b84334a77"
+  license "GPL-2.0-or-later"
+  revision 2
+
+  livecheck do
+    url "https://visp.inria.fr/download/"
+    regex(/href=.*?visp[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "86af46cedc6f6240d1e4f58f89909433936639989d3d6b35799524ddb654ff7b" => :mojave
-    sha256 "2d916fcddfe30085b591e9a0e343bc2d14de281eb907c20279c054d64bf30305" => :high_sierra
-    sha256 "8e3ef1fde35fccc12e4c3bfb2e8615ce0150bd19c2c5bc4251a991d125392e6b" => :sierra
-    sha256 "c3476bb04f41c009a86afaa24c5f7943627b5696d8613b323afaaf7894b9e257" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "f3ed6c3a6521e69df0398fd6b822946af0c954c2e2ccb81d7e62776aa31d393b"
+    sha256 cellar: :any, big_sur:       "1a511a538ba33f04f5f40e777102c178b5239730dabbf3f552079f781c340c0a"
+    sha256 cellar: :any, catalina:      "acaabe9ce5e6d1e18dd850ce4b27a765646483805110b6616763feeff74638ef"
+    sha256 cellar: :any, mojave:        "85f4ff32b4e5c5dbb38e5905496ddf21f84a6fc8034b3c6d10007d3b305d3ae2"
   end
 
   depends_on "cmake" => :build
+  depends_on "pkg-config" => :build
   depends_on "eigen"
   depends_on "gsl"
   depends_on "jpeg"
   depends_on "libdc1394"
   depends_on "libpng"
   depends_on "opencv"
+  depends_on "pcl"
   depends_on "zbar"
 
+  uses_from_macos "libxml2"
+  uses_from_macos "zlib"
+
+  # Fix Apple Silicon build
+  patch :DATA
+
   def install
-    sdk = MacOS::CLT.installed? ? "" : MacOS.sdk_path
+    ENV.cxx11
+
+    # Avoid superenv shim references
+    inreplace "CMakeLists.txt" do |s|
+      s.sub!(/CMake build tool:"\s+\${CMAKE_BUILD_TOOL}/,
+             "CMake build tool:            gmake\"")
+      s.sub!(/C\+\+ Compiler:"\s+\${VISP_COMPILER_STR}/,
+             "C++ Compiler:                clang++\"")
+      s.sub!(/C Compiler:"\s+\${CMAKE_C_COMPILER}/,
+             "C Compiler:                  clang\"")
+    end
 
     system "cmake", ".", "-DBUILD_DEMOS=OFF",
                          "-DBUILD_EXAMPLES=OFF",
@@ -40,33 +64,42 @@ class Visp < Formula
                          "-DUSE_JPEG=ON",
                          "-DJPEG_INCLUDE_DIR=#{Formula["jpeg"].opt_include}",
                          "-DJPEG_LIBRARY=#{Formula["jpeg"].opt_lib}/libjpeg.dylib",
-                         "-DUSE_LAPACK=OFF",
+                         "-DUSE_LAPACK=ON",
                          "-DUSE_LIBUSB_1=OFF",
                          "-DUSE_OPENCV=ON",
                          "-DOpenCV_DIR=#{Formula["opencv"].opt_share}/OpenCV",
-                         "-DUSE_PCL=OFF",
+                         "-DUSE_PCL=ON",
                          "-DUSE_PNG=ON",
                          "-DPNG_PNG_INCLUDE_DIR=#{Formula["libpng"].opt_include}",
                          "-DPNG_LIBRARY_RELEASE=#{Formula["libpng"].opt_lib}/libpng.dylib",
                          "-DUSE_PTHREAD=ON",
-                         "-DPTHREAD_INCLUDE_DIR=#{sdk}/usr/include",
-                         "-DPTHREAD_LIBRARY=/usr/lib/libpthread.dylib",
                          "-DUSE_PYLON=OFF",
                          "-DUSE_REALSENSE=OFF",
                          "-DUSE_REALSENSE2=OFF",
                          "-DUSE_X11=OFF",
                          "-DUSE_XML2=ON",
-                         "-DXML2_INCLUDE_DIR=#{sdk}/usr/include/libxml2",
-                         "-DXML2_LIBRARY=/usr/lib/libxml2.dylib",
                          "-DUSE_ZBAR=ON",
                          "-DZBAR_INCLUDE_DIRS=#{Formula["zbar"].opt_include}",
                          "-DZBAR_LIBRARIES=#{Formula["zbar"].opt_lib}/libzbar.dylib",
                          "-DUSE_ZLIB=ON",
-                         "-DZLIB_INCLUDE_DIR=#{sdk}/usr/include",
-                         "-DZLIB_LIBRARY_RELEASE=/usr/lib/libz.dylib",
-                         "-DWITH_LAPACK=OFF",
                          *std_cmake_args
+
+    # Replace generated references to OpenCV's Cellar path
+    opencv = Formula["opencv"]
+    opencv_references = Dir[
+      "CMakeCache.txt",
+      "CMakeFiles/Export/lib/cmake/visp/VISPModules.cmake",
+      "VISPConfig.cmake",
+      "VISPGenerateConfigScript.info.cmake",
+      "VISPModules.cmake",
+      "modules/**/flags.make",
+      "unix-install/VISPConfig.cmake",
+    ]
+    inreplace opencv_references, opencv.prefix.realpath, opencv.opt_prefix
     system "make", "install"
+
+    # Make sure software built against visp don't reference opencv's cellar path either
+    inreplace lib/"pkgconfig/visp.pc", opencv.prefix.realpath, opencv.opt_prefix
   end
 
   test do
@@ -84,3 +117,29 @@ class Visp < Formula
     assert_equal version.to_s, shell_output("./test").chomp
   end
 end
+
+__END__
+diff --git a/3rdparty/simdlib/Simd/SimdEnable.h b/3rdparty/simdlib/Simd/SimdEnable.h
+index a5ca71702..6c79eb0d9 100644
+--- a/3rdparty/simdlib/Simd/SimdEnable.h
++++ b/3rdparty/simdlib/Simd/SimdEnable.h
+@@ -44,8 +44,8 @@
+ #include <TargetConditionals.h>             // To detect OSX or IOS using TARGET_OS_IPHONE or TARGET_OS_IOS macro
+ #endif
+
+-// The following includes <sys/auxv.h> and <asm/hwcap.h> are not available for iOS.
+-#if (TARGET_OS_IOS == 0) // not iOS
++// The following includes <sys/auxv.h> and <asm/hwcap.h> are not available for macOS, iOS.
++#if !defined(__APPLE__) // not macOS, iOS
+ #if defined(SIMD_PPC_ENABLE) || defined(SIMD_PPC64_ENABLE) || defined(SIMD_ARM_ENABLE) || defined(SIMD_ARM64_ENABLE)
+ #include <unistd.h>
+ #include <fcntl.h>
+@@ -124,7 +124,7 @@ namespace Simd
+     }
+ #endif//defined(SIMD_X86_ENABLE) || defined(SIMD_X64_ENABLE)
+
+-#if (TARGET_OS_IOS == 0) // not iOS
++#if !defined(__APPLE__) // not macOS, iOS
+ #if defined(__GNUC__) && (defined(SIMD_PPC_ENABLE) || defined(SIMD_PPC64_ENABLE) || defined(SIMD_ARM_ENABLE) || defined(SIMD_ARM64_ENABLE))
+     namespace CpuInfo
+     {

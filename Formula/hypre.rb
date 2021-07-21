@@ -1,35 +1,30 @@
 class Hypre < Formula
   desc "Library featuring parallel multigrid methods for grid problems"
-  homepage "https://computation.llnl.gov/casc/hypre/software.html"
-  url "https://computation.llnl.gov/projects/hypre-scalable-linear-solvers-multigrid-methods/download/hypre-2.11.2.tar.gz"
-  sha256 "25b6c1226411593f71bb5cf3891431afaa8c3fd487bdfe4faeeb55c6fdfb269e"
-  revision 3
-  head "https://github.com/LLNL/hypre.git"
+  homepage "https://computing.llnl.gov/projects/hypre-scalable-linear-solvers-multigrid-methods"
+  url "https://github.com/hypre-space/hypre/archive/v2.22.0.tar.gz"
+  sha256 "2c786eb5d3e722d8d7b40254f138bef4565b2d4724041e56a8fa073bda5cfbb5"
+  license any_of: ["MIT", "Apache-2.0"]
+  head "https://github.com/hypre-space/hypre.git"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "01be3b67dc76cde96a42254a49b1bf14cdbf87e841ded452d9d50f7883eccbfd" => :mojave
-    sha256 "7b0ee7e6a754e583739aa29b055d812a4d77834c0871e38c38f931731c860818" => :high_sierra
-    sha256 "1702f97e71696f76192e2be7719020999810984515e777964053c2f6d2541ddb" => :sierra
-    sha256 "9f8162b5b6119c7a1015388a054415c5d77fae6cf37a24b4bd58b7e3d0ef885b" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d8efc39a64885386f230bb87dee3f21fb01066ea6435e3e26df806e170c4f40e"
+    sha256 cellar: :any_skip_relocation, big_sur:       "279ec7e7f7d7cb9f35726400670bf712fdcb4ff90b41ed8fa3f6b6044825385f"
+    sha256 cellar: :any_skip_relocation, catalina:      "aea86f07dd1a186e92cb3bab3724da406ddd9fb52296e5c0c3e00325ffefc8fb"
+    sha256 cellar: :any_skip_relocation, mojave:        "6e1d4bca68208860dcaec185ca1a1fcf90ef97e1ea7918868d6d7152833c147d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "14347d2805d8c264f0059a9d1da1c560a148380e0dcadc1da72c9438cdbedd29"
   end
 
   depends_on "gcc" # for gfortran
   depends_on "open-mpi"
-  depends_on "veclibfort"
 
   def install
     cd "src" do
-      ENV["CC"] = ENV["MPICC"]
-      ENV["CXX"] = ENV["MPICXX"]
-
       system "./configure", "--prefix=#{prefix}",
-                            "--with-blas=yes",
-                            "--with-blas-libs=blas cblas",
-                            "--with-blas-lib-dirs=/usr/lib",
-                            "--with-lapack=yes",
-                            "--with-lapack-libs=lapack clapack f77lapack",
-                            "--with-lapack-lib-dirs=/usr/lib",
                             "--with-MPI",
                             "--enable-bigint"
       system "make", "install"
@@ -44,7 +39,7 @@ class Hypre < Formula
       }
     EOS
 
-    system ENV.cc, "test.cpp", "-o", "test"
+    system ENV.cxx, "test.cpp", "-o", "test"
     system "./test"
   end
 end

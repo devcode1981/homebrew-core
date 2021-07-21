@@ -1,19 +1,21 @@
 class Singular < Formula
   desc "Computer algebra system for polynomial computations"
   homepage "https://www.singular.uni-kl.de/"
-  url "https://www.mathematik.uni-kl.de/ftp/pub/Math/Singular/SOURCES/4-1-1/singular-4.1.1.tar.gz"
-  sha256 "3792c5707b60c1748298bf47e2277de20303d60563b797372cc0e1eff4bbc583"
-  revision 5
+  url "https://service.mathematik.uni-kl.de/ftp/pub/Math/Singular/src/4-2-0/singular-4.2.0.tar.gz"
+  sha256 "5b0f6c036b4a6f58bf620204b004ec6ca3a5007acc8352fec55eade2fc9d63f6"
+  license "GPL-2.0"
+  revision 2
 
   bottle do
-    sha256 "5066f4d8f37460e4c742448904bc0ab86f6c80a33403a8166519e2106d1269c6" => :mojave
-    sha256 "26d97d795cb78e7970766a0838d82cdb83bab2c6364cd0335a35ad8b818ac2c2" => :high_sierra
-    sha256 "d59170be2fc20723900b78e780efc5b56857eae053683b4e5d52670d5db5e1bc" => :sierra
-    sha256 "a31f9779b2572c5e15f8f667c4ab4e32e3c89214d4488193cca66637b36e31c0" => :el_capitan
+    sha256 arm64_big_sur: "b3bcbed0cffc2751cb4e7422987dae763c7bb5fefb6da4e172182296f56d3f1d"
+    sha256 big_sur:       "a344fa6e1ecd01461fa59ddb95863581b85749ef9802f3d6f7d79032b26cf9e8"
+    sha256 catalina:      "7b9172e57c84672c1aa97a2a09e075a193a064fa3af3678df79b33e0fb0565ef"
+    sha256 mojave:        "9bfe6a7938e60280130ba2042a6c1a95840dcadaf65832b5aa6906e738263fe3"
+    sha256 x86_64_linux:  "37c4ecf472f68670c963b85fb8271aa8e9baabd274e77872af5aa2aa185ec477"
   end
 
   head do
-    url "https://github.com/Singular/Sources.git"
+    url "https://github.com/Singular/Singular.git", branch: "spielwiese"
 
     depends_on "autoconf" => :build
     depends_on "automake" => :build
@@ -23,6 +25,7 @@ class Singular < Formula
   depends_on "gmp"
   depends_on "mpfr"
   depends_on "ntl"
+  depends_on "python@3.9"
 
   def install
     system "./autogen.sh" if build.head?
@@ -30,6 +33,7 @@ class Singular < Formula
                           "--disable-dependency-tracking",
                           "--disable-silent-rules",
                           "--prefix=#{prefix}",
+                          "--with-python=#{Formula["python@3.9"].opt_bin}/python3",
                           "CXXFLAGS=-std=c++11"
     system "make", "install"
   end

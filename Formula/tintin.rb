@@ -1,20 +1,30 @@
 class Tintin < Formula
   desc "MUD client"
-  homepage "https://tintin.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/tintin/TinTin%2B%2B%20Source%20Code/2.01.4/tintin-2.01.4.tar.gz"
-  sha256 "dd22afbff45a93ec399065bae385489131af7e1b6ae8abb28f80d6a03b82ebbc"
-  revision 2
+  homepage "https://tintin.mudhalla.net/"
+  url "https://github.com/scandum/tintin/releases/download/2.02.11/tintin-2.02.11.tar.gz"
+  sha256 "b39289ef1e26d2f5b7f7e33f70bcd894060c95dd96c157bb976f063c59a8b1f5"
+  license "GPL-3.0-or-later"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any
-    sha256 "fbdf58d5dbba8cf3acf14c2691b7bc2408ef46cc2d1d720ee2baf0386da95f12" => :mojave
-    sha256 "552223fd7efc3d68a99a1d49135a6537091f0d893e67f08eaf876e2385a0460d" => :high_sierra
-    sha256 "58dbcc694fb3b80f10951d06f24fb4fd0e94eac1a3dc84017cd82e38610ff6a7" => :sierra
-    sha256 "bd1fe99b7c2a458acd81a5a567ba57c664c99f9f5f73adb8845bae7d7363a151" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "07e798401b8b564e0a73800dcbf7838db211fc7206e678da8f62e40c6317e284"
+    sha256 cellar: :any,                 big_sur:       "75d0d24c05851877e7542fca80f3e254cc8c4502946a6cc09b2cfd9cab6a94ae"
+    sha256 cellar: :any,                 catalina:      "9a9660684f30f8263a4d3502af6cc0fd6d78d088404cd4804813cf0fd6b19d13"
+    sha256 cellar: :any,                 mojave:        "5f4883e59f5d48c351fb8c0db259dd026a0aa8c456c3ddbec349793c651f6220"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "97c74f2c3121c0abd0d108af6d058eb96c94197be091b87b1e6f23f426bca1f1"
   end
 
   depends_on "gnutls"
   depends_on "pcre"
+
+  # Fix for `error: use of undeclared identifier 'environ'`.
+  # Already applied upstream.
+  # https://github.com/scandum/tintin/issues/47
+  patch :DATA
 
   def install
     # find Homebrew's libpcre
@@ -30,10 +40,33 @@ class Tintin < Formula
   end
 
   test do
-    require "pty"
-    (testpath/"input").write("#end {bye}\n")
-    PTY.spawn(bin/"tt++", "-G", "input") do |r, _w, _pid|
-      assert_match "Goodbye", r.read
-    end
+    assert_match version.to_s, shell_output("#{bin}/tt++ -V", 1)
   end
 end
+
+__END__
+diff --git a/src/data.c b/src/data.c
+index 34401f8..cf23f58 100644
+--- a/src/data.c
++++ b/src/data.c
+@@ -27,6 +27,8 @@
+
+ #include <limits.h>
+
++extern char **environ;
++
+ struct listroot *init_list(struct session *ses, int type, int size)
+ {
+ 	struct listroot *listhead;
+diff --git a/src/scan.c b/src/scan.c
+index 7c46890..b036e9f 100644
+--- a/src/scan.c
++++ b/src/scan.c
+@@ -33,6 +33,7 @@
+   #endif
+ #endif
+ #include <dirent.h>
++#include <limits.h>
+ 
+ #define DO_SCAN(scan) struct session *scan(struct session *ses, FILE *fp, char *arg, char *arg1, char *arg2)
+ 

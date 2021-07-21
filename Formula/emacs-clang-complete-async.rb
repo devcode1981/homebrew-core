@@ -1,7 +1,8 @@
 class EmacsClangCompleteAsync < Formula
   desc "Emacs plugin using libclang to complete C/C++ code"
   homepage "https://github.com/Golevka/emacs-clang-complete-async"
-  revision 4
+  license "GPL-3.0"
+  revision 5
   head "https://github.com/Golevka/emacs-clang-complete-async.git"
 
   stable do
@@ -13,26 +14,26 @@ class EmacsClangCompleteAsync < Formula
   end
 
   bottle do
-    sha256 "18f453799c1a970ed786f58def3826c9ad07d67fd099a3335f42bb9f08c4d60d" => :mojave
-    sha256 "0ba317a80f92e3edc59b0e9205cd4854f2b8debcec89e7844c6c4a82570b9b1e" => :high_sierra
-    sha256 "75d385e6d09ad1ca380891f2835d07ba1eaf3091ab0d82d063a4c977464d5cd0" => :sierra
-    sha256 "9501489cb080eef8a51eb5d3891df8d75f1ccb2211b5d1e95e4ac52c031ab191" => :el_capitan
+    sha256 arm64_big_sur: "1aa78bbcd4d00d0b93ff4cd24c4c4713937acd6759264e50bc180292ed6336a5"
+    sha256 big_sur:       "9f3d6f44651fe4c55baaa1e75d3948d3506932f669cb02490d2218d2edda494c"
+    sha256 catalina:      "d0582c74bee8c8379cd6aed9d150d38473323fb1993c7219536f1a783d1fadeb"
+    sha256 mojave:        "3e57ed30a99d26abf1dfe26989adfa19b258fe4c7e372eac8469566ac89be31b"
+    sha256 high_sierra:   "628ef0dce4d14042267c54e8baa1c20b594c7853f23ac35c012a5a6a2f506880"
+    sha256 sierra:        "3161dd4faf73ca236e5258011e2bd6229706a01dea444fbd2fa22de05070c0d1"
   end
-
-  option "with-elisp", "Include Emacs lisp package"
 
   depends_on "llvm"
 
   # https://github.com/Golevka/emacs-clang-complete-async/pull/59
   patch do
-    url "https://github.com/yocchi/emacs-clang-complete-async/commit/5ce197b15d7b8c9abfc862596bf8d902116c9efe.diff?full_index=1"
-    sha256 "ba3bbb1ebbfdbf430d18cc79b9918ca500eb4d6949e0479a24016e46fe5a920c"
+    url "https://github.com/yocchi/emacs-clang-complete-async/commit/5ce197b15d7b8c9abfc862596bf8d902116c9efe.patch?full_index=1"
+    sha256 "f5057f683a9732c36fea206111507e0e373e76ee58483e6e09a0302c335090d0"
   end
 
   def install
     system "make"
     bin.install "clang-complete"
-    share.install "auto-complete-clang-async.el" if build.with? "elisp"
+    share.install "auto-complete-clang-async.el"
   end
 end
 

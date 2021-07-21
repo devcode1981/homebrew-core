@@ -1,19 +1,18 @@
 class Profanity < Formula
   desc "Console based XMPP client"
-  homepage "http://www.profanity.im/"
-  url "http://www.profanity.im/profanity-0.5.1.tar.gz"
-  sha256 "e3513713e74ec3363fbdbac2919bdc17e249988780cc5a4589d1425807a7feb8"
-  revision 1
+  homepage "https://profanity-im.github.io"
+  url "https://profanity-im.github.io/profanity-0.11.0.tar.gz"
+  sha256 "3fc9809816f69186dbb860b27183f6cd2aef0a52a7d14e20e4ef6c3a7f0f3606"
+  license "GPL-3.0-or-later"
 
   bottle do
-    sha256 "51cfcfe6bd1cbada4749999ae0dd26a9285b8f8c7e756dc7e38ca879394792b4" => :mojave
-    sha256 "c97ecd459069c638acb346488507b3f216c485d5667f3999875b8166e2e36fef" => :high_sierra
-    sha256 "50e1f4970c62dfd02c0c0fe5f439d87d18d6de276fdc2982c7713b74a57e38d9" => :sierra
-    sha256 "90d81d6a2f308a5ae8a0ed69abcea2e4ed531f3d237600b51d41406c705f6443" => :el_capitan
+    sha256 big_sur:  "969adf8ec31291af0845c5908d3aff338fd941dc3b938ece43a1962357f53622"
+    sha256 catalina: "76b3363d89c561b19cb9ac9a10fa1e81b433545400a2aa0f648b9541a1ffd7bb"
+    sha256 mojave:   "cb5376e9ccd4f1b0f43d5c5f43cf9677f6b87f47a649224b7a2cb41da8a913e9"
   end
 
   head do
-    url "https://github.com/boothj5/profanity.git"
+    url "https://github.com/profanity-im/profanity.git"
 
     depends_on "autoconf" => :build
     depends_on "autoconf-archive" => :build
@@ -22,17 +21,24 @@ class Profanity < Formula
   end
 
   depends_on "pkg-config" => :build
+  depends_on "python@3.9" => :build
+  depends_on "curl"
   depends_on "glib"
   depends_on "gnutls"
   depends_on "gpgme"
   depends_on "libotr"
+  depends_on "libsignal-protocol-c"
   depends_on "libstrophe"
-  depends_on "openssl"
-  depends_on "ossp-uuid"
+  depends_on "openssl@1.1"
   depends_on "readline"
-  depends_on "terminal-notifier"
+
+  on_macos do
+    depends_on "terminal-notifier"
+  end
 
   def install
+    ENV.prepend_path "PATH", Formula["python@3.9"].opt_libexec/"bin"
+
     system "./bootstrap.sh" if build.head?
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",

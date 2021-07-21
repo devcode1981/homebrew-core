@@ -1,21 +1,19 @@
 class Grep < Formula
   desc "GNU grep, egrep and fgrep"
   homepage "https://www.gnu.org/software/grep/"
-  url "https://ftp.gnu.org/gnu/grep/grep-3.1.tar.xz"
-  mirror "https://ftpmirror.gnu.org/grep/grep-3.1.tar.xz"
-  sha256 "db625c7ab3bb3ee757b3926a5cfa8d9e1c3991ad24707a83dde8a5ef2bf7a07e"
+  url "https://ftp.gnu.org/gnu/grep/grep-3.6.tar.xz"
+  mirror "https://ftpmirror.gnu.org/grep/grep-3.6.tar.xz"
+  sha256 "667e15e8afe189e93f9f21a7cd3a7b3f776202f417330b248c2ad4f997d9373e"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "151b6433e22f799b0a3b4bcd68e98d96333a46fd1e0a4c7be2cf90c443207ff5" => :mojave
-    sha256 "17972d85803a24a567b92b1b25df46c5510684fe7ca64f29e277d27f9ca134b2" => :high_sierra
-    sha256 "65cb0f628d3678c4dd7bf6af1c736d717c1eb8975e203619123379447063fec1" => :sierra
-    sha256 "1556c6afb5cbc430e647e70fcd521ce42e203a0c5833cb6a2c6be4413b200c3b" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "a48ab26324b25a6033372f26490b09e7e0569f76a4b7f85bdd0aa9a3fc996537"
+    sha256 cellar: :any,                 big_sur:       "6ee2dac30a5250d7d218b6520392b4cb8e7a806149f900e11637e556e6a9237a"
+    sha256 cellar: :any,                 catalina:      "78c2b965ced34a99ac47d3058a3971b9696a6157215c82edd16562d6ec6fc689"
+    sha256 cellar: :any,                 mojave:        "80a62eaefb57437bcb3aeb1d8489b9bf062ec77184624249da27afc578be1315"
+    sha256 cellar: :any,                 high_sierra:   "ae3cfbe66d6391edd32153f9b02e3da1286482dd196a18da017903a0bd4e7cf7"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d256494db01809327bcbe122bae1157c252084b2b42754388b675051918b2705"
   end
-
-  option "with-default-names", "Do not prepend 'g' to the binary"
-  deprecated_option "default-names" => "with-default-names"
 
   depends_on "pkg-config" => :build
   depends_on "pcre"
@@ -30,45 +28,49 @@ class Grep < Formula
       --with-packager=Homebrew
     ]
 
-    args << "--program-prefix=g" if build.without? "default-names"
-
+    on_macos do
+      args << "--program-prefix=g"
+    end
     system "./configure", *args
     system "make"
     system "make", "install"
 
-    if build.without? "default-names"
-      (libexec/"gnubin").install_symlink bin/"ggrep" => "grep"
-      (libexec/"gnubin").install_symlink bin/"gegrep" => "egrep"
-      (libexec/"gnubin").install_symlink bin/"gfgrep" => "fgrep"
-
-      (libexec/"gnuman/man1").install_symlink man1/"ggrep.1" => "grep.1"
-      (libexec/"gnuman/man1").install_symlink man1/"gegrep.1" => "egrep.1"
-      (libexec/"gnuman/man1").install_symlink man1/"gfgrep.1" => "fgrep.1"
+    on_macos do
+      %w[grep egrep fgrep].each do |prog|
+        (libexec/"gnubin").install_symlink bin/"g#{prog}" => prog
+        (libexec/"gnuman/man1").install_symlink man1/"g#{prog}.1" => "#{prog}.1"
+      end
     end
+
+    libexec.install_symlink "gnuman" => "man"
   end
 
   def caveats
-    if build.without? "default-names" then <<~EOS
-      The command has been installed with the prefix "g".
-      If you do not want the prefix, install using the "with-default-names"
-      option.
-
-      If you need to use these commands with their normal names, you
-      can add a "gnubin" directory to your PATH from your bashrc like:
-        PATH="#{opt_libexec}/gnubin:$PATH"
-
-      Additionally, you can access their man pages with normal names if you add
-      the "gnuman" directory to your MANPATH from your bashrc as well:
-        MANPATH="#{opt_libexec}/gnuman:$MANPATH"
-    EOS
+    on_macos do
+      <<~EOS
+        All commands have been installed with the prefix "g".
+        If you need to use these commands with their normal names, you
+        can add a "gnubin" directory to your PATH from your bashrc like:
+          PATH="#{opt_libexec}/gnubin:$PATH"
+      EOS
     end
   end
 
   test do
     text_file = testpath/"file.txt"
     text_file.write "This line should be matched"
-    cmd = build.with?("default-names") ? "grep" : "ggrep"
-    grepped = shell_output("#{bin}/#{cmd} match #{text_file}")
-    assert_match "should be matched", grepped
+
+    on_macos do
+      grepped = shell_output("#{bin}/ggrep match #{text_file}")
+      assert_match "should be matched", grepped
+
+      grepped = shell_output("#{opt_libexec}/gnubin/grep match #{text_file}")
+      assert_match "should be matched", grepped
+    end
+
+    on_linux do
+      grepped = shell_output("#{bin}/grep match #{text_file}")
+      assert_match "should be matched", grepped
+    end
   end
 end

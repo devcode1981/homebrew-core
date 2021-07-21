@@ -1,27 +1,26 @@
 class Spin < Formula
-  desc "The efficient verification tool of multi-threaded software"
+  desc "Efficient verification tool of multi-threaded software"
   homepage "https://spinroot.com/spin/whatispin.html"
-  url "https://spinroot.com/spin/Src/spin648.tar.gz"
-  version "6.4.8"
-  sha256 "0035bb114157a759e047c7f94ede0a3d7149003893914c9bbdff45e074ab6ae7"
+  url "https://github.com/nimble-code/Spin/archive/version-6.5.2.tar.gz"
+  sha256 "e46a3bd308c4cd213cc466a8aaecfd5cedc02241190f3cb9a1d1b87e5f37080a"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "7e4e65759c869d3b4964139b731725f4b6aba48ee722f5ed8824f92a8b097b77" => :mojave
-    sha256 "11dcb2192a287c7bdbdbf7109add8ffb9c33161b12b4342c9feef21fd16269d1" => :high_sierra
-    sha256 "5d881e899d308eee2c72c19050d61f70c53b439d7cb5b188dd6e104345a6fa35" => :sierra
-    sha256 "f64e72a5667316b47f32d7c1af206a7735708bbbb1a02e7d6d752d1e7e63b3ad" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "4f8951592f6d019eafb6466a4e991c7437d13a699af047bbbbfd0bc4fdcb82bf"
+    sha256 cellar: :any_skip_relocation, big_sur:       "d49e61e18c0c65108a64d3e0c91addbd011b3fff90434509958ebfe33b14c6cd"
+    sha256 cellar: :any_skip_relocation, catalina:      "6432ab186b64f64851fa0f60dae53c13b6c9bfbc6195c41abc08f1ddfd824bf6"
+    sha256 cellar: :any_skip_relocation, mojave:        "eae932021ba8a15f713dd60ca2a29267f5df53a832895c5ab1a342d2568c6f45"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "3ffbbe34633fa0e177bd25343b3bbd35d706988ab04c4a617fff530cf3dc542a"
   end
 
-  def install
-    ENV.deparallelize
+  uses_from_macos "bison" => :build
 
-    cd "Src#{version}" do
+  def install
+    cd "Src" do
       system "make"
       bin.install "spin"
     end
 
-    bin.install "iSpin/ispin.tcl" => "ispin"
     man1.install "Man/spin.1"
   end
 
@@ -42,6 +41,6 @@ class Spin < Formula
       }
     EOS
     output = shell_output("#{bin}/spin #{testpath}/test.pml")
-    assert_match /language is golang/, output
+    assert_match "language is golang", output
   end
 end

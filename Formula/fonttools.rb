@@ -3,25 +3,32 @@ class Fonttools < Formula
 
   desc "Library for manipulating fonts"
   homepage "https://github.com/fonttools/fonttools"
-  url "https://github.com/fonttools/fonttools/releases/download/3.33.0/fonttools-3.33.0.zip"
-  sha256 "f809b33c9124f6b06c9915bedb8c7a28c8201028e55546995e997937aaa1dea4"
+  url "https://files.pythonhosted.org/packages/9a/93/e3f03ca37e97246612109ec04f3ea06f0d7b70267866b0d96d06782e1f4e/fonttools-4.25.1.zip"
+  sha256 "86ac279648828beec635731c338b40cadca9681a7653653a84fc85fd6be60083"
+  license "MIT"
   head "https://github.com/fonttools/fonttools.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "fd9a84e39a47954b7fe9b2f118ae9c4e2e79ea2a516d3c218fc0a2f7e5523d34" => :mojave
-    sha256 "ded0e0044b35c466a9b9ea330533a34e641bec15ed58705609f4ceddbf35381d" => :high_sierra
-    sha256 "bb1cdda627764f7310dd45757b5caea24d12fbfeb3474cc3832777af1d46ced4" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "3becfa0f32a8d1b0c61b8980c8c48ba6a4acfab7fb0609b616f351d2225a9a72"
+    sha256 cellar: :any_skip_relocation, big_sur:       "9db5ee7ea5eab0f3a2dd67991318b67507ab4e3477a2ade00910f9a471d6ea4d"
+    sha256 cellar: :any_skip_relocation, catalina:      "9db5ee7ea5eab0f3a2dd67991318b67507ab4e3477a2ade00910f9a471d6ea4d"
+    sha256 cellar: :any_skip_relocation, mojave:        "9db5ee7ea5eab0f3a2dd67991318b67507ab4e3477a2ade00910f9a471d6ea4d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5e2507664aeccd68d46963e12e57fbb3689ee130998503213b83dc3c0e9d377f"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   def install
     virtualenv_install_with_resources
   end
 
   test do
-    cp "/Library/Fonts/Arial.ttf", testpath
-    system bin/"ttx", "Arial.ttf"
+    on_macos do
+      cp "/System/Library/Fonts/ZapfDingbats.ttf", testpath
+      system bin/"ttx", "ZapfDingbats.ttf"
+    end
+    on_linux do
+      assert_match "usage", shell_output("#{bin}/ttx -h")
+    end
   end
 end

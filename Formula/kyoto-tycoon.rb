@@ -3,19 +3,34 @@ class KyotoTycoon < Formula
   homepage "https://fallabs.com/kyototycoon/"
   url "https://fallabs.com/kyototycoon/pkg/kyototycoon-0.9.56.tar.gz"
   sha256 "553e4ea83237d9153cc5e17881092cefe0b224687f7ebcc406b061b2f31c75c6"
-  revision 2
+  license "GPL-3.0-or-later"
+  revision 5
 
   bottle do
-    sha256 "8ac87720e1b33402d76d26dd142abc14a3ebe211b92d97d32df7a0959a87d1d3" => :mojave
-    sha256 "7be4c6e507a1d8a1d526c82c11dd41b150806211c48388ab9a0dd790875fff79" => :high_sierra
-    sha256 "55a2e33c172afca9880553097beef413abce0c2f913c0ca1aa20ff5873732d14" => :sierra
-    sha256 "33d857c99b29a62a42965ebd5639990cdbfeb3584adee249caff81ab0cdf4328" => :el_capitan
+    sha256 arm64_big_sur: "244a150072e722f1ee861425fdfd1cb12a6a09ee27899b998b0794bd01cd1f12"
+    sha256 big_sur:       "30c5a805f4e4f672814b210a28567424b23af490a8d9555286dae17ee41506c4"
+    sha256 catalina:      "575c025f8a4479503833b3d90c8054ed3b67e8f4a14a96978ec585a76bbf7963"
+    sha256 mojave:        "aafcc936bd17bade9714e200c0e713ec4cd6ddc8f38a08d258cbf09437adec75"
+    sha256 x86_64_linux:  "bb1a1af50e64ab1cf5d39182e0ea8ef10869ecf4f995fd7b6fc31969dab97c9b"
   end
 
+  depends_on "lua" => :build
+  depends_on "pkg-config" => :build
   depends_on "kyoto-cabinet"
-  depends_on "lua"
 
-  patch :DATA if MacOS.version >= :mavericks
+  uses_from_macos "zlib"
+
+  # Build patch (submitted upstream)
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/955ce09/kyoto-tycoon/0.9.56.patch"
+    sha256 "7a5efe02a38e3f5c96fd5faa81d91bdd2c1d2ffeb8c3af52878af4a2eab3d830"
+  end
+
+  # Homebrew-specific patch to support testing with ephemeral ports (submitted upstream)
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/9925c07/kyoto-tycoon/ephemeral-ports.patch"
+    sha256 "736603b28e9e7562837d0f376d89c549f74a76d31658bf7d84b57c5e66512672"
+  end
 
   def install
     system "./configure", "--prefix=#{prefix}",
@@ -24,18 +39,26 @@ class KyotoTycoon < Formula
     system "make"
     system "make", "install"
   end
+
+  test do
+    (testpath/"test.lua").write <<~EOS
+      kt = __kyototycoon__
+      db = kt.db
+      -- echo back the input data as the output data
+      function echo(inmap, outmap)
+         for key, value in pairs(inmap) do
+            outmap[key] = value
+         end
+         return kt.RVSUCCESS
+      end
+    EOS
+    port = free_port
+
+    fork do
+      exec bin/"ktserver", "-port", port.to_s, "-scr", testpath/"test.lua"
+    end
+    sleep 5
+
+    assert_match "Homebrew\tCool", shell_output("#{bin}/ktremotemgr script -port #{port} echo Homebrew Cool 2>&1")
+  end
 end
-
-
-__END__
---- a/ktdbext.h  2013-11-08 09:34:53.000000000 -0500
-+++ b/ktdbext.h  2013-11-08 09:35:00.000000000 -0500
-@@ -271,7 +271,7 @@
-       if (!logf("prepare", "started to open temporary databases under %s", tmppath.c_str()))
-         err = true;
-       stime = kc::time();
--      uint32_t pid = getpid() & kc::UINT16MAX;
-+      uint32_t pid = kc::getpid() & kc::UINT16MAX;
-       uint32_t tid = kc::Thread::hash() & kc::UINT16MAX;
-       uint32_t ts = kc::time() * 1000;
-       for (size_t i = 0; i < dbnum_; i++) {

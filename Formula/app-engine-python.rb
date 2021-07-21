@@ -1,10 +1,15 @@
 class AppEnginePython < Formula
   desc "Google App Engine"
   homepage "https://cloud.google.com/appengine/docs"
-  url "https://storage.googleapis.com/appengine-sdks/featured/google_appengine_1.9.70.zip"
-  sha256 "3675197df810f104bbbee0e97b1ab776ba2ebff8b99f241bd4c2c125c8ebdaa1"
+  url "https://storage.googleapis.com/appengine-sdks/featured/google_appengine_1.9.86.zip"
+  sha256 "8a1d57f8819792a4c18bc337762f73f3bf207da986fd6028e3e591f24cfde9f2"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "b856b6306476de51b4cd973eda2a6e8f1bca646b53c3ebc547db06a47ed7f84b"
+    sha256 cellar: :any_skip_relocation, big_sur:       "5b799bff8064c075f8950a27c73f1a1cfd18c57fd4fb2082b19f1bade4f61cc0"
+    sha256 cellar: :any_skip_relocation, catalina:      "5b799bff8064c075f8950a27c73f1a1cfd18c57fd4fb2082b19f1bade4f61cc0"
+    sha256 cellar: :any_skip_relocation, mojave:        "5b799bff8064c075f8950a27c73f1a1cfd18c57fd4fb2082b19f1bade4f61cc0"
+  end
 
   def install
     pkgshare.install Dir["*"]
@@ -50,12 +55,14 @@ class AppEnginePython < Formula
         ('/', MainPage),
       ], debug=True)
     EOS
+
+    port = free_port
     begin
       pid = fork do
-        exec "#{pkgshare}/dev_appserver.py app.yaml --skip_sdk_update_check"
+        exec "#{pkgshare}/dev_appserver.py app.yaml --skip_sdk_update_check --port #{port}"
       end
       sleep 5
-      output = shell_output("curl -s http://localhost:8080/")
+      output = shell_output("curl -s http://localhost:#{port}/")
       assert_equal "Hello, World!", output.chomp
     ensure
       Process.kill("HUP", pid)

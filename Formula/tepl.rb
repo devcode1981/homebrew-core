@@ -1,27 +1,40 @@
 class Tepl < Formula
   desc "GNOME Text Editor Product Line"
   homepage "https://wiki.gnome.org/Projects/Tepl"
-  url "https://download.gnome.org/sources/tepl/4.2/tepl-4.2.0.tar.xz"
-  sha256 "8839d4428ecdd87fd5abc657ebbe5a9601a57262e9946845e47dec264e669ccd"
-  revision 1
+  url "https://download.gnome.org/sources/tepl/6.00/tepl-6.00.0.tar.xz"
+  sha256 "a86397a895dca9c0de7a5ccb063bda8f7ef691cccb950ce2cfdee367903e7a63"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    sha256 "7441ef2c9d036a7b98f4d31b1fc2d4db265aff6950520f7f0832e79fc91ce9f7" => :mojave
-    sha256 "2077774560060c8ab6bdb55f207959d22e798c8ded812a5302b7e8a657f3e238" => :high_sierra
-    sha256 "30e342a9e85b2bf27e568ec242f141e4845b119d5392ce5df5868edb72599027" => :sierra
+    sha256 arm64_big_sur: "ffb98f11bf159e2352d8ed7ca0bb4c62c48f4ba5781c7e2757a02ad5458fc1a0"
+    sha256 big_sur:       "b5c8dfff1540875f6bd03ec4a7e58ba68d5df65597e80eb7e469ce88c6bd4175"
+    sha256 catalina:      "0c2d2161a8f65a3728e479d26ba2dc736e163b7fe902ec59666d138bfc0de47e"
+    sha256 mojave:        "44b4a1c68e07df9275cb2275f6852e6b713e306f764833c620542a2cb741e565"
   end
 
+  # See: https://gitlab.gnome.org/Archive/tepl
+  deprecate! date: "2021-05-25", because: :repo_archived
+
   depends_on "gobject-introspection" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "amtk"
   depends_on "gtksourceview4"
   depends_on "uchardet"
 
+  # Submitted upstream at https://gitlab.gnome.org/GNOME/tepl/-/merge_requests/8
+  patch do
+    url "https://gitlab.gnome.org/GNOME/tepl/-/commit/a8075b0685764d1243762e569fc636fa4673d244.diff"
+    sha256 "b5d646c194955b0c14bbb7604c96e237a82632dc548f66f2d0163595ef18ee88"
+  end
+
   def install
-    system "./configure", "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--prefix=#{prefix}"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
   end
 
   test do
@@ -66,7 +79,7 @@ class Tepl < Formula
       -I#{gtksourceview4.opt_include}/gtksourceview-4
       -I#{gtkx3.opt_include}/gtk-3.0
       -I#{harfbuzz.opt_include}/harfbuzz
-      -I#{include}/tepl-4
+      -I#{include}/tepl-#{version.major}
       -I#{libepoxy.opt_include}
       -I#{libpng.opt_include}/libpng16
       -I#{pango.opt_include}/pango-1.0
@@ -93,7 +106,7 @@ class Tepl < Formula
       -lgio-2.0
       -lglib-2.0
       -lgobject-2.0
-      -ltepl-4
+      -ltepl-6
       -lgtk-3
       -lgtksourceview-4.0
       -lintl

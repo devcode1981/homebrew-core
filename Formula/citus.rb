@@ -1,19 +1,22 @@
 class Citus < Formula
   desc "PostgreSQL-based distributed RDBMS"
   homepage "https://www.citusdata.com"
-  url "https://github.com/citusdata/citus/archive/v8.0.0.tar.gz"
-  sha256 "fe3c0b5feed9c671f0da07fbfba0e5cd494e93900348dd04863e8dd96453b8da"
+  url "https://github.com/citusdata/citus/archive/v10.0.3.tar.gz"
+  sha256 "42fb6908eba4713704d4cd1f53b7dae3f2f51c0865d63f9dc7be6693c8d5ba40"
+  license "AGPL-3.0-only"
   head "https://github.com/citusdata/citus.git"
 
   bottle do
-    cellar :any
-    sha256 "0e5aa70fa108095fff9b68235d0be08a12ab10fb823d24b7783d08b92c814cab" => :mojave
-    sha256 "1a46406c7e9456e50928416657f0a8dd13ed876a86737eb35a7beaefa4c9e64b" => :high_sierra
-    sha256 "3376570e9cfec5fafe3329046f86ac6c5919ee57093dd7668cfa50afbcd9dfda" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "57bc55b52cf75aa6be2a8005c88cca5a7b100dfe9d7bad6b3e07fdfd4b2d9605"
+    sha256 cellar: :any, big_sur:       "8e89c8a73c422d729d757fcf222997907429c3406dd6882f7ddf5b7233d3bbe8"
+    sha256 cellar: :any, catalina:      "0b1b2ed735e95ffdb19ae6e875c1b1a232fa84d35a7ef23f6093354f3c155d30"
+    sha256 cellar: :any, mojave:        "5e61831c224d8be0f08fcbeb3a3841feeb2013ec3d0f80fbcf6dc94e1fffabe1"
   end
 
+  depends_on "lz4"
   depends_on "postgresql"
   depends_on "readline"
+  depends_on "zstd"
 
   def install
     ENV["PG_CONFIG"] = Formula["postgresql"].opt_bin/"pg_config"
@@ -32,32 +35,5 @@ class Citus < Formula
     lib.install Dir["stage/**/lib/*"]
     include.install Dir["stage/**/include/*"]
     (share/"postgresql/extension").install Dir["stage/**/share/postgresql/extension/*"]
-  end
-
-  test do
-    pg_bin = Formula["postgresql"].opt_bin
-    pg_port = "55561"
-    system "#{pg_bin}/initdb", testpath/"test"
-    pid = fork do
-      exec("#{pg_bin}/postgres",
-           "-D", testpath/"test",
-           "-c", "shared_preload_libraries=citus",
-           "-p", pg_port)
-    end
-
-    begin
-      sleep 2
-
-      count_workers_query = "SELECT COUNT(*) FROM master_get_active_worker_nodes();"
-
-      system "#{pg_bin}/createdb", "-p", pg_port, "test"
-      system "#{pg_bin}/psql", "-p", pg_port, "-d", "test", "--command", "CREATE EXTENSION citus;"
-
-      assert_equal "0", shell_output("#{pg_bin}/psql -p #{pg_port} -d test -Atc" \
-                                     "'#{count_workers_query}'").strip
-    ensure
-      Process.kill 9, pid
-      Process.wait pid
-    end
   end
 end

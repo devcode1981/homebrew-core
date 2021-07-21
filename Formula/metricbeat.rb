@@ -1,52 +1,41 @@
 class Metricbeat < Formula
   desc "Collect metrics from your systems and services"
-  homepage "https://www.elastic.co/products/beats/metricbeat"
-  # Pinned at 6.2.x because of a licencing issue
-  # See: https://github.com/Homebrew/homebrew-core/pull/28995
-  url "https://github.com/elastic/beats/archive/v6.2.4.tar.gz"
-  sha256 "87d863cf55863329ca80e76c3d813af2960492f4834d4fea919f1d4b49aaf699"
+  homepage "https://www.elastic.co/beats/metricbeat"
+  url "https://github.com/elastic/beats.git",
+      tag:      "v7.13.3",
+      revision: "3ddad4cee7394d1643023604f246cd5ab6d8cfbb"
+  license "Apache-2.0"
   head "https://github.com/elastic/beats.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "61b1556e02c1e15dcf152b52ad3f0016314e6c631aa4a0597ce3907e0bd75f9f" => :mojave
-    sha256 "5b8962f3d4f0a6844d029063b8df98e61a29b7ae5b0e41692222c3bdaa2b8aa9" => :high_sierra
-    sha256 "8d569b6b800ea8681496651812b2431dd478a28028e2059a5ed8b3a1833ac8aa" => :sierra
-    sha256 "f8c5c12f3fdf6dff8abaf1cb7077f8c71a26e8bafc9561f5a08f3d2e6fbbbe2d" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "79b1171c112ea35866351c40fc23b1c8fc9ad330f9675aa9651786b90816546c"
+    sha256 cellar: :any_skip_relocation, big_sur:       "7629f4f1ae8743739c5c9b347355ae224b4f22ed110eb0fd91eaa338a1a4d1f5"
+    sha256 cellar: :any_skip_relocation, catalina:      "5cebd32fd991e8e170fe580c5a2914a63737798f263f655f680389b3024207e5"
+    sha256 cellar: :any_skip_relocation, mojave:        "ceeed2cbc02f39ca6cc5a806e69747dd1f413c327679adf5914b263be1d6d940"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "cb456eb086078f8eba872437e122c773b17ed5164aa676c4e3702df16f3e5351"
   end
 
   depends_on "go" => :build
-  depends_on "python@2" => :build
-
-  resource "virtualenv" do
-    url "https://files.pythonhosted.org/packages/b1/72/2d70c5a1de409ceb3a27ff2ec007ecdd5cc52239e7c74990e32af57affe9/virtualenv-15.2.0.tar.gz"
-    sha256 "1d7e241b431e7afce47e77f8843a276f652699d1fa4f93b9d8ce0076fd7b0b54"
-  end
+  depends_on "mage" => :build
+  depends_on "python@3.9" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/elastic/beats").install buildpath.children
+    # remove non open source files
+    rm_rf "x-pack"
 
-    ENV.prepend_create_path "PYTHONPATH", buildpath/"vendor/lib/python2.7/site-packages"
+    cd "metricbeat" do
+      # don't build docs because it would fail creating the combined OSS/x-pack
+      # docs and we aren't installing them anyway
+      inreplace "magefile.go", "mg.Deps(CollectDocs, FieldsDocs)", ""
 
-    resource("virtualenv").stage do
-      system "python", *Language::Python.setup_install_args(buildpath/"vendor")
-    end
-
-    ENV.prepend_path "PATH", buildpath/"vendor/bin"
-
-    cd "src/github.com/elastic/beats/metricbeat" do
-      system "make"
-      # prevent downloading binary wheels during python setup
-      system "make", "PIP_INSTALL_COMMANDS=--no-binary :all", "python-env"
-      system "make", "DEV_OS=darwin", "update"
+      system "mage", "-v", "build"
+      ENV.deparallelize
+      system "mage", "-v", "update"
 
       (etc/"metricbeat").install Dir["metricbeat.*", "fields.yml", "modules.d"]
       (libexec/"bin").install "metricbeat"
-      prefix.install "_meta/kibana"
+      prefix.install "build/kibana"
     end
-
-    prefix.install_metafiles buildpath/"src/github.com/elastic/beats"
 
     (bin/"metricbeat").write <<~EOS
       #!/bin/sh
@@ -59,23 +48,24 @@ class Metricbeat < Formula
     EOS
   end
 
-  plist_options :manual => "metricbeat"
+  plist_options manual: "metricbeat"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN"
-    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>Program</key>
-        <string>#{opt_bin}/metricbeat</string>
-        <key>RunAtLoad</key>
-        <true/>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN"
+      "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>Program</key>
+          <string>#{opt_bin}/metricbeat</string>
+          <key>RunAtLoad</key>
+          <true/>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do
@@ -93,17 +83,12 @@ class Metricbeat < Formula
     (testpath/"logs").mkpath
     (testpath/"data").mkpath
 
-    pid = fork do
+    fork do
       exec bin/"metricbeat", "-path.config", testpath/"config", "-path.data",
                              testpath/"data"
     end
 
-    begin
-      sleep 30
-      assert_predicate testpath/"data/metricbeat", :exist?
-    ensure
-      Process.kill "SIGINT", pid
-      Process.wait pid
-    end
+    sleep 30
+    assert_predicate testpath/"data/metricbeat", :exist?
   end
 end

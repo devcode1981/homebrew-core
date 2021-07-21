@@ -2,24 +2,26 @@ class Watch < Formula
   desc "Executes a program periodically, showing output fullscreen"
   homepage "https://gitlab.com/procps-ng/procps"
   url "https://gitlab.com/procps-ng/procps.git",
-      :tag      => "v3.3.15",
-      :revision => "7bb949bcba13c107fa0f45d2d0298b1ad6b6d6cc"
+      tag:      "v3.3.17",
+      revision: "19a508ea121c0c4ac6d0224575a036de745eaaf8"
+  license all_of: ["GPL-2.0-or-later", "LGPL-2.1-or-later"]
   head "https://gitlab.com/procps-ng/procps.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "bdb4f8a1feed527be937eb0f470444c93643b3dc72943387fcd7584c2b96baf6" => :mojave
-    sha256 "9fceef6cae551481726f86f9a0e5e79ca2bf27e0f41d0feb0800ab25e9161342" => :high_sierra
-    sha256 "010375a88535763436571b3140bacd5733e8176621d663464a8ae3c57ed7813f" => :sierra
-    sha256 "d89d82028efa1586bd6f6b05fba3f7c15259e6a9fedffa5e36d8a900514b0ecb" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "45b90fbbda918d2c87ef6ccc29f1d931cbd0a490f2b1d599444591aae04a3cb0"
+    sha256 cellar: :any,                 big_sur:       "251b920890874ad798cf01c4c52564c720f785ce8184ae41181654b8f65e592b"
+    sha256 cellar: :any,                 catalina:      "05698a04a502ac32c97e0de0d9f00ac7c7450afd5d42b85d8ce1cd55d010fff3"
+    sha256 cellar: :any,                 mojave:        "d2ce790ff9e073d04615051cd94dce4e06d37993de21894a64d4a23b7dfe5ea5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "2ae42218ef9ec54573be5a7f207c5057f326a62e11c8f158974aff56e1762284"
   end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
+  depends_on "gettext" => :build
   depends_on "libtool" => :build
   depends_on "pkg-config" => :build
 
-  depends_on "gettext"
+  depends_on "ncurses"
 
   conflicts_with "visionmedia-watch"
 
@@ -27,7 +29,8 @@ class Watch < Formula
     system "autoreconf", "-fiv"
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
-                          "--disable-nls"
+                          "--disable-nls",
+                          "--enable-watch8bit"
     system "make", "watch"
     bin.install "watch"
     man1.install "watch.1"

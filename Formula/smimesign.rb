@@ -1,32 +1,28 @@
 class Smimesign < Formula
   desc "S/MIME signing utility for use with Git"
   homepage "https://github.com/github/smimesign"
-  url "https://github.com/github/smimesign/archive/0.0.10.tar.gz"
-  sha256 "c2036abba5f38b42acc40f311176a7af0bef7f9cc4f6c0454ba51d2335631db3"
+  url "https://github.com/github/smimesign/archive/v0.1.0.tar.gz"
+  sha256 "b01443a54354c0ceab2501403b67b76e3cf2b12dcd9f0474e18a22c66099e589"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "da64d72469542b9f414f755030d0f7367d86239f74a80a67ab280f8e2e792c3a" => :mojave
-    sha256 "3651001471f346165ad493458c46629ff8ba7395a6610217941cdb4634c7b84b" => :high_sierra
-    sha256 "2e4c7a707f083376c7ea4e2e659576de4ffde7252327c882516671e35530e40b" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1ff41bca0d768e6939c790b7f0cb01a22e15710f4a286b0aba1de3940e4f7d6a"
+    sha256 cellar: :any_skip_relocation, big_sur:       "aa8df0fdb6acb090de4eacca0b1b83825b6fa594c7743981be42654fede1b797"
+    sha256 cellar: :any_skip_relocation, catalina:      "abad2ebcdf7f1c0eb58badee31d787e9a986b99ea17e79013acfeb437a4537e9"
+    sha256 cellar: :any_skip_relocation, mojave:        "56af904bbe4aa96d755ef99b67145ee20c57d0a0fc1681fe9c6333e19ce68be3"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "024a4963b723bd2ec94fde2a578cb80342f4837d9ec34158ae023479c4157f33"
   end
 
   depends_on "go" => :build
-  depends_on :macos => :sierra
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/github/smimesign").install buildpath.children
-
-    cd "src/github.com/github/smimesign" do
-      system "go", "build", "-o", bin/"smimesign", "-ldflags", "-X main.versionString=#{version}"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args, "-ldflags", "-X main.versionString=#{version}"
   end
 
   test do
     assert_match version.to_s, shell_output("#{bin}/smimesign --version")
     system "#{bin}/smimesign", "--list-keys"
-    assert_match "could not find identity matching specified user-id: bad@identity", shell_output("#{bin}/smimesign -su bad@identity 2>&1", 1)
+    assert_match "could not find identity matching specified user-id: bad@identity",
+      shell_output("#{bin}/smimesign -su bad@identity 2>&1", 1)
   end
 end

@@ -1,15 +1,17 @@
 class Jabba < Formula
   desc "Cross-platform Java Version Manager"
   homepage "https://github.com/shyiko/jabba"
-  url "https://github.com/shyiko/jabba/archive/0.11.0.tar.gz"
-  sha256 "1eee1ac5a8bf74918b95e933f91037bffa320c28da2013d876888fcf19bc94f8"
+  url "https://github.com/shyiko/jabba/archive/0.11.2.tar.gz"
+  sha256 "33874c81387f03fe1a27c64cb6fb585a458c1a2c1548b4b86694da5f81164355"
+  license "Apache-2.0"
   head "https://github.com/shyiko/jabba.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "86c773bc4a97e432bc6491087189918e5e1abde371e4339d2241f816ce833d55" => :mojave
-    sha256 "cfd5d350cac91a435cb70921b5ebb69dd8705b40a48b195becea6035a6e110ed" => :high_sierra
-    sha256 "8b5667589047a75e48b28b3d2721980294652e71bae47ccd5f4ec61ec62da8cb" => :sierra
+    rebuild 3
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "72cd725e75b0d214c6cbc03bc87fcb15d9b824ea24eba43f267cdfc768edf460"
+    sha256 cellar: :any_skip_relocation, big_sur:       "72c397a12fe10181efb7fca300d78d3244160c9a0a4dcbe2cd17c179df678db4"
+    sha256 cellar: :any_skip_relocation, catalina:      "146e37a3138b919c497da279eecd2d282d5f6f5e0f1b9aa94257df2fbf19efba"
+    sha256 cellar: :any_skip_relocation, mojave:        "6f2d27333e0b8d73ba2166c4abb960642d64a3efcd394ee5683e6c71b8d0c305"
   end
 
   depends_on "glide" => :build
@@ -17,6 +19,7 @@ class Jabba < Formula
 
   def install
     ENV["GOPATH"] = buildpath
+    ENV["GO111MODULE"] = "auto"
     ENV["GLIDE_HOME"] = HOMEBREW_CACHE/"glide_home/#{name}"
     dir = buildpath/"src/github.com/shyiko/jabba"
     dir.install buildpath.children
@@ -29,10 +32,14 @@ class Jabba < Formula
   end
 
   test do
+    jdk_version = "zulu@1.16.0-0"
+    version_check ='openjdk version "16'
+
     ENV["JABBA_HOME"] = testpath/"jabba_home"
-    system bin/"jabba", "install", "1.11.0"
-    jdk_path = Utils.popen_read("#{bin}/jabba which 1.11.0").strip
-    assert_match 'java version "11.0',
+
+    system bin/"jabba", "install", jdk_version
+    jdk_path = shell_output("#{bin}/jabba which #{jdk_version}").strip
+    assert_match version_check,
                  shell_output("#{jdk_path}/Contents/Home/bin/java -version 2>&1")
   end
 end

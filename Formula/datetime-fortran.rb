@@ -1,20 +1,21 @@
 class DatetimeFortran < Formula
   desc "Fortran time and date manipulation library"
-  homepage "https://github.com/milancurcic/datetime-fortran"
-  url "https://github.com/milancurcic/datetime-fortran/releases/download/v1.6.0/datetime-fortran-1.6.0.tar.gz"
-  sha256 "e46c583bca42e520a05180984315495495da4949267fc155e359524c2bf31e9a"
-  revision 3
+  homepage "https://github.com/wavebitscientific/datetime-fortran"
+  url "https://github.com/wavebitscientific/datetime-fortran/releases/download/v1.7.0/datetime-fortran-1.7.0.tar.gz"
+  sha256 "cff4c1f53af87a9f8f31256a3e04176f887cc3e947a4540481ade4139baf0d6f"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d75d7804b0d14697f1b15089bc787e54a0fb57c55670ed21ec99fc577a05de92" => :mojave
-    sha256 "ea8405814e9c3e72a192836107d6620a9e3c6996b8c3169675dbe7cb44b345b6" => :high_sierra
-    sha256 "4d5d027551164ce741f3dd3915cc4d5b57e246120cd92ac002616c50d05ebd55" => :sierra
-    sha256 "5c20d20514118ec61bd76de9dbabe7a84e10d9c7a13c74cc1f95272af60d999e" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e2986c9fde31f0bb075f4399c251599b481e2c9f5509e9ba6aa56e2fd8f2c939"
+    sha256 cellar: :any_skip_relocation, big_sur:       "13b551703e1afcdcb1c4a92939afdce7447fbf96e071c984944a8bee8e833496"
+    sha256 cellar: :any_skip_relocation, catalina:      "82d8b0e2a51fb7df321659ed4f5da43c24edd5aba81e5e05250508b541f2eb4b"
+    sha256 cellar: :any_skip_relocation, mojave:        "ef59feabc30610c41a5ac4b2e594f1378d3edeb3b13dd7912825c48815d547e2"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "cf59b21c0539aa14f5e0274387669d13dae47b3e11267cdb1baed8545f2bd535"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "429f291ed9e56d7cd7abc05c3315466544d2cdecec92d583fceb880528676be1"
   end
 
   head do
-    url "https://github.com/milancurcic/datetime-fortran.git"
+    url "https://github.com/wavebitscientific/datetime-fortran.git"
 
     depends_on "autoconf"   => :build
     depends_on "automake"   => :build
@@ -28,12 +29,12 @@ class DatetimeFortran < Formula
     system "./configure", "--prefix=#{prefix}",
                           "--disable-silent-rules"
     system "make", "install"
-    (pkgshare/"test").install "src/tests/datetime_tests.f90"
+    (pkgshare/"test").install "tests/datetime_tests.f90"
   end
 
   test do
-    system "gfortran", "-o", "test", "-I#{include}", "-L#{lib}", "-ldatetime",
-                       pkgshare/"test/datetime_tests.f90"
+    system "gfortran", "-I#{include}", pkgshare/"test/datetime_tests.f90",
+                       "-L#{lib}", "-ldatetime", "-o", "test"
     system "./test"
   end
 end

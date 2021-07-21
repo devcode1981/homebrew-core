@@ -1,24 +1,32 @@
 class Calcurse < Formula
   desc "Text-based personal organizer"
   homepage "https://calcurse.org/"
-  url "https://calcurse.org/files/calcurse-4.3.0.tar.gz"
-  sha256 "31ecc3dc09e1e561502b4c94f965ed6b167c03e9418438c4a7ad5bad2c785f9a"
-  head "https://git.calcurse.org/calcurse.git"
+  url "https://calcurse.org/files/calcurse-4.7.1.tar.gz"
+  sha256 "0a7c55d07674569d166c0b0e7587b2972d3da8160cdb7d60b1dbd2895803afb0"
+  license "BSD-2-Clause"
 
-  bottle do
-    sha256 "c3f0fc356930d24114a2ef1c16679f1184ba60a4f5bb888b822f6a343f7ae5b5" => :mojave
-    sha256 "0fbabcf326ec92cf28ec57ff76f77e1a6fa41217f7d11ef5090c18b7bfc5b8aa" => :high_sierra
-    sha256 "0a4237919a02a48d0c661ae43a4da579c69bf826921af07d14d9ade6f835374a" => :sierra
-    sha256 "4cca241225bacb88ffd8c9f97e8c7b4027068551523f07874975362995eacf54" => :el_capitan
+  livecheck do
+    url "https://calcurse.org/downloads/"
+    regex(/href=.*?calcurse[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  depends_on "gettext"
+  bottle do
+    sha256 arm64_big_sur: "f5aea7fdb9fd90fdbe3ccb695fd1e7922b39bf35b9568a35cca0659aad9884ca"
+    sha256 big_sur:       "3ec58ced653c61f7205ee551d5ac6dddeeced2fdd1231c6fc6dae8c1d5532f48"
+    sha256 catalina:      "edd3afddbdf8bcd68494332eeb6620a93530cd3a12541fb5db08470422715a4d"
+    sha256 mojave:        "3ae0a4b707a783e4fc8be4e575d16701f45f3c69c0cd67b6882e49f86fc7f52f"
+    sha256 x86_64_linux:  "4ab43789ad00c84b0f4844c6dd836bc0a5623a28d80d04027554433d4fb362c4"
+  end
 
-  if build.head?
+  head do
+    url "https://git.calcurse.org/calcurse.git"
+
     depends_on "asciidoc" => :build
     depends_on "autoconf" => :build
     depends_on "automake" => :build
   end
+
+  depends_on "gettext"
 
   def install
     system "./autogen.sh" if build.head?

@@ -1,39 +1,31 @@
 class S6 < Formula
   desc "Small & secure supervision software suite"
   homepage "https://skarnet.org/software/s6/"
+  url "https://skarnet.org/software/s6/s6-2.10.0.3.tar.gz"
+  sha256 "1d21373151704150df0e8ed199f097f6ee5d2befb9a68aca4f20f3862e5d8757"
+  license "ISC"
 
-  stable do
-    url "https://skarnet.org/software/s6/s6-2.7.2.0.tar.gz"
-    sha256 "af54fcbae7028a90bd12c7ee71a8f3954a74c6a4de376a427cc664587fb68a09"
-
-    resource "skalibs" do
-      url "https://skarnet.org/software/skalibs/skalibs-2.7.0.0.tar.gz"
-      sha256 "96494d76669d2f8622511d5d616b6367801a42683c0bb11a8855114e5ccbd756"
-    end
-
-    resource "execline" do
-      url "https://skarnet.org/software/execline/execline-2.5.0.1.tar.gz"
-      sha256 "8d07d14e9e9abb1301e08be271313c4ffa5ddf7248fd262dda19588e78e31049"
-    end
+  livecheck do
+    url :homepage
+    regex(/href=.*?s6[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
   bottle do
-    sha256 "de84ce2daa762ee81c1ba5580030e912072ec3659ff3ba876c4da11c27e146ed" => :mojave
-    sha256 "fea087bab9413a1c548c6f9219d901e825be1cf1de5a46e1fd9ac0a3017a1b92" => :high_sierra
-    sha256 "764172107342cea76c6a35b37ff830f5481efaa30410d89bd2b41ed1eda291e5" => :sierra
-    sha256 "760b7806a4f4f9d7e78369406033fca48821933d3f7bdca70298efce5469471f" => :el_capitan
+    sha256 arm64_big_sur: "e2ef25cfe9cc6eeb4bb6c44c0b1b887531d582f0a277a60cb912f265198d3247"
+    sha256 big_sur:       "ec0bed5bcbfe3a75e9ad5e6d172b1b5f8bf531d46bfe8d00cfefddaf6477c67c"
+    sha256 catalina:      "827c8b3861623b6495317ecded680984800b3c6d222da2e613e3da7a02e8a502"
+    sha256 mojave:        "bfff5e8f2f1dfb93d87da55e1e1ce1bc8b444e8683f0e861eb7b7dac8952ba42"
+    sha256 x86_64_linux:  "917ae23b2f1333cb04ba3c539d4f67f5b72846094dce3aeb37e61c6df34049e0"
   end
 
-  head do
-    url "git://git.skarnet.org/s6"
+  resource "skalibs" do
+    url "https://skarnet.org/software/skalibs/skalibs-2.10.0.3.tar.gz"
+    sha256 "b780b0ae650dda0c3ec5f8975174998af2d24c2a2e2be669b1bab46e73b1464d"
+  end
 
-    resource "skalibs" do
-      url "git://git.skarnet.org/skalibs"
-    end
-
-    resource "execline" do
-      url "git://git.skarnet.org/execline"
-    end
+  resource "execline" do
+    url "https://skarnet.org/software/execline/execline-2.8.0.1.tar.gz"
+    sha256 "a373f497d2335905d750e2f3be2ba47a028c11c4a7d5595dca9965c161e53aed"
   end
 
   def install
@@ -69,9 +61,10 @@ class S6 < Formula
     system "make", "install"
 
     # Some S6 tools expect execline binaries to be on the path
-    bin.env_script_all_files(libexec/"bin", :PATH => "#{libexec}/execline:$PATH")
-    sbin.env_script_all_files(libexec/"sbin", :PATH => "#{libexec}/execline:$PATH")
-    (bin/"execlineb").write_env_script libexec/"execline/execlineb", :PATH => "#{libexec}/execline:$PATH"
+    bin.env_script_all_files(libexec/"bin", PATH: "#{libexec}/execline:$PATH")
+    sbin.env_script_all_files(libexec/"sbin", PATH: "#{libexec}/execline:$PATH")
+    (bin/"execlineb").write_env_script libexec/"execline/execlineb", PATH: "#{libexec}/execline:$PATH"
+    doc.install Dir["doc/*"]
   end
 
   test do

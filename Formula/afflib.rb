@@ -1,36 +1,43 @@
 class Afflib < Formula
   desc "Advanced Forensic Format"
   homepage "https://github.com/sshock/AFFLIBv3"
-  url "https://github.com/sshock/AFFLIBv3/archive/v3.7.17.tar.gz"
-  sha256 "3c5a718731c90a75a1134796ab9de9a0156f6b3a8d1dec4f532e161b94bdaff4"
+  url "https://github.com/sshock/AFFLIBv3/archive/v3.7.19.tar.gz"
+  sha256 "d358b07153dd08df3f35376bab0202c6103808686bab5e8486c78a18b24e2665"
+  revision 1
 
   bottle do
-    cellar :any
-    sha256 "e2f6aabed324721e31798315e0f8f7768f14b3858e6b16f4f921edb57ff40838" => :mojave
-    sha256 "0ebbe3c416cd433966a37d6724129720a1314e9a0f9b58ef3ff132ece9d8efb3" => :high_sierra
-    sha256 "ea3328cb0ffa8848a1f21893ee96782bd886cd9821d0e4542968b98c7c209cf7" => :sierra
-    sha256 "cb6ada311bc269985934cc835adf7dde8e8437f882beda9223ba47613c5364f0" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "4ebc86660cab0964031b14ee14a710a8d83222389ba9e263463f7b7610582b3b"
+    sha256 cellar: :any,                 big_sur:       "045dd01683d3c1411e493d72a8b4bcd6e71113386f330254252e5876d702429f"
+    sha256 cellar: :any,                 catalina:      "63075bb1473d3342521c6e29fd1c8c628114cef274ec8b7cc572d46068f19f4a"
+    sha256 cellar: :any,                 mojave:        "9a50d803eedfeb45425b1f7a0452e8f7072d87c2b7b5b488dfca6222a18440c6"
+    sha256 cellar: :any,                 high_sierra:   "9367940cd2b04b6a244b00ba0970ab20b23393604689ee45b5b5b2b5274e752c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "1efab46d8c360d5836edbd17a19553baa45e53afedcb918c4637219b17f218ac"
   end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
   depends_on "libtool" => :build
   depends_on "pkg-config" => :build
-  depends_on "openssl"
-  # Python 3 error filed upstream: https://github.com/sshock/AFFLIBv3/issues/35
-  depends_on "python@2" # does not support Python 3
-  depends_on :osxfuse => :optional
+  depends_on "openssl@1.1"
+  depends_on "python@3.9"
+
+  uses_from_macos "curl"
+  uses_from_macos "expat"
+
+  # Fix for Python 3.9, remove in next version
+  patch do
+    url "https://github.com/sshock/AFFLIBv3/commit/aeb444da.patch?full_index=1"
+    sha256 "90cbb0b55a6e273df986b306d20e0cfb77a263cb85e272e01f1b0d8ee8bd37a0"
+  end
 
   def install
-    args = ["--enable-s3", "--enable-python"]
+    ENV["PYTHON"] = Formula["python@3.9"].opt_bin/"python3"
 
-    if build.with? "osxfuse"
-      ENV.append "CPPFLAGS", "-I/usr/local/include/osxfuse"
-      ENV.append "LDFLAGS", "-L/usr/local/lib"
-      args << "--enable-fuse"
-    else
-      args << "--disable-fuse"
-    end
+    args = %w[
+      --enable-s3
+      --enable-python
+      --disable-fuse
+    ]
 
     system "autoreconf", "-fiv"
     system "./configure", "--disable-dependency-tracking",

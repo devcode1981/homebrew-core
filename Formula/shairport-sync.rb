@@ -1,14 +1,21 @@
 class ShairportSync < Formula
   desc "AirTunes emulator that adds multi-room capability"
   homepage "https://github.com/mikebrady/shairport-sync"
-  url "https://github.com/mikebrady/shairport-sync/archive/3.2.2.tar.gz"
-  sha256 "4f1ee142b887842727ae0c310e21c83ea2386518e841a25c7ddb015d08b54eba"
-  head "https://github.com/mikebrady/shairport-sync.git", :branch => "development"
+  url "https://github.com/mikebrady/shairport-sync/archive/3.3.8.tar.gz"
+  sha256 "c92f9a2d86dd1138673abc66e0010c94412ad6a46da8f36c3d538f4fa6b9faca"
+  license "MIT"
+  head "https://github.com/mikebrady/shairport-sync.git", branch: "development"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    sha256 "7dc8276b51f1ef0ef4cf38c27228d46e80678425626783efc0e71646b8a6c60f" => :mojave
-    sha256 "8ed5e98d394f2dc6136abbbc15ecdc27a471244ef2c67c69558fbf9c3fae77ed" => :high_sierra
-    sha256 "72a828bd11b9c6a28d0c4b3c90e92ded0c4ee4ba5aa095f06a22362e5c78212d" => :sierra
+    sha256 arm64_big_sur: "69aca6973958639950c913bc230b93bf23f200ca4ad4031a2e23f400ae9d9468"
+    sha256 big_sur:       "d789905a7d6a4c93b28b5a5ed07d6b1b5a32ccecdf47c41268525404d406dcb2"
+    sha256 catalina:      "1e284d58843c0bb34a421bb5259b3e81759c77eecd992b0f9e4b66976155bb55"
+    sha256 mojave:        "202eeb58dfed5376c7be58ed53eab101ee9d829d142e374056984db25ce77aa0"
   end
 
   depends_on "autoconf" => :build
@@ -18,17 +25,20 @@ class ShairportSync < Formula
   depends_on "libconfig"
   depends_on "libdaemon"
   depends_on "libsoxr"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
   depends_on "popt"
+  depends_on "pulseaudio"
 
   def install
     system "autoreconf", "-fvi"
     args = %W[
       --with-os=darwin
+      --with-libdaemon
       --with-ssl=openssl
       --with-dns_sd
       --with-ao
       --with-stdout
+      --with-pa
       --with-pipe
       --with-soxr
       --with-metadata
@@ -44,8 +54,37 @@ class ShairportSync < Formula
     (var/"run").mkpath
   end
 
+  plist_options manual: "shairport-sync"
+
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/shairport-sync</string>
+          <string>--use-stderr</string>
+          <string>--verbose</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>KeepAlive</key>
+        <true/>
+        <key>StandardErrorPath</key>
+        <string>#{var}/log/#{name}.log</string>
+        <key>StandardOutPath</key>
+        <string>#{var}/log/#{name}.log</string>
+      </dict>
+      </plist>
+    EOS
+  end
+
   test do
-    output = shell_output("#{bin}/shairport-sync -V", 1)
-    assert_match "OpenSSL-ao-stdout-pipe-soxr-metadata", output
+    output = shell_output("#{bin}/shairport-sync -V")
+    assert_match "libdaemon-OpenSSL-dns_sd-ao-pa-stdout-pipe-soxr-metadata", output
   end
 end

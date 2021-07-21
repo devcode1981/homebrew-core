@@ -1,28 +1,29 @@
 class KubeAws < Formula
-  desc "CoreOS Kubernetes on AWS"
-  homepage "https://coreos.com/kubernetes/docs/latest/kubernetes-on-aws.html"
-  url "https://github.com/kubernetes-incubator/kube-aws.git",
-      :tag      => "v0.12.0",
-      :revision => "d7e327d3da1e08021edd8bf24cc72fef4132f0af"
-  head "https://github.com/kubernetes-incubator/kube-aws.git"
+  desc "Command-line tool to declaratively manage Kubernetes clusters on AWS"
+  homepage "https://kubernetes-retired.github.io/kube-aws/"
+  url "https://github.com/kubernetes-retired/kube-aws.git",
+      tag:      "v0.16.4",
+      revision: "c74d91ecd6760d33111dc8c7f8f51bf816424310"
+  license "Apache-2.0"
+  head "https://github.com/kubernetes-retired/kube-aws.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a9078fbf661e698806792606b197374af301b2024ad42d54e7dfb8f0df4e0123" => :mojave
-    sha256 "4bdc3016b4e20a9c57a932aea241fcf70ba8d76ca03039122bd9531ea7643b63" => :high_sierra
-    sha256 "fffdabcce63790444868136d02ddd1e995855f6f841685545e25123e18d53671" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "7af14149a6b45de2067d7fbb256bcc452582134eda27688a82527d7a7a074b41"
+    sha256 cellar: :any_skip_relocation, big_sur:       "8e8c892bc74895bf9567f96ba0d27d74b206197f20bd6d348c96732984dad507"
+    sha256 cellar: :any_skip_relocation, catalina:      "1c5004445c0be8fd055ff78439bd3c0b413cd56247385c1453c5956fbe9503b1"
+    sha256 cellar: :any_skip_relocation, mojave:        "f05e8f3cfbe5f8c17f2cd6d3a854b7c329d7f922f03271bb36ca8497589ef7d4"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "5172a4ad55d3977c81d405bc67d91a35ead719e24c555d5843529d2489323d79"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "34fad4681f7bd9006dd5a6c8e4c482244dd27d881e5c6ced41cd4a61722df064"
   end
 
+  # Fork can be found at: https://github.com/kube-aws/kube-aws
+  deprecate! date: "2020-09-29", because: :repo_archived
+
   depends_on "go" => :build
+  depends_on "packr" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    dir = buildpath/"src/github.com/kubernetes-incubator/kube-aws"
-    dir.install buildpath.children - [buildpath/".brew_home"]
-    cd dir do
-      system "make", "OUTPUT_PATH=#{bin}/kube-aws"
-      prefix.install_metafiles
-    end
+    system "make", "OUTPUT_PATH=#{bin}/kube-aws"
   end
 
   test do

@@ -1,68 +1,74 @@
 class Gdcm < Formula
   desc "Grassroots DICOM library and utilities for medical files"
   homepage "https://sourceforge.net/projects/gdcm/"
-  url "https://downloads.sourceforge.net/project/gdcm/gdcm%202.x/GDCM%202.8.7/gdcm-2.8.7.tar.gz"
-  sha256 "7a08baa93e90bce17d9999d59b95876808801a287812348e27a23decb1ebc58c"
+  url "https://github.com/malaterre/GDCM/archive/v3.0.9.tar.gz"
+  sha256 "fcfc50ea8809bd4a173550c7d7bb4f8722ae0781fbf17240ce84a04e90af0e9b"
+  license "BSD-3-Clause"
+  revision 3
 
-  bottle do
-    sha256 "9f3d3a1de707e4184bc62fa7070fccb39c9fd1864966e49dc58e93c0616ec012" => :mojave
-    sha256 "ad87ce2f85f16278131b692b12c33cbf1f02af7263c04a9b3dc1cb8188bcdf53" => :high_sierra
-    sha256 "ba985660d7000a4f8b054a63269c60cab9c542e46e81864d8ef8621c2a246cbf" => :sierra
-    sha256 "66d1542a14b6c6e75946853944662d4a934101ceb9c865a9c1da527884133bd6" => :el_capitan
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
-  option "without-python@2", "Build without python2 support"
-
-  deprecated_option "with-python3" => "with-python"
-  deprecated_option "without-python" => "without-python@2"
+  bottle do
+    sha256 arm64_big_sur: "dc3b35c1e010fa296be33d8e3c6716fcb6ceed2b8a2faa052d912d73b50502d3"
+    sha256 big_sur:       "7bff75beab06c8250e57f71edc9db13deee5e8436b6601f04a5488bb2e1d4f5d"
+    sha256 catalina:      "48c5d04a2a95db995522d31e5efffd9a9dcf97afb4896d64610a2347431a3481"
+    sha256 mojave:        "6837489e4b3a300a96e15506c6e2bb092bda59f4b1e8d96448ecd923c9568317"
+  end
 
   depends_on "cmake" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
+  depends_on "swig" => :build
   depends_on "openjpeg"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
+  depends_on "python@3.9"
+  depends_on "vtk@8.2"
 
-  depends_on "python@2" => :recommended
-  depends_on "python" => :optional
-  depends_on "swig" => :build if build.with?("python") || build.with?("python@2")
-
-  needs :cxx11
+  uses_from_macos "expat"
+  uses_from_macos "zlib"
 
   def install
     ENV.cxx11
 
-    common_args = std_cmake_args + %w[
+    python3 = Formula["python@3.9"].opt_bin/"python3"
+    xy = Language::Python.major_minor_version python3
+    python_include =
+      Utils.safe_popen_read(python3, "-c", "from distutils import sysconfig;print(sysconfig.get_python_inc(True))")
+           .chomp
+    python_executable = Utils.safe_popen_read(python3, "-c", "import sys;print(sys.executable)").chomp
+
+    args = std_cmake_args + %W[
+      -GNinja
       -DGDCM_BUILD_APPLICATIONS=ON
       -DGDCM_BUILD_SHARED_LIBS=ON
       -DGDCM_BUILD_TESTING=OFF
       -DGDCM_BUILD_EXAMPLES=OFF
       -DGDCM_BUILD_DOCBOOK_MANPAGES=OFF
-      -DGDCM_USE_VTK=OFF
+      -DGDCM_USE_VTK=ON
+      -DGDCM_USE_SYSTEM_EXPAT=ON
+      -DGDCM_USE_SYSTEM_ZLIB=ON
+      -DGDCM_USE_SYSTEM_UUID=ON
       -DGDCM_USE_SYSTEM_OPENJPEG=ON
       -DGDCM_USE_SYSTEM_OPENSSL=ON
+      -DGDCM_WRAP_PYTHON=ON
+      -DPYTHON_EXECUTABLE=#{python_executable}
+      -DPYTHON_INCLUDE_DIR=#{python_include}
+      -DGDCM_INSTALL_PYTHONMODULE_DIR=#{lib}/python#{xy}/site-packages
+      -DCMAKE_INSTALL_RPATH=#{lib}
+      -DGDCM_NO_PYTHON_LIBS_LINKING=ON
     ]
 
     mkdir "build" do
-      if build.without?("python") && build.without?("python@2")
-        system "cmake", "..", *common_args
-        system "make", "install"
-      else
+      on_macos do
         ENV.append "LDFLAGS", "-undefined dynamic_lookup"
-
-        Language::Python.each_python(build) do |python, py_version|
-          python_include = Utils.popen_read("#{python} -c 'from distutils import sysconfig;print(sysconfig.get_python_inc(True))'").chomp
-          args = common_args + %W[
-            -DGDCM_WRAP_PYTHON=ON
-            -DPYTHON_EXECUTABLE=#{python}
-            -DPYTHON_INCLUDE_DIR=#{python_include}
-            -DGDCM_INSTALL_PYTHONMODULE_DIR=#{lib}/python#{py_version}/site-packages
-            -DCMAKE_INSTALL_RPATH=#{lib}
-            -DGDCM_NO_PYTHON_LIBS_LINKING=ON
-          ]
-
-          system "cmake", "..", *args
-          system "make", "install"
-        end
       end
+
+      system "cmake", "..", *args
+      system "ninja"
+      system "ninja", "install"
     end
   end
 
@@ -76,12 +82,10 @@ class Gdcm < Formula
       }
     EOS
 
-    system ENV.cxx, "-isystem", "#{include}/gdcm-2.8", "-o", "test.cxx.o", "-c", "test.cxx"
-    system ENV.cxx, "test.cxx.o", "-o", "test", "-L#{lib}", "-lgdcmDSED"
+    system ENV.cxx, "-std=c++11", "-isystem", "#{include}/gdcm-3.0", "-o", "test.cxx.o", "-c", "test.cxx"
+    system ENV.cxx, "-std=c++11", "test.cxx.o", "-o", "test", "-L#{lib}", "-lgdcmDSED"
     system "./test"
 
-    Language::Python.each_python(build) do |python, _py_version|
-      system python, "-c", "import gdcm"
-    end
+    system Formula["python@3.9"].opt_bin/"python3", "-c", "import gdcm"
   end
 end

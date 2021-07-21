@@ -1,37 +1,55 @@
 class Lammps < Formula
   desc "Molecular Dynamics Simulator"
   homepage "https://lammps.sandia.gov/"
-  url "https://lammps.sandia.gov/tars/lammps-11Aug17.tar.gz"
+  url "https://github.com/lammps/lammps/archive/stable_29Oct2020.tar.gz"
   # lammps releases are named after their release date. We transform it to
   # YYYY-MM-DD (year-month-day) so that we get a sane version numbering.
   # We only track stable releases as announced on the LAMMPS homepage.
-  version "2017-08-11"
-  sha256 "33431329fc735fb12d22ed33399235ef9506ba759a281a24028de538822af104"
-  revision 4
+  version "2020-10-29"
+  sha256 "759705e16c1fedd6aa6e07d028cc0c78d73c76b76736668420946a74050c3726"
+  license "GPL-2.0-only"
 
-  bottle do
-    cellar :any
-    sha256 "e7884462cb19ecb08fe0961bcb599167b3778dee56b7e917a93deb284fe19488" => :mojave
-    sha256 "6e8a4829a9220e654f46e74033a8adf4fc2f8b6551e0fe8d565e865b7aefcc18" => :high_sierra
-    sha256 "ee741c246d6c76998d682fe28351a76ed4d581a3b7a31443896fa31e035aed22" => :sierra
-    sha256 "ff600c4f0c8e03bc538636552517d128a6eef46c0aa0603209b821b736cf616e" => :el_capitan
+  # The `strategy` block below is used to massage upstream tags into the
+  # YYYY-MM-DD format we use in the `version`. This is necessary for livecheck
+  # to be able to do proper `Version` comparison.
+  livecheck do
+    url :stable
+    regex(%r{href=.*?/tag/stable[._-](\d{1,2}\w+\d{2,4})["' >]}i)
+    strategy :github_latest do |page, regex|
+      date_str = page[regex, 1]
+      date_str.present? ? Date.parse(date_str).to_s : []
+    end
   end
 
+  bottle do
+    sha256                               arm64_big_sur: "cd8e88f101776028e6859211611d5f581f7020b3e806f53e98b831ab3d0eb9f5"
+    sha256                               big_sur:       "9bd87a2b72f291229de3d436f8fc7b0706ab5fc245587936943284287457d1c0"
+    sha256                               catalina:      "4cb389466954f5fdafc8a05a06eff9c8a17886b69e2ea6cc38c55cf3912980d0"
+    sha256                               mojave:        "e1ef047d6c3155e5a8bb704a5f141beb7427194c61e6d16885610bdfd20ecf5c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "930043afd64c57fc5f7a421d282f8c799202f9c3176108d9f945483f31a0b29c"
+  end
+
+  depends_on "pkg-config" => :build
   depends_on "fftw"
   depends_on "gcc" # for gfortran
   depends_on "jpeg"
+  depends_on "kim-api"
   depends_on "libpng"
   depends_on "open-mpi"
 
   def install
+    ENV.cxx11
+
+    # Disable some packages for which we do not have dependencies, that are
+    # deprecated or require too much configuration.
+    disabled_packages = %w[gpu kokkos latte mscg message mpiio poems python voronoi]
+
     %w[serial mpi].each do |variant|
       cd "src" do
         system "make", "clean-all"
         system "make", "yes-standard"
 
-        # Disable some packages for which we do not have dependencies, that are
-        # deprecated or require too much configuration.
-        %w[gpu kim kokkos mscg meam mpiio poems reax voronoi].each do |package|
+        disabled_packages.each do |package|
           system "make", "no-#{package}"
         end
 

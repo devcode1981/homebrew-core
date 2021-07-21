@@ -1,28 +1,25 @@
 class NodeAT10 < Formula
   desc "Platform built on V8 to build network applications"
   homepage "https://nodejs.org/"
-  url "https://nodejs.org/dist/v10.14.1/node-v10.14.1.tar.gz"
-  sha256 "b97b355f3774adbeb4ffce52e275029e767ba9f317f9eb573175410b6255919f"
+  url "https://nodejs.org/dist/v10.24.1/node-v10.24.1.tar.xz"
+  sha256 "d72fc2c244603b4668da94081dc4d6067d467fdfa026e06a274012f16600480c"
+  license "MIT"
+  revision 1
 
   bottle do
-    sha256 "1c0cf6ce0517d209bb13d3a3742cdeb3030e66d09cc6658dfa9668d6187a33a1" => :mojave
-    sha256 "1529d45eb2ae7a69e0b559fc2a2e681d4568abafe652301a0acc400288ba62cb" => :high_sierra
-    sha256 "33fa1c920de475808c463b2298ce69aa493855e5ff4ba0765e69b9b48d56392f" => :sierra
+    sha256 cellar: :any, big_sur:  "84095e53ee88c7acc39a574a64e7832bbb7326be76a4de502ed55fdd47e784c4"
+    sha256 cellar: :any, catalina: "be200f225fd88d1a4a1efba2470b305accbddff927bf7d5287eeb4777fb02b9c"
+    sha256 cellar: :any, mojave:   "cdaf548a304fb2eda428a61c8b25c406e2ada5f9eb7cf5b56174d0753f153598"
   end
 
   keg_only :versioned_formula
 
-  depends_on "pkg-config" => :build
-  depends_on "python@2" => :build
-  depends_on "icu4c"
+  deprecate! date: "2021-04-30", because: :unsupported
 
-  # Per upstream - "Need g++ 4.8 or clang++ 3.4".
-  fails_with :clang if MacOS.version <= :snow_leopard
-  fails_with :gcc_4_0
-  fails_with :gcc_4_2
-  ("4.3".."4.7").each do |n|
-    fails_with :gcc => n
-  end
+  depends_on "pkg-config" => :build
+  depends_on "icu4c"
+  depends_on :macos # Due to Python 2 (Will not work with Python 3 without extensive patching)
+  # Node 10 will be EOL April 2021
 
   def install
     system "./configure", "--prefix=#{prefix}", "--with-intl=system-icu"

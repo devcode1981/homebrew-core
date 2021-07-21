@@ -1,12 +1,16 @@
 class Tomcat < Formula
   desc "Implementation of Java Servlet and JavaServer Pages"
   homepage "https://tomcat.apache.org/"
-  url "https://www.apache.org/dyn/closer.cgi?path=/tomcat/tomcat-9/v9.0.13/bin/apache-tomcat-9.0.13.tar.gz"
-  sha256 "b8f7b7ac0cb6c53ae6524086efc69c6ea6933344908b294d91f9af3c67b559e7"
+  url "https://www.apache.org/dyn/closer.lua?path=tomcat/tomcat-10/v10.0.8/bin/apache-tomcat-10.0.8.tar.gz"
+  mirror "https://archive.apache.org/dist/tomcat/tomcat-10/v10.0.8/bin/apache-tomcat-10.0.8.tar.gz"
+  sha256 "b1f85342bc5a5f30be4e1b5ed9aca8375412c564e8e8214523a6733d7237c07e"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "d879b4a70b63dc660d14e9e8b2ad1fff92b47603634a28200102ae5d69ad7801"
+  end
 
-  depends_on :java => "1.8+"
+  depends_on "openjdk"
 
   def install
     # Remove Windows scripts
@@ -15,30 +19,31 @@ class Tomcat < Formula
     # Install files
     prefix.install %w[NOTICE LICENSE RELEASE-NOTES RUNNING.txt]
     libexec.install Dir["*"]
-    bin.install_symlink "#{libexec}/bin/catalina.sh" => "catalina"
+    (bin/"catalina").write_env_script "#{libexec}/bin/catalina.sh", JAVA_HOME: Formula["openjdk"].opt_prefix
   end
 
-  plist_options :manual => "catalina run"
+  plist_options manual: "catalina run"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Disabled</key>
-        <false/>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/catalina</string>
-          <string>run</string>
-        </array>
-        <key>KeepAlive</key>
-        <true/>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Disabled</key>
+          <false/>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_bin}/catalina</string>
+            <string>run</string>
+          </array>
+          <key>KeepAlive</key>
+          <true/>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do

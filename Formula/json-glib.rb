@@ -1,29 +1,27 @@
 class JsonGlib < Formula
   desc "Library for JSON, based on GLib"
   homepage "https://wiki.gnome.org/Projects/JsonGlib"
-  url "https://download.gnome.org/sources/json-glib/1.4/json-glib-1.4.4.tar.xz"
-  sha256 "720c5f4379513dc11fd97dc75336eb0c0d3338c53128044d9fabec4374f4bc47"
+  url "https://download.gnome.org/sources/json-glib/1.6/json-glib-1.6.2.tar.xz"
+  sha256 "a33d66c6d038bda46b910c6c6d59c4e15db014e363dc997a0414c2e07d134f24"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    sha256 "5955c4e1bb25115e61252ef5b11e6a4c7e2211b4ff71c56cae5a76c6a73c5064" => :mojave
-    sha256 "896582a3d39376e8ae3ed1093344f5de02505d81d4639d6256db8d4f292a24ce" => :high_sierra
-    sha256 "ac347ffca088d57e22296de1b717dd0d21086e09b04d20919f530c3a20f4a3dd" => :sierra
-    sha256 "19690e86594be958118eddeb8a50cfd8175c00e122bc83120cfefd9914dd1eea" => :el_capitan
+    sha256 arm64_big_sur: "f84ff6cd5b2e0295f55fec084791de5d78cc8eceab6af8c2bbccff7534aa370a"
+    sha256 big_sur:       "1f91e53ac2d8364a97b28a02cbf01d95458679548d09d5ed2b7e64b0bc6daabe"
+    sha256 catalina:      "53f88d2001e5050f25d1faa331112eb7ec706ce8fb67fa737fa0213b34980975"
+    sha256 mojave:        "47e4851f7cb0b4b54f2fc789bff2d38bf143f4c0d29e785797344ecdf87a8ef6"
+    sha256 x86_64_linux:  "25fb04a84ef17ded62de366d319f2df936f2b4d90dd95b6eee568b4691286bfa"
   end
 
   depends_on "gobject-introspection" => :build
-  depends_on "meson-internal" => :build
+  depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "glib"
 
-  patch :DATA
-
   def install
-    ENV.refurbish_args
-
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", ".."
+      system "meson", *std_meson_args, "-Dintrospection=enabled", ".."
       system "ninja"
       system "ninja", "install"
     end
@@ -52,31 +50,12 @@ class JsonGlib < Formula
       -lgio-2.0
       -lglib-2.0
       -lgobject-2.0
-      -lintl
       -ljson-glib-1.0
     ]
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end
 end
-
-__END__
-diff --git a/meson.build b/meson.build
-index cee6389..50808cf 100644
---- a/meson.build
-+++ b/meson.build
-@@ -145,14 +145,6 @@ if host_system == 'linux'
-   endforeach
- endif
-
--# Maintain compatibility with autotools
--if host_system == 'darwin'
--  common_ldflags += [
--    '-compatibility_version 1',
--    '-current_version @0@.@1@'.format(json_binary_age - json_interface_age, json_interface_age),
--  ]
--endif
--
- root_dir = include_directories('.')
-
- gnome = import('gnome')

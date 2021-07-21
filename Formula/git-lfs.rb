@@ -1,20 +1,22 @@
 class GitLfs < Formula
   desc "Git extension for versioning large files"
   homepage "https://github.com/git-lfs/git-lfs"
-  url "https://github.com/git-lfs/git-lfs/releases/download/v2.6.1/git-lfs-v2.6.1.tar.gz"
-  sha256 "df7fcd3a72f3b8916b2d9a591f1435ea7479f397257508c335cb5ba82c040f4a"
+  url "https://github.com/git-lfs/git-lfs/releases/download/v2.13.3/git-lfs-v2.13.3.tar.gz"
+  sha256 "f8bd7a06e61e47417eb54c3a0db809ea864a9322629b5544b78661edab17b950"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "e73e7554c4b45bc1ba95fb64e597457c97f90179fe02ca5dd34e0f22112ac19e" => :mojave
-    sha256 "0daf04ca0a32e208be0e6df07c42a1ab049a3e50c962b04ea650a626a97920bb" => :high_sierra
-    sha256 "9eba8835ba9803e37f4f8e9215f98bd8cd1fc903baa47563d5ff195bc8d0060e" => :sierra
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "def0547e1e83bda58b68b6880f3eb5a0a803df0addfb6e4915b6b76852735195"
+    sha256 cellar: :any_skip_relocation, big_sur:       "db355632f3236b7042d2900b7883edfe476d9fb467e62124bb5864ab2be88415"
+    sha256 cellar: :any_skip_relocation, catalina:      "b4c1b5d14562c7a1e0fbe210dc5e58888dff8437586ffc49425099c546a988b0"
+    sha256 cellar: :any_skip_relocation, mojave:        "0aaead90f98027ec8774eb318a58c6f5bef167342a52b115207ecb878f63e7f5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "918e279cead08a4d34efccd29eb656849b727c46b4431287b326e8f0fe92f40b"
   end
 
   depends_on "go" => :build
-
-  # System Ruby uses old TLS versions no longer supported by RubyGems.
-  depends_on "ruby" => :build if MacOS.version <= :sierra
+  depends_on "ronn" => :build
+  depends_on "ruby" => :build
 
   def install
     ENV["GIT_LFS_SHA"] = ""
@@ -22,12 +24,9 @@ class GitLfs < Formula
 
     (buildpath/"src/github.com/git-lfs/git-lfs").install buildpath.children
     cd "src/github.com/git-lfs/git-lfs" do
-      ENV["GEM_HOME"] = ".gem_home"
-      system "gem", "install", "ronn"
-
       system "make", "vendor"
       system "make"
-      system "make", "man", "RONN=.gem_home/bin/ronn"
+      system "make", "man", "RONN=#{Formula["ronn"].bin}/ronn"
 
       bin.install "bin/git-lfs"
       man1.install Dir["man/*.1"]
@@ -36,15 +35,16 @@ class GitLfs < Formula
     end
   end
 
-  def caveats; <<~EOS
-    Update your git config to finish installation:
+  def caveats
+    <<~EOS
+      Update your git config to finish installation:
 
-      # Update global git config
-      $ git lfs install
+        # Update global git config
+        $ git lfs install
 
-      # Update system git config
-      $ git lfs install --system
-  EOS
+        # Update system git config
+        $ git lfs install --system
+    EOS
   end
 
   test do

@@ -1,54 +1,42 @@
 class Flann < Formula
   desc "Fast Library for Approximate Nearest Neighbors"
-  homepage "https://www.cs.ubc.ca/research/flann/"
-  url "https://github.com/mariusmuja/flann/archive/1.9.1.tar.gz"
+  homepage "https://github.com/flann-lib/flann"
+  url "https://github.com/flann-lib/flann/archive/refs/tags/1.9.1.tar.gz"
   sha256 "b23b5f4e71139faa3bcb39e6bbcc76967fbaf308c4ee9d4f5bfbeceaa76cc5d3"
-  revision 6
+  license "BSD-3-Clause"
+  revision 11
 
   bottle do
-    cellar :any
-    sha256 "d63b6b851376c199e86938129b34616500be62354904b586e367af6108541609" => :mojave
-    sha256 "dc63d79be691c9b18d98b8c900fc5eb6d824feb2d4e2a8b7e5fd085827f70cfb" => :high_sierra
-    sha256 "9c825c76c662f0743adad10544fd7572a6d2449a59cc92da674da244ea2e209b" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "4f7bdd32f4a2e7e4ae1f9367585da94b5cdb6ede82dee359046ab5e6cf59efdd"
+    sha256 cellar: :any, big_sur:       "33278f699e22bd607e44ba0d556e34ed492adb8bd5c73a1c414a7241423f8bf7"
+    sha256 cellar: :any, catalina:      "ef260f54e418a03d2320369da486148caacc0c6d5697f00e6efdbda4116f00fb"
+    sha256 cellar: :any, mojave:        "59a708f81108cbbb05e885ed2125437fdecb6d8dc91ad901b48c92641b4dc199"
   end
-
-  deprecated_option "with-python" => "with-python@2"
 
   depends_on "cmake" => :build
   depends_on "hdf5"
-  depends_on "python@2" => :optional
-  depends_on "numpy" if build.with? "python@2"
 
-  resource("dataset.dat") do
-    url "https://www.cs.ubc.ca/research/flann/uploads/FLANN/datasets/dataset.dat"
-    sha256 "dcbf0268a7ff9acd7c3972623e9da722a8788f5e474ae478b888c255ff73d981"
+  on_linux do
+    # Fix for Linux build: https://bugs.gentoo.org/652594
+    # Not yet fixed upstream: https://github.com/mariusmuja/flann/issues/369
+    patch do
+      url "https://raw.githubusercontent.com/buildroot/buildroot/0c469478f64d0ddaf72c0622a1830d855306d51c/package/flann/0001-src-cpp-fix-cmake-3.11-build.patch"
+      sha256 "aa181d0731d4e9a266f7fcaf5423e7a6b783f400cc040a3ef0fef77930ecf680"
+    end
   end
 
-  resource("testset.dat") do
-    url "https://www.cs.ubc.ca/research/flann/uploads/FLANN/datasets/testset.dat"
-    sha256 "d9ff91195bf2ad8ced78842fa138b3cd4e226d714edbb4cb776369af04dda81b"
-  end
-
-  resource("dataset.hdf5") do
-    url "https://www.cs.ubc.ca/research/flann/uploads/FLANN/datasets/dataset.hdf5"
-    sha256 "64ae599f3182a44806f611fdb3c77f837705fcaef96321fb613190a6eabb4860"
+  resource("dataset") do
+    url "https://github.com/flann-lib/flann/files/6518483/dataset.zip"
+    sha256 "169442be3e9d8c862eb6ae4566306c31ff18406303d87b4d101f367bc5d17afa"
   end
 
   def install
-    if build.with? "python@2"
-      pyarg = "-DBUILD_PYTHON_BINDINGS:BOOL=ON"
-    else
-      pyarg = "-DBUILD_PYTHON_BINDINGS:BOOL=OFF"
-    end
-
-    system "cmake", ".", *std_cmake_args, pyarg
+    system "cmake", ".", *std_cmake_args, "-DBUILD_PYTHON_BINDINGS:BOOL=OFF", "-DBUILD_MATLAB_BINDINGS:BOOL=OFF"
     system "make", "install"
   end
 
   test do
-    resource("dataset.dat").stage testpath
-    resource("testset.dat").stage testpath
-    resource("dataset.hdf5").stage testpath
+    resource("dataset").stage testpath
     system "#{bin}/flann_example_c"
     system "#{bin}/flann_example_cpp"
   end

@@ -1,26 +1,61 @@
 class Fltk < Formula
   desc "Cross-platform C++ GUI toolkit"
   homepage "https://www.fltk.org/"
-  url "https://www.fltk.org/pub/fltk/1.3.4/fltk-1.3.4-2-source.tar.gz"
-  mirror "https://dl.bintray.com/homebrew/mirror/fltk-1.3.4-2.tar.gz"
-  version "1.3.4-2"
-  sha256 "25d349c18c99508737d48f225a2eb26a43338f9247551cab72a317fa42cda910"
+  url "https://www.fltk.org/pub/fltk/1.3.6/fltk-1.3.6-source.tar.gz"
+  sha256 "9aac75ef9e9b7bd7b5338a4c0d4dd536e6c22ea7b15ea622aa1d8f1fa30d37ab"
+  license "LGPL-2.0-only" => { with: "FLTK-exception" }
+
+  livecheck do
+    url "https://www.fltk.org/software.php"
+    regex(/href=.*?fltk[._-]v?(\d+(?:\.\d+)+(?:-\d+)?)-source\.t/i)
+  end
 
   bottle do
-    sha256 "fbf193393bb8d95b303e3e9bdda7b7808c8211b06ec76017ef386f3dac3ca8aa" => :mojave
-    sha256 "5dd4bbb5cf10af5e0a1ff2f29c6d12657f09626fab43811b441b27c677afd0af" => :high_sierra
-    sha256 "e22929035ced94a301c1294de6d305079e34d9709d3e9551b19555ab2f06656e" => :sierra
-    sha256 "5481ffce354c2c98ed7634b036d678c7476780085e1a518af186f2e4b22d2c31" => :el_capitan
+    sha256 arm64_big_sur: "8a38a916979fe3cd382d683bcd0c0cea2322a1754024e6afe99c9c9591bb8724"
+    sha256 big_sur:       "ec58967d86a8068d770f5c1f8a5650ff7a4c334d952b51220564e1539b1c54de"
+    sha256 catalina:      "94960f1fd2d833812056ef8d8be09b563331277b6b30b49e527d2a28d1454fb8"
+    sha256 mojave:        "137faeafeb34fe3517d79aebb9c3fcfb2c959729e46d59d62be6203c2a520f39"
+    sha256 x86_64_linux:  "51aeebe6988201f1acdc00c02d9e1c11a54d7abf77bcf32357b70cd16cd78d9d"
+  end
+
+  head do
+    url "https://github.com/fltk/fltk.git"
+    depends_on "cmake" => :build
   end
 
   depends_on "jpeg"
   depends_on "libpng"
 
+  on_linux do
+    depends_on "pkg-config" => :build
+    depends_on "libxft"
+    depends_on "libxt"
+    depends_on "mesa-glu"
+  end
+
   def install
-    system "./configure", "--prefix=#{prefix}",
-                          "--enable-threads",
-                          "--enable-shared"
-    system "make", "install"
+    if build.head?
+      args = std_cmake_args
+
+      # Don't build docs / require doxygen
+      args << "-DOPTION_BUILD_HTML_DOCUMENTATION=OFF"
+      args << "-DOPTION_BUILD_PDF_DOCUMENTATION=OFF"
+
+      # Don't build tests
+      args << "-DFLTK_BUILD_TEST=OFF"
+
+      # Build both shared & static libs
+      args << "-DOPTION_BUILD_SHARED_LIBS=ON"
+
+      system "cmake", ".", *args
+      system "cmake", "--build", "."
+      system "cmake", "--install", "."
+    else
+      system "./configure", "--prefix=#{prefix}",
+                            "--enable-threads",
+                            "--enable-shared"
+      system "make", "install"
+    end
   end
 
   test do

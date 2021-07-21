@@ -1,65 +1,64 @@
 class Gstreamer < Formula
   desc "Development framework for multimedia applications"
   homepage "https://gstreamer.freedesktop.org/"
-  url "https://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.14.4.tar.xz"
-  sha256 "f94f6696c5f05a3b3a9183e39c5f5c0b779f75a04c0efa497e7920afa985ffc7"
+  url "https://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.18.4.tar.xz"
+  sha256 "9aeec99b38e310817012aa2d1d76573b787af47f8a725a65b833880a094dfbc5"
+  license "LGPL-2.0-or-later"
+  head "https://gitlab.freedesktop.org/gstreamer/gstreamer.git"
 
-  bottle do
-    sha256 "c45904015e59ae08b2b4d0d1acd54df18b1b82e404050563c5b1e2b4a265e97e" => :mojave
-    sha256 "f51c9fc52634124810ce4860655aeeada3fe959fcb2d1e5837cd28aedebee235" => :high_sierra
-    sha256 "066190df52e9eed97fd3a9f1886e09a44075fdb445978ad2aca08b9220e8076a" => :sierra
+  livecheck do
+    url "https://gstreamer.freedesktop.org/src/gstreamer/"
+    regex(/href=.*?gstreamer[._-]v?(\d+\.\d*[02468](?:\.\d+)*)\.t/i)
   end
 
-  head do
-    url "https://anongit.freedesktop.org/git/gstreamer/gstreamer.git"
-
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "libtool" => :build
+  bottle do
+    sha256 arm64_big_sur: "d62ea2ea98bd22267eabf676f8ec577df5eac27e7656e56545767b909d2224d5"
+    sha256 big_sur:       "a2d62c11bf92e6d4f2d02d1dff4558e945f6dc10b27f435c14824de9d2fdba48"
+    sha256 catalina:      "9fcc5eb54cebede4c30ed3bacbf82fb8272471bd0a80cbc0a63b503a79994371"
+    sha256 mojave:        "259ae892b842f10c590240abfc97e2af6d6c93f67d1362da1d858e913d3ddbd1"
+    sha256 x86_64_linux:  "ed6878d62c1ae4e7f007ddad5d307b84bef65a8ce7637aa65dcf9e2b6aebaaf9"
   end
 
   depends_on "bison" => :build
   depends_on "gobject-introspection" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "gettext"
   depends_on "glib"
 
+  uses_from_macos "flex" => :build
+
   def install
-    args = %W[
-      --prefix=#{prefix}
-      --disable-debug
-      --disable-dependency-tracking
-      --disable-gtk-doc
-      --enable-introspection=yes
+    # Ban trying to chown to root.
+    # https://bugzilla.gnome.org/show_bug.cgi?id=750367
+    args = std_meson_args + %w[
+      -Dintrospection=enabled
+      -Dptp-helper-permissions=none
     ]
-
-    if build.head?
-      ENV["NOCONFIGURE"] = "yes"
-      system "./autogen.sh"
-
-      # Ban trying to chown to root.
-      # https://bugzilla.gnome.org/show_bug.cgi?id=750367
-      args << "--with-ptp-helper-permissions=none"
-    end
 
     # Look for plugins in HOMEBREW_PREFIX/lib/gstreamer-1.0 instead of
     # HOMEBREW_PREFIX/Cellar/gstreamer/1.0/lib/gstreamer-1.0, so we'll find
     # plugins installed by other packages without setting GST_PLUGIN_PATH in
     # the environment.
-    inreplace "configure", 'PLUGINDIR="$full_var"',
-      "PLUGINDIR=\"#{HOMEBREW_PREFIX}/lib/gstreamer-1.0\""
+    inreplace "meson.build",
+      "cdata.set_quoted('PLUGINDIR', join_paths(get_option('prefix'), get_option('libdir'), 'gstreamer-1.0'))",
+      "cdata.set_quoted('PLUGINDIR', '#{HOMEBREW_PREFIX}/lib/gstreamer-1.0')"
 
-    system "./configure", *args
-    system "make"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
   end
 
-  def caveats; <<~EOS
-    Consider also installing gst-plugins-base and gst-plugins-good.
+  def caveats
+    <<~EOS
+      Consider also installing gst-plugins-base and gst-plugins-good.
 
-    The gst-plugins-* packages contain gstreamer-video-1.0, gstreamer-audio-1.0,
-    and other components needed by most gstreamer applications.
-  EOS
+      The gst-plugins-* packages contain gstreamer-video-1.0, gstreamer-audio-1.0,
+      and other components needed by most gstreamer applications.
+    EOS
   end
 
   test do

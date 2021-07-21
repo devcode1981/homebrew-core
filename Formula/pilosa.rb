@@ -1,68 +1,66 @@
 class Pilosa < Formula
   desc "Distributed bitmap index that queries across data sets"
   homepage "https://www.pilosa.com"
-  url "https://github.com/pilosa/pilosa/archive/v1.1.0.tar.gz"
-  sha256 "1129cb41bb653dd93d170a6b23caf0aca8f02d56efe56f6c966eb663d3b49d3a"
+  url "https://github.com/pilosa/pilosa/archive/v1.4.1.tar.gz"
+  sha256 "a250dda8788fefdb0b0b7eeff1bb44375a570cd4c6a0c501bc55612775b1578e"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a7e431a20b9e90a0dc0e22218956bba6bbbd2e1c8c99ccbbb65b527f1fe06442" => :mojave
-    sha256 "e63c7d2de244ca57b2b6032901ff9a99eb6a0335f1738d6e832d8f03ceb85ea7" => :high_sierra
-    sha256 "0dad658a2c78686af07c7012870541ca193b1d2189f3a0122a1356076f23614b" => :sierra
-    sha256 "fe22b919c424b81169929e3be5f675f53a337ab52c5d47bd762dfadb5b130b34" => :el_capitan
+    sha256 cellar: :any_skip_relocation, catalina:     "703ee800aa37986fb22892672ae4f20020561df1aeccf60bc68f4f2c5807ec02"
+    sha256 cellar: :any_skip_relocation, mojave:       "486ace10d0957669478591911549112c22d812b26a746b3aca8cf00fee726fc8"
+    sha256 cellar: :any_skip_relocation, high_sierra:  "f7cd715d06c813bf358b3151ddfe24c4a7664b464b3d7bd047b222189d603281"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "776da185052f34aa5c973e92bfefb27304168a7d24f5cbb1dd1a951e1330cd5e"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
 
   def install
     ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/pilosa/pilosa").install buildpath.children
 
+    (buildpath/"src/github.com/pilosa/pilosa").install buildpath.children
     cd "src/github.com/pilosa/pilosa" do
       system "make", "build", "FLAGS=-o #{bin}/pilosa", "VERSION=v#{version}"
       prefix.install_metafiles
     end
   end
 
-  plist_options :manual => "pilosa server"
+  plist_options manual: "pilosa server"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-            <string>#{opt_bin}/pilosa</string>
-            <string>server</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>KeepAlive</key>
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
         <dict>
-            <key>SuccessfulExit</key>
-            <false/>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+              <string>#{opt_bin}/pilosa</string>
+              <string>server</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>KeepAlive</key>
+          <dict>
+              <key>SuccessfulExit</key>
+              <false/>
+          </dict>
+          <key>WorkingDirectory</key>
+          <string>#{var}</string>
         </dict>
-        <key>WorkingDirectory</key>
-        <string>#{var}</string>
-      </dict>
-    </plist>
-  EOS
+      </plist>
+    EOS
   end
 
   test do
-    begin
-      server = fork do
-        exec "#{bin}/pilosa", "server"
-      end
-      sleep 0.5
-      assert_match("Welcome. Pilosa is running.", shell_output("curl localhost:10101"))
-    ensure
-      Process.kill "TERM", server
-      Process.wait server
+    server = fork do
+      exec "#{bin}/pilosa", "server"
     end
+    sleep 0.5
+    assert_match("Welcome. Pilosa is running.", shell_output("curl localhost:10101"))
+  ensure
+    Process.kill "TERM", server
+    Process.wait server
   end
 end

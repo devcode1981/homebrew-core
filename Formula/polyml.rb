@@ -1,15 +1,16 @@
 class Polyml < Formula
   desc "Standard ML implementation"
   homepage "https://www.polyml.org/"
-  url "https://github.com/polyml/polyml/archive/v5.7.1.tar.gz"
-  sha256 "d18dd824b426edaed1cec71dded354b57df9ebdbd38863bc7540a60bd0667028"
+  url "https://github.com/polyml/polyml/archive/v5.8.2.tar.gz"
+  sha256 "310b0ba748a50f38e99de7f65ba990bc4b4f4b0123ad76aba4c44d7cd1ed9277"
+  license "LGPL-2.1"
   head "https://github.com/polyml/polyml.git"
 
   bottle do
-    sha256 "ac906a03567d473a5827a8c6ccb8dc12944e4c28ed85925d62fd09b8d2c401d9" => :mojave
-    sha256 "5a1f478b3b2b26ab1f2326031c5ea930aa97ac08b83881151e976942c674df65" => :high_sierra
-    sha256 "d4c027b336791cc932cebddb6ea901af8a17f482511e9858a4766b380a1b3391" => :sierra
-    sha256 "5adaaa6d45b674090dd49918532a5035737e7d7d2a1acf861a053ac96d297596" => :el_capitan
+    sha256 big_sur:      "4b68c9e84f40360b1b65444949637bb1f5749f532ad198a44f3bb570854b9900"
+    sha256 catalina:     "1517e342bf9c4569b986d1139c063e14a999cacb29597e53e438040090e93424"
+    sha256 mojave:       "fccbd2fc3c3570178c8578475035fbee24ab9280a3366a82b797c1fb7627c588"
+    sha256 x86_64_linux: "d356087174d4a1031bbacaac76dfcb1735d613a55510ff8b0207ea6d53994038"
   end
 
   def install
@@ -17,5 +18,16 @@ class Polyml < Formula
                           "--prefix=#{prefix}"
     system "make"
     system "make", "install"
+  end
+
+  test do
+    (testpath/"hello.ml").write <<~EOS
+      let
+        fun concatWithSpace(a,b) = a ^ " " ^ b
+      in
+        TextIO.print(concatWithSpace("Hello", "World"))
+      end
+    EOS
+    assert_match "Hello World", shell_output("#{bin}/poly --script hello.ml")
   end
 end

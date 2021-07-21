@@ -1,40 +1,39 @@
 class Hatari < Formula
   desc "Atari ST/STE/TT/Falcon emulator"
   homepage "https://hatari.tuxfamily.org"
-  url "https://download.tuxfamily.org/hatari/2.1.0/hatari-2.1.0.tar.bz2"
-  sha256 "eb299460e92db4a8a2983a0725cbbc8c185f1470b8ecd791b3d102815da20924"
-  head "https://hg.tuxfamily.org/mercurialroot/hatari/hatari", :using => :hg, :branch => "default"
+  url "https://download.tuxfamily.org/hatari/2.3.1/hatari-2.3.1.tar.bz2"
+  sha256 "44a2f62ca995e38d9e0874806956f0b9c3cc84ea89e0169a63849b63cd3b64bd"
+  license "GPL-2.0-or-later"
+  head "https://git.tuxfamily.org/hatari/hatari.git"
+
+  livecheck do
+    url "https://download.tuxfamily.org/hatari/"
+    regex(%r{href=["']?v?(\d+(?:\.\d+)+)/?["' >]}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "3c13b288119a92d537856f07fd1dc8086778560659acfc84a228891bf2e11709" => :mojave
-    sha256 "8ae0f75f55becb21fcedb5dd1d06925624d911088e5eebec85f284411406622b" => :high_sierra
-    sha256 "51da79162122d274d22bb54e08d3c6e9c2fffa561da57800af6342f081ed621f" => :sierra
-    sha256 "ab91725ffc7378cafd715b5d357fae4a0efcba481a28062ec267b880f56191fd" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "8606d3d0c17b73205030593e2b2a3cd0ea1a87fbcb7998b2d84bba14e67957f1"
+    sha256 cellar: :any, big_sur:       "485738be593ab647a5543878cf748d4602f9123b053fef63672f31a271009700"
+    sha256 cellar: :any, catalina:      "9137d6022e24772be5ef1af60ecd2fc9441a690cea63cd9509b3c9619a88d303"
+    sha256 cellar: :any, mojave:        "c88fc0f38bb911d3d7ef419a176118bfa3de9f3e9db4b1ab8c3d1644fe75c039"
   end
 
   depends_on "cmake" => :build
   depends_on "libpng"
   depends_on "portaudio"
+  depends_on "python@3.9"
   depends_on "sdl2"
 
   # Download EmuTOS ROM image
   resource "emutos" do
-    url "https://downloads.sourceforge.net/project/emutos/emutos/0.9.9.1/emutos-512k-0.9.9.1.zip"
-    sha256 "ab94cd249aebd7fb1696cbd5992734042450d8b96525f707e9ad8a2283185341"
-  end
-
-  # Fix build by providing missing NSAlertStyleInformational
-  # Remove in next version.
-  patch do
-    url "https://hg.tuxfamily.org/mercurialroot/hatari/hatari/raw-rev/21bc2b0ebae4"
-    sha256 "0d6ca48030749061246d5edbf61e4bf2ad0311d5f004c1df8bee1d662b581dc6"
+    url "https://downloads.sourceforge.net/project/emutos/emutos/1.0.1/emutos-512k-1.0.1.zip"
+    sha256 "96c698aa0fc0f51ecdb0f8b53484df9de273215467b5de3f44d245821dff795e"
   end
 
   def install
     # Set .app bundle destination
     inreplace "src/CMakeLists.txt", "/Applications", prefix
-    system "cmake", *std_cmake_args
+    system "cmake", *std_cmake_args, "-DPYTHON_EXECUTABLE=#{Formula["python@3.9"].opt_bin}/python3"
     system "make"
     prefix.install "src/Hatari.app"
     bin.write_exec_script "#{prefix}/Hatari.app/Contents/MacOS/hatari"
@@ -44,6 +43,6 @@ class Hatari < Formula
   end
 
   test do
-    assert_match /Hatari v#{version} -/, shell_output("#{bin}/hatari -v", 1)
+    assert_match "Hatari v#{version} -", shell_output("#{bin}/hatari -v", 1)
   end
 end

@@ -1,16 +1,18 @@
 class Owfs < Formula
   desc "Monitor and control physical environment using Dallas/Maxim 1-wire system"
-  homepage "http://owfs.org/"
-  url "https://downloads.sourceforge.net/project/owfs/owfs/3.2p2/owfs-3.2p2.tar.gz"
-  version "3.2p2"
-  sha256 "39535521a65a74bd36dc31726bcf04201f60f230a7944e9a63c393c318f5113c"
+  homepage "https://owfs.org/"
+  url "https://github.com/owfs/owfs/releases/download/v3.2p4/owfs-3.2p4.tar.gz"
+  version "3.2p4"
+  sha256 "af0a5035f3f3df876ca15aea13486bfed6b3ef5409dee016db0be67755c35fcc"
+  license "GPL-2.0-only"
 
   bottle do
-    cellar :any
-    sha256 "0347d5b92cf6e7c42975d5556609f30c4034936472843b7513ab5a208134d1c2" => :mojave
-    sha256 "51bd18872d4b55af34626459c3f6e039139647124abff190b280e4ddf2c4012f" => :high_sierra
-    sha256 "5dd1116b1058b7eb849905b6af987e7ea71fd3486ccc8f1670cf841b6583802f" => :sierra
-    sha256 "06a2b3710c371730028a58bab488064f967ef6e820f0877e723f38a4e5eaf5e7" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "62b0c429498ff8aef96aa05ec7e4502978b3d98aa289ff8283a27de41352b68a"
+    sha256 cellar: :any,                 big_sur:       "d1f522c35882921728f0bc27c62c0b3a9c225278729ecf3b30ea093c21a1cc4b"
+    sha256 cellar: :any,                 catalina:      "659e132d059f5b07c1f53f7ebc8676edf732da7b36f4e85065a30fe616358f50"
+    sha256 cellar: :any,                 mojave:        "f67044700191dc6becb4b768d2c89f8e6714411ec4182c8297edcf3d3eac1318"
+    sha256 cellar: :any,                 high_sierra:   "1812f6546d6e6957fc34aefadb1ce83ab8c7995a4c9c67b85f0ff7ba4e7e381c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "dc7081d7fe26ec46288fa5bb16f5404e9697f1c567dde4ded5e181f0b54bbb6b"
   end
 
   depends_on "pkg-config" => :build

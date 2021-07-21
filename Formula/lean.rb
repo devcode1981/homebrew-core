@@ -1,21 +1,32 @@
 class Lean < Formula
   desc "Theorem prover"
-  homepage "https://leanprover.github.io/"
-  url "https://github.com/leanprover/lean/archive/v3.4.1.tar.gz"
-  sha256 "c146385e75ae8fbd88732d4443400123288bfea885c35c213efaba78b655d320"
-  head "https://github.com/leanprover/lean.git"
+  homepage "https://leanprover-community.github.io/"
+  url "https://github.com/leanprover-community/lean/archive/v3.30.0.tar.gz"
+  sha256 "402b89ff4d368fd6597dd87c521fd2fe456c6b2b90c99d85f57523661bdd94be"
+  license "Apache-2.0"
+  head "https://github.com/leanprover-community/lean.git"
+
+  # The Lean 3 repository (https://github.com/leanprover/lean/) is archived
+  # and there won't be any new releases. Lean 4 is being developed but is still
+  # a work in progress: https://github.com/leanprover/lean4
+  livecheck do
+    skip "Lean 3 is archived; add a new check once Lean 4 is stable"
+  end
 
   bottle do
-    cellar :any
-    sha256 "f9b31e72b4a0c314c09af988e21172bcfce644487a2e7f4d0bafb898be3a8ee0" => :mojave
-    sha256 "5afcb08796f1e4bf4600006c7b3ebcb76e90f15a14bce73af97f55f1896a4ef1" => :high_sierra
-    sha256 "4c25bc5a6233614a706323e9a4bfec26bb83f10d67a96f05272ad2c0fe2c7e71" => :sierra
-    sha256 "711ed18ebd939e8db24c1c87cba002fd6e590fbc92e110aae7e78310852343b2" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "dce6ff86967540c830fa6aecb39e1dcb3dd54beaa0a524ef373e405dbb6f514a"
+    sha256 cellar: :any, big_sur:       "a10756134d6e97923dc0425d02a8b1ee0a49b4758f49f27e03282887071cde6f"
+    sha256 cellar: :any, catalina:      "014297ad90fee979d9e726fc08d13edd2adab94986541cd67172f62f845aaea5"
+    sha256 cellar: :any, mojave:        "386b72209c9b4fdea4f1ee0a5cded5560bd276e4b9e297c4e4586efbb03c4e74"
   end
 
   depends_on "cmake" => :build
+  depends_on "coreutils"
   depends_on "gmp"
   depends_on "jemalloc"
+  depends_on macos: :mojave
+
+  conflicts_with "elan-init", because: "`lean` and `elan-init` install the same binaries"
 
   def install
     mkdir "src/build" do
@@ -37,6 +48,7 @@ class Lean < Formula
           split, repeat { assumption }
       end
     EOS
-    system "#{bin}/lean", testpath/"hello.lean"
+    system bin/"lean", testpath/"hello.lean"
+    system bin/"leanpkg", "help"
   end
 end

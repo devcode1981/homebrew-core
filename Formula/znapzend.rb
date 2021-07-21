@@ -1,19 +1,20 @@
 class Znapzend < Formula
   desc "ZFS backup with remote capabilities and mbuffer integration"
   homepage "https://www.znapzend.org/"
-  url "https://github.com/oetiker/znapzend/releases/download/v0.19.1/znapzend-0.19.1.tar.gz"
-  sha256 "93e3ec3c6f5cdf6973f72a6b764c49dc6545f2a0a2e0267a1382d471b930efea"
+  url "https://github.com/oetiker/znapzend/releases/download/v0.21.0/znapzend-0.21.0.tar.gz"
+  sha256 "c9218f8540269a85d83b4d9159b7990ce074bac5f56566049ba355fd45ab16c5"
+  license "GPL-3.0-or-later"
   head "https://github.com/oetiker/znapzend.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "7962667b10e7f44b35469d4b5ef1a8e4aeaf75310b34e72840edfc283f1aae16" => :mojave
-    sha256 "7fca9b0f4b129afbc30bee164b1a73911e4da9e48c4943b1d6e7e8e77a1cec17" => :high_sierra
-    sha256 "f12ede845017559f77147ceab275fcbb128f3bdec7a1ff0cd72d54029349a419" => :sierra
-    sha256 "d88080d21fd9def227853fc0d08db6bef5a10d0bca74c16c0207f023aabc8d67" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "712e06398c1865796cc896a7d8c0d6c0baf4c10a52ac5006cc4c8d69b6359fcb"
+    sha256 cellar: :any_skip_relocation, big_sur:       "03e855b5e75b84add0bd121a3f729112c7874ee09c74c2408479e1df095bc96c"
+    sha256 cellar: :any_skip_relocation, catalina:      "d4a36c0209fcb921c565bc9430ecf7a13ef3cfd226e32090c67af215c67b28ca"
+    sha256 cellar: :any_skip_relocation, mojave:        "2435d387ff28213402b816f40fdbf34bb733db8216ca72e66459b188d9e25ae5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d434f71ee8faa538bbf39b2cc6c328274d9f45873098f03bd7f4b2b33b05da40"
   end
 
-  depends_on "perl" if MacOS.version <= :mavericks
+  uses_from_macos "perl"
 
   def install
     system "./configure", "--disable-silent-rules",
@@ -26,42 +27,43 @@ class Znapzend < Formula
     (var/"run/znapzend").mkpath
   end
 
-  plist_options :startup => true, :manual => "sudo znapzend --daemonize"
+  plist_options startup: true, manual: "sudo znapzend --daemonize"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>EnvironmentVariables</key>
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+      "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
         <dict>
-          <key>PATH</key>
-          <string>/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:#{HOMEBREW_PREFIX}/bin</string>
+          <key>EnvironmentVariables</key>
+          <dict>
+            <key>PATH</key>
+            <string>/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:#{HOMEBREW_PREFIX}/bin</string>
+          </dict>
+          <key>KeepAlive</key>
+          <true/>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_bin}/znapzend</string>
+            <string>--connectTimeout=120</string>
+            <string>--logto=#{var}/log/znapzend/znapzend.log</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>StandardErrorPath</key>
+          <string>#{var}/log/znapzend/znapzend.err.log</string>
+          <key>StandardOutPath</key>
+          <string>#{var}/log/znapzend/znapzend.out.log</string>
+          <key>ThrottleInterval</key>
+          <integer>30</integer>
+          <key>WorkingDirectory</key>
+          <string>#{var}/run/znapzend</string>
         </dict>
-        <key>KeepAlive</key>
-        <true/>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/znapzend</string>
-          <string>--connectTimeout=120</string>
-          <string>--logto=#{var}/log/znapzend/znapzend.log</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>StandardErrorPath</key>
-        <string>#{var}/log/znapzend/znapzend.err.log</string>
-        <key>StandardOutPath</key>
-        <string>#{var}/log/znapzend/znapzend.out.log</string>
-        <key>ThrottleInterval</key>
-        <integer>30</integer>
-        <key>WorkingDirectory</key>
-        <string>#{var}/run/znapzend</string>
-      </dict>
-    </plist>
-  EOS
+      </plist>
+    EOS
   end
 
   test do

@@ -1,30 +1,25 @@
 class Noti < Formula
   desc "Trigger notifications when a process completes"
   homepage "https://github.com/variadico/noti"
-  url "https://github.com/variadico/noti/archive/3.1.0.tar.gz"
-  sha256 "3210059aefb9dbbefc67948518509eb2800209fe61bceb158360931dc8d2bd32"
+  url "https://github.com/variadico/noti/archive/3.5.0.tar.gz"
+  sha256 "04183106921e3a6aa7c107c6dff6fa13273436e8a26d139e49f34c5d1eea348c"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "472aa21bb739b064f79f2b7aed61ec699b1aa7ae9d239baef7947fa72817b583" => :mojave
-    sha256 "2ce04f2a8cf722016935a83010314a08a0bb0d9ca7aeed7b62dd9ceab4b73cda" => :high_sierra
-    sha256 "72d72841b3a4f488014abe42d27913c8d9049f681851e4abde30a4a8b2e64554" => :sierra
-    sha256 "72b5fa9563eaf47e3f25f7792bcd9500fb71432932aa4840af70c81c936b94c1" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a4eb0ad59a65cb3c8c870aef3b96754c2ec1b3e62ca79d30bad2abdf746ce9e3"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c62799cbbb117b38b1aa7115d9ca4e823caf6eba30bc509638445d82ea7aaa99"
+    sha256 cellar: :any_skip_relocation, catalina:      "fd5b46d0b59943d06196923e4ba4f5628816d3c051d3b982939e3e64d2397fdf"
+    sha256 cellar: :any_skip_relocation, mojave:        "83a2ca79439aaaa5872597f0d937facea22e69eba196eade49a20099c5b6b120"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "f622905f1a8f1ce308b629de6521c17be579de1019a3727ec568a359f852d135"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "8b5e7f6ed05b1d96d96059281319cbb3fd5cfb95b7b81c58aa7cfc115698cffb"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    notipath = buildpath/"src/github.com/variadico/noti"
-    notipath.install Dir["*"]
-
-    cd "src/github.com/variadico/noti/cmd/noti" do
-      system "go", "build"
-      bin.install "noti"
-      prefix.install_metafiles
-    end
+    system "go", "build", "-mod=vendor", "-o", "#{bin}/noti", "cmd/noti/main.go"
+    man1.install "docs/man/noti.1"
+    man5.install "docs/man/noti.yaml.5"
   end
 
   test do

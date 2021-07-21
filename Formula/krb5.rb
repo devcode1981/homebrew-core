@@ -1,27 +1,50 @@
 class Krb5 < Formula
   desc "Network authentication protocol"
   homepage "https://web.mit.edu/kerberos/"
-  url "https://kerberos.org/dist/krb5/1.16/krb5-1.16.2.tar.gz"
-  sha256 "9f721e1fe593c219174740c71de514c7228a97d23eb7be7597b2ae14e487f027"
+  url "https://kerberos.org/dist/krb5/1.19/krb5-1.19.1.tar.gz"
+  sha256 "fa16f87eb7e3ec3586143c800d7eaff98b5e0dcdf0772af7d98612e49dbeb20b"
+  license :cannot_represent
+
+  livecheck do
+    url :homepage
+    regex(/Current release: .*?>krb5[._-]v?(\d+(?:\.\d+)+)</i)
+  end
 
   bottle do
-    sha256 "2a65570080ab6a01c73b77b318502881e13c9e3e7203607b8b31aab6fa3ff876" => :mojave
-    sha256 "b4031c03425dcbd98f7f7d2b505542b06b18054b947b92cff85563446c4eccbc" => :high_sierra
-    sha256 "e6964cbea39ddef11af37c8f431567c1aa97b92ee31763be311268b922c2e5e1" => :sierra
+    sha256 arm64_big_sur: "0a2528fac8efc2c289411944004f75c5bed52942bc5c2258636e47a1fab635f9"
+    sha256 big_sur:       "d544c1111503eb27b253e190998b948889ea224b1ebecbceb6a4dd912317eb53"
+    sha256 catalina:      "6a41de7c23c35b555a22349963df4114c498c5b91c345126a1e7deb7acbe31ea"
+    sha256 mojave:        "7697a5ffefab32cacc4d34aec34cb03dab185776025d56d7442d6350cd9fadc1"
+    sha256 x86_64_linux:  "66786d7f83dda619a4a3687045b686fd0507abd475ec9053a94fd2341c31ea12"
   end
 
   keg_only :provided_by_macos
 
-  depends_on "openssl"
+  depends_on "openssl@1.1"
+
+  uses_from_macos "bison"
+
+  on_linux do
+    depends_on "gettext"
+  end
 
   def install
     cd "src" do
-      system "./configure",
-        "--disable-debug",
-        "--disable-dependency-tracking",
-        "--disable-silent-rules",
-        "--prefix=#{prefix}",
-        "--without-system-verto"
+      # Newer versions of clang are very picky about missing includes.
+      # One configure test fails because it doesn't #include the header needed
+      # for some functions used in the rest. The test isn't actually testing
+      # those functions, just using them for the feature they're
+      # actually testing. Adding the include fixes this.
+      # https://krbdev.mit.edu/rt/Ticket/Display.html?id=8928
+      inreplace "configure", "void foo1() __attribute__((constructor));",
+                             "#include <unistd.h>\nvoid foo1() __attribute__((constructor));"
+
+      system "./configure", "--disable-debug",
+                            "--disable-dependency-tracking",
+                            "--disable-silent-rules",
+                            "--prefix=#{prefix}",
+                            "--without-system-verto",
+                            "--without-keyutils"
       system "make"
       system "make", "install"
     end

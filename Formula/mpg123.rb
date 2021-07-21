@@ -1,14 +1,22 @@
 class Mpg123 < Formula
   desc "MP3 player for Linux and UNIX"
   homepage "https://www.mpg123.de/"
-  url "https://downloads.sourceforge.net/project/mpg123/mpg123/1.25.10/mpg123-1.25.10.tar.bz2"
-  sha256 "6c1337aee2e4bf993299851c70b7db11faec785303cfca3a5c3eb5f329ba7023"
+  url "https://www.mpg123.de/download/mpg123-1.28.2.tar.bz2"
+  mirror "https://downloads.sourceforge.net/project/mpg123/mpg123/1.28.2/mpg123-1.28.2.tar.bz2"
+  sha256 "7eefd4b68fdac7e138d04c37efe12155a8ebf25a5bccf0fb7e775af22d21db00"
+  license "LGPL-2.1-only"
+
+  livecheck do
+    url "https://www.mpg123.de/download/"
+    regex(/href=.*?mpg123[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "293d4702bee5702d5b75983d2537ea55fcc751f95b19883f69ad1aa105062fe4" => :mojave
-    sha256 "ddcbdf62b3ddf3ad7d1b73f76aca1c51c4ba7bc85484b0d04050dfe7bb3f8a68" => :high_sierra
-    sha256 "86afb9e31472b3b4b432bbad04b8e88d7f60b7a35c14208a4c0313ef4beb7b97" => :sierra
-    sha256 "079e45cffa682e9cbdc42a51a4d7362e28246311e9f6268e246d255b3dfc0cc9" => :el_capitan
+    sha256 arm64_big_sur: "9da7a8249c0b232c766cf1efab8e956a62a7d3e84889c4f94b7571918246476f"
+    sha256 big_sur:       "2d7805fe21b9178ca7a4df40fb05b7b01f22b95be6b5cdc1a94c014f1d9aa50d"
+    sha256 catalina:      "6fd71cfdf237aa77246851ef9401d10fe91f9e13ef7817c7e66d73c86b4f745d"
+    sha256 mojave:        "281d8863a9b1af6d2e9024b8ebc7041206ed3f3a84e5469ec9a9feec1a3b92b0"
+    sha256 x86_64_linux:  "59a245a3fbf56ea367ce412a04d804b809699b3266b0010da393451e8f6f4b7f"
   end
 
   def install
@@ -16,14 +24,17 @@ class Mpg123 < Formula
       --disable-debug
       --disable-dependency-tracking
       --prefix=#{prefix}
-      --with-default-audio=coreaudio
       --with-module-suffix=.so
     ]
 
-    if MacOS.prefer_64_bit?
-      args << "--with-cpu=x86-64"
+    on_macos do
+      args << "--with-default-audio=coreaudio"
+    end
+
+    args << if Hardware::CPU.arm?
+      "--with-cpu=aarch64"
     else
-      args << "--with-cpu=sse_alone"
+      "--with-cpu=x86-64"
     end
 
     system "./configure", *args

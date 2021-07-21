@@ -1,65 +1,50 @@
 class Fish < Formula
   desc "User-friendly command-line shell for UNIX-like operating systems"
   homepage "https://fishshell.com"
-  url "https://github.com/fish-shell/fish-shell/releases/download/2.7.1/fish-2.7.1.tar.gz"
-  mirror "https://fishshell.com/files/2.7.1/fish-2.7.1.tar.gz"
-  sha256 "e42bb19c7586356905a58578190be792df960fa81de35effb1ca5a5a981f0c5a"
+  url "https://github.com/fish-shell/fish-shell/releases/download/3.3.1/fish-3.3.1.tar.xz"
+  sha256 "b5b4ee1a5269762cbbe993a4bd6507e675e4100ce9bbe84214a5eeb2b19fae89"
+  license "GPL-2.0-only"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    sha256 "173bd50e5490974f8c980a022c4ed4c203d93c861d310ae319734b2233a465d0" => :mojave
-    sha256 "b75d873885ecfe3a6e28e8de9a7f292b03c3fb3ebedd3d6ac7a74219148af04e" => :high_sierra
-    sha256 "20e6c49692cef13eaadd8ee94e9831557130d449405fe12bfd9403659865f5b3" => :sierra
-    sha256 "017610f146a161b4383b905a675ac935568a721ed042c3f41f97aaa7f4b5037b" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "b38561f401a18c3347b34cfee074d812728bc027fc351eaab95a872564f102d9"
+    sha256 cellar: :any,                 big_sur:       "eb6c0068f4a2fce0992048d31f1204ebaad31237a17e2ada18843a54afea162c"
+    sha256 cellar: :any,                 catalina:      "50b1d13f3cf765f6b7933b317e48c76bcd42ce65fb5cbd5eeb1279229d6937a7"
+    sha256 cellar: :any,                 mojave:        "25119dc2f23d89aad5666dcd6ebdf58a1c250c5a86942c187a65b72ab19e287c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "13846c25ad06b9327782e430ed9e7e1d7faec4712704a28001b65ba5073df84c"
   end
 
   head do
-    url "https://github.com/fish-shell/fish-shell.git", :shallow => false
+    url "https://github.com/fish-shell/fish-shell.git"
 
-    depends_on "cmake" => :build
-    depends_on "doxygen" => :build
+    depends_on "sphinx-doc" => :build
   end
 
+  depends_on "cmake" => :build
+  # Apple ncurses (5.4) is 15+ years old and
+  # has poor support for modern terminals
+  depends_on "ncurses"
   depends_on "pcre2"
 
   def install
-    if build.head?
-      args = %W[
-        -Dextra_functionsdir=#{HOMEBREW_PREFIX}/share/fish/vendor_functions.d
-        -Dextra_completionsdir=#{HOMEBREW_PREFIX}/share/fish/vendor_completions.d
-        -Dextra_confdir=#{HOMEBREW_PREFIX}/share/fish/vendor_conf.d
-        -DSED=/usr/bin/sed
-      ]
-      system "cmake", ".", *std_cmake_args, *args
-    else
-      # In Homebrew's 'superenv' sed's path will be incompatible, so
-      # the correct path is passed into configure here.
-      args = %W[
-        --prefix=#{prefix}
-        --with-extra-functionsdir=#{HOMEBREW_PREFIX}/share/fish/vendor_functions.d
-        --with-extra-completionsdir=#{HOMEBREW_PREFIX}/share/fish/vendor_completions.d
-        --with-extra-confdir=#{HOMEBREW_PREFIX}/share/fish/vendor_conf.d
-        SED=/usr/bin/sed
-      ]
-      system "./configure", *args
-    end
-    system "make", "install"
+    args = %W[
+      -Dextra_functionsdir=#{HOMEBREW_PREFIX}/share/fish/vendor_functions.d
+      -Dextra_completionsdir=#{HOMEBREW_PREFIX}/share/fish/vendor_completions.d
+      -Dextra_confdir=#{HOMEBREW_PREFIX}/share/fish/vendor_conf.d
+    ]
+    system "cmake", "-S", ".", "-B", "build", *std_cmake_args, *args
+    system "cmake", "--build", "build"
+    system "cmake", "--install", "build"
   end
 
   def post_install
     (pkgshare/"vendor_functions.d").mkpath
     (pkgshare/"vendor_completions.d").mkpath
     (pkgshare/"vendor_conf.d").mkpath
-  end
-
-  def caveats; <<~EOS
-    You will need to add:
-      #{HOMEBREW_PREFIX}/bin/fish
-    to /etc/shells.
-
-    Then run:
-      chsh -s #{HOMEBREW_PREFIX}/bin/fish
-    to make fish your default shell.
-  EOS
   end
 
   test do

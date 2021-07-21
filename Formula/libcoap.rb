@@ -1,27 +1,48 @@
 class Libcoap < Formula
   desc "Lightweight application-protocol for resource-constrained devices"
   homepage "https://github.com/obgm/libcoap"
-  url "https://github.com/obgm/libcoap/archive/v4.1.2.tar.gz"
-  sha256 "f7e26dc232c177336474a14487771037a8fb32e311f5ccd076a00dc04b6d7b7a"
+  url "https://github.com/obgm/libcoap/archive/v4.3.0.tar.gz"
+  sha256 "1a195adacd6188d3b71c476e7b21706fef7f3663ab1fb138652e8da49a9ec556"
+  license "BSD-2-Clause"
 
   bottle do
-    cellar :any
-    sha256 "d83c195d5b9acd81c7a91a3115ef8ac9783baefd48cdf63396c74cefcf4ecbd7" => :mojave
-    sha256 "0c6f38dbbdca258949c72b8eb9439e72c9f8cdb473de80fc4b2d5996a89d80b5" => :high_sierra
-    sha256 "f9577ef79f4c1a7a257d04004cb64802879787bb5b5657a7aa54ab24ee102c20" => :sierra
-    sha256 "a8b3fe01f85e8d9345dbe4ceddda24abd244f1b4055abcfef36e73b26e14ae86" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "57300cff98f6ad59e6c4cf95de26bf0a4dbcf0fb64d2d911d6bdddadf63da1dc"
+    sha256 cellar: :any, big_sur:       "f82b84bbe8f8db3b33810627b2a6d68462fc93a82daa6385a79afe7738534ae5"
+    sha256 cellar: :any, catalina:      "4e2fa796da56bec1271a091dc6262b812ece25b989c62be4e4d4d08943dfbe7d"
+    sha256 cellar: :any, mojave:        "09ad4d7b446860842318c4f21a4ee112e1dda916a36f9023811d7abb7bd66001"
   end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
+  depends_on "doxygen" => :build
   depends_on "libtool" => :build
   depends_on "pkg-config" => :build
+  depends_on "openssl@1.1"
 
   def install
     system "./autogen.sh"
     system "./configure", "--prefix=#{prefix}",
-                          "--disable-examples"
+                          "--disable-examples",
+                          "--disable-manpages"
     system "make"
     system "make", "install"
+  end
+
+  test do
+    %w[coap-client coap-server].each do |src|
+      system ENV.cc, pkgshare/"examples/#{src}.c",
+        "-I#{Formula["openssl@1.1"].opt_include}", "-I#{include}",
+        "-L#{Formula["openssl@1.1"].opt_lib}", "-L#{lib}",
+        "-lcrypto", "-lssl", "-lcoap-3-openssl", "-o", src
+    end
+
+    port = free_port
+    fork do
+      exec testpath/"coap-server", "-p", port.to_s
+    end
+
+    sleep 1
+    output = shell_output(testpath/"coap-client -B 5 -m get coap://localhost:#{port}")
+    assert_match "This is a test server made with libcoap", output
   end
 end

@@ -1,17 +1,17 @@
 class Imlib2 < Formula
   desc "Image loading and rendering library"
   homepage "https://sourceforge.net/projects/enlightenment/"
-  url "https://downloads.sourceforge.net/project/enlightenment/imlib2-src/1.5.1/imlib2-1.5.1.tar.bz2"
-  sha256 "fa4e57452b8843f4a70f70fd435c746ae2ace813250f8c65f977db5d7914baae"
+  url "https://downloads.sourceforge.net/project/enlightenment/imlib2-src/1.7.1/imlib2-1.7.1.tar.bz2"
+  sha256 "033a6a639dcbc8e03f65ff05e57068e7346d50ee2f2fff304bb9095a1b2bc407"
+  license "Imlib2"
 
   bottle do
-    sha256 "bf73b51f136932cbf6403da131f9e509eb05b6c677a42c1edcc82e5003d3e40e" => :mojave
-    sha256 "7edcb670d36ba9a1ff093c23f08a87162e7ff0969591a5666ba4e7c42b91a047" => :high_sierra
-    sha256 "2e9f97ed9f360067b209b424ef476282a12be3bea11cc30ef10b9848d7a754f8" => :sierra
-    sha256 "90bd1801b3f7c1ada18b6a2982770453893c3f71b2fa07621e6a5c051e1776a9" => :el_capitan
+    sha256 arm64_big_sur: "9455235701eb3e7228e8189f99b79c94c3034372d475c7c0ced4468418adafbb"
+    sha256 big_sur:       "d2af1ccb06b90d94c4a6e0502f722880a2947d126735c0e6e15bb2ec4600955d"
+    sha256 catalina:      "530114570c89b19a5b4383adca9168f85ae033ba75627f794c557bd5bb5179f6"
+    sha256 mojave:        "4e65ec5a0c3474e47a93b3c25048247c1062c62a5a92a2525842226c4ed238bb"
+    sha256 x86_64_linux:  "439592effbbc1882d59b695ac98f2d4eaf3c35c7a17578014ef7d13135211975"
   end
-
-  deprecated_option "without-x" => "without-x11"
 
   depends_on "pkg-config" => :build
   depends_on "freetype"
@@ -19,7 +19,9 @@ class Imlib2 < Formula
   depends_on "jpeg"
   depends_on "libpng"
   depends_on "libtiff"
-  depends_on :x11 => :recommended
+  depends_on "libx11"
+  depends_on "libxcb"
+  depends_on "libxext"
 
   def install
     args = %W[
@@ -28,7 +30,6 @@ class Imlib2 < Formula
       --enable-amd64=no
       --without-id3
     ]
-    args << "--without-x" if build.without? "x11"
 
     system "./configure", *args
     system "make", "install"

@@ -1,23 +1,32 @@
 class Goaccess < Formula
   desc "Log analyzer and interactive viewer for the Apache Webserver"
   homepage "https://goaccess.io/"
-  url "https://tar.goaccess.io/goaccess-1.2.tar.gz"
-  sha256 "6ba9f66540ea58fc2c17f175265f9ed76d74a8432eeac1182b74ebf4f2cd3414"
-  revision 1
+  url "https://tar.goaccess.io/goaccess-1.5.1.tar.gz"
+  sha256 "88417e78e62b70de3980b7622911e4fcd719c3660f003c887968e7196c39970f"
+  license "MIT"
   head "https://github.com/allinurl/goaccess.git"
 
+  livecheck do
+    url "https://goaccess.io/download"
+    regex(/href=.*?goaccess[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    sha256 "97d3bd323111361a0c0790dd9f1a3d50a96941e0c0f53d0f09bb8cea9d7c2807" => :mojave
-    sha256 "fbab9c91c705da72e58919231feac0949f2a557185a884686f189d24e25d3908" => :high_sierra
-    sha256 "a6dfa226d34a108be47db6ba5e1515b50b25e7ded1af71145dd43c2d6dcbd688" => :sierra
+    sha256 arm64_big_sur: "17c731e75f74d763c6d6429a68b61a87838c60a84471713697887d80686de430"
+    sha256 big_sur:       "ee16b6e3d3b2c554b0283c1542bb09642900704aee00046784cea3bf033e72b8"
+    sha256 catalina:      "cb169175ffab71ec3cdacdff8c9a52f78a3331599a3e797a282180ffae3b180d"
+    sha256 mojave:        "2f6832aa0c6fb0597e2cea15d9a0f2399630ebd8c8009ea249bd31da148faad7"
+    sha256 x86_64_linux:  "3fb32f60f838b2da1185af1b31eb9bd2ed796939449af9970f67cb798660ac0b"
   end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
+  depends_on "gettext"
   depends_on "libmaxminddb"
   depends_on "tokyo-cabinet"
 
   def install
+    ENV.append_path "PATH", Formula["gettext"].bin
     system "autoreconf", "-vfi"
 
     args = %W[
@@ -27,6 +36,7 @@ class Goaccess < Formula
       --enable-utf8
       --enable-tcb=btree
       --enable-geoip=mmdb
+      --with-libintl-prefix=#{Formula["gettext"].opt_prefix}
     ]
 
     system "./configure", *args

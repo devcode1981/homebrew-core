@@ -1,15 +1,16 @@
 class Hwloc < Formula
   desc "Portable abstraction of the hierarchical topology of modern architectures"
   homepage "https://www.open-mpi.org/projects/hwloc/"
-  url "https://www.open-mpi.org/software/hwloc/v2.0/downloads/hwloc-2.0.2.tar.bz2"
-  sha256 "14457d70e6f98ee9eb3f2940000da4bac99909a49560ef2fdf4eacd286410cde"
+  url "https://download.open-mpi.org/release/hwloc/v2.5/hwloc-2.5.0.tar.bz2"
+  sha256 "a9cf9088be085bdd167c78b73ddf94d968fa73a8ccf62172481ba9342c4f52c8"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any
-    sha256 "1bab0bc7648791a559811cdc7135f54879aa5992948529942502279bdcdde3cc" => :mojave
-    sha256 "f9d9eff8707c433e53322487dec416e7f55aecb115b33cdbd57a9e53d23898c2" => :high_sierra
-    sha256 "403bc0d7b05a1a371be6b28f6732ec0758d35789a257330fd96f01c1162518f8" => :sierra
-    sha256 "6cb2aca1177a2dea107e6edb32b9a4383de751a41290688b8fd1b4f55529fbac" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "1df444fd7640dff4306508bcf2baa3f5a9fb83db7646897fd31421034f5765ac"
+    sha256 cellar: :any,                 big_sur:       "d0b225d121dcd50e56b2b592a2670f05e94d48316cd37e6c254c36b99690e278"
+    sha256 cellar: :any,                 catalina:      "39a52a77a6f45eed5601095cd8e4e96e978683fab21231547367903d21943ead"
+    sha256 cellar: :any,                 mojave:        "27fe1f8278655b12f5392ea303c3c3083ab71bb8db42a111192e6e72bd898c9b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "88e5133fba92e2c0ef66f0fad789f18fe24240f4a48cae9b4696f1b4731801a7"
   end
 
   head do
@@ -20,7 +21,8 @@ class Hwloc < Formula
   end
 
   depends_on "pkg-config" => :build
-  depends_on "cairo" => :optional
+
+  uses_from_macos "libxml2"
 
   def install
     system "./autogen.sh" if build.head?
@@ -29,10 +31,14 @@ class Hwloc < Formula
                           "--enable-shared",
                           "--enable-static",
                           "--prefix=#{prefix}",
+                          "--disable-cairo",
                           "--without-x"
     system "make", "install"
 
     pkgshare.install "tests"
+
+    # remove homebrew shims directory references
+    rm Dir[pkgshare/"tests/**/Makefile"]
   end
 
   test do

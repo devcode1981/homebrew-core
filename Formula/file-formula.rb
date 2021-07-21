@@ -1,17 +1,18 @@
 # "File" is a reserved class name
 class FileFormula < Formula
   desc "Utility to determine file types"
-  homepage "https://www.darwinsys.com/file/"
-  url "ftp://ftp.astron.com/pub/file/file-5.35.tar.gz"
-  mirror "https://fossies.org/linux/misc/file-5.35.tar.gz"
-  sha256 "30c45e817440779be7aac523a905b123cba2a6ed0bf4f5439e1e99ba940b5546"
+  homepage "https://darwinsys.com/file/"
+  url "https://astron.com/pub/file/file-5.40.tar.gz"
+  sha256 "167321f43c148a553f68a0ea7f579821ef3b11c27b8cbe158e4df897e4a5dd57"
+  # file-formula has a BSD-2-Clause-like license
+  license :cannot_represent
   head "https://github.com/file/file.git"
 
   bottle do
-    cellar :any
-    sha256 "414a7ea4620970ec73ac089629e244e878072d4ac9b279be52c42e5756bd9220" => :mojave
-    sha256 "661aec7c6c1fbd510f03faf696cde94d55d5ea691346078dc947c18a78ceb312" => :high_sierra
-    sha256 "a0c67d9fdfbf0deb40a81be2cc7fce0196ea919f3496550fa8ff679cd47705f4" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "707df034d66e4a7e448fd1849f266634d5095f0605a8c7354bf5f0cf4fc5a45f"
+    sha256 cellar: :any, big_sur:       "90936b82c5dae98ee47784aea42bb8c085febf2bdc860c5c5d8d553d6b958201"
+    sha256 cellar: :any, catalina:      "79a0d7c166aaccfef9c381350dae30f8547a68b99e380f8d542fc92a05d1e8cf"
+    sha256 cellar: :any, mojave:        "7c351f1d74d78678bdff2d1ba0f245a7d3e6933e56ce726d60488e5d78cfa631"
   end
 
   keg_only :provided_by_macos

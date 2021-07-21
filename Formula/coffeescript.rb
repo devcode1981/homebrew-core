@@ -3,21 +3,23 @@ require "language/node"
 class Coffeescript < Formula
   desc "Unfancy JavaScript"
   homepage "https://coffeescript.org/"
-  url "https://registry.npmjs.org/coffeescript/-/coffeescript-2.3.2.tgz"
-  sha256 "c74eb245cbd411eefc34d44bc2570b470682c434e029afac9ece0175db9faa5a"
+  url "https://registry.npmjs.org/coffeescript/-/coffeescript-2.5.1.tgz"
+  sha256 "0ab43e873a859d323f2f5a0069a8bef3acfa72b09769be3350c9d43c5bb489a0"
+  license "MIT"
   head "https://github.com/jashkenas/coffeescript.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "9a34ee70f2b0806edf10c621a777bcab5b674b6a2c3babb21a62637175b79052" => :mojave
-    sha256 "49da6599ee49ee6644fbb8cef4da0f333a36e5169b49882e151ea95c3e0288c5" => :high_sierra
-    sha256 "bbb0b28041b6aa10e4730d1cafa2e682438fb7384165651cf4b6ab72386fd669" => :sierra
-    sha256 "750778791fbd6e5896a10bacc345ca18bbb28e29abd270227f4bbfc73d7426c1" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "cfe10ba50bec4e20897d1d2ead0a21e8bfcd25841dae5e875e8c04a8cbfdd44f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "203638208a42d33debe48c9e5c4cea7adfec2fb30b0afeb4d0dea77bcb506863"
+    sha256 cellar: :any_skip_relocation, catalina:      "090fe2a4161fbcf4e7615cded97c8e9736f7939c1a70a863f37d83141f5cb118"
+    sha256 cellar: :any_skip_relocation, mojave:        "acd2a08cb5db976c36508582ac5ff82476ad9dc037ab065353d071cf46c211f5"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "4ee049a8e7bb8a0c67452cb0b912ef5fd4e402c4948cf1b4cb8a5022640df19e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "74189e3849ff5df9c38e51a8c986a269c15974c7e24959141351b1fa93ec4a78"
   end
 
   depends_on "node"
 
-  conflicts_with "cake", :because => "both install `cake` binaries"
+  conflicts_with "cake", because: "both install `cake` binaries"
 
   def install
     system "npm", "install", *Language::Node.std_npm_install_args(libexec)

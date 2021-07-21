@@ -5,39 +5,77 @@ class Vault < Formula
   desc "Secures, stores, and tightly controls access to secrets"
   homepage "https://vaultproject.io/"
   url "https://github.com/hashicorp/vault.git",
-      :tag      => "v0.11.5",
-      :revision => "a59ffa4a0f09bbf198241fe6793a96722789b639"
-  head "https://github.com/hashicorp/vault.git"
+      tag:      "v1.7.3",
+      revision: "5d517c864c8f10385bf65627891bc7ef55f5e827"
+  license "MPL-2.0"
+  head "https://github.com/hashicorp/vault.git", branch: "main"
+
+  livecheck do
+    url "https://releases.hashicorp.com/vault/"
+    regex(%r{href=.*?v?(\d+(?:\.\d+)+)/?["' >]}i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "ccdd43326edadd365168e929aae2e4da898d65838df3e61dae7892d46eea0a32" => :mojave
-    sha256 "250d162042ebd0577625c969f5eef235cb1cabf857b75a8657462e2b6b82f85a" => :high_sierra
-    sha256 "ee289fb807fea35118c3f88c2bbbf39ee4accc3efa2c40869b06c2352801eed9" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "f9e9ff9c469553fade899be62cb729a09d0366fa01cc4c35156ee9615a9fb0eb"
+    sha256 cellar: :any_skip_relocation, big_sur:       "8690b134a8a1fd3c6fffe89aa1711b17c02e5ba187fed06027f5dd2b7e7001c1"
+    sha256 cellar: :any_skip_relocation, catalina:      "67278a2537cc7a10ad685ae1ed76a62309b4ceeb58b4447c31af4de041b1ccfe"
+    sha256 cellar: :any_skip_relocation, mojave:        "40d18916c9c50ef3aeb9e57dc31ff4cbf46a57c811de6260d125f1b6718cd734"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "bc2760aff47c4fd741eef2433330fb5b019cf36bbdf0dcfd74e3525d9713fc96"
   end
 
   depends_on "go" => :build
   depends_on "gox" => :build
+  # Cannot build with `node` while upstream depends on node-sass<6
+  depends_on "node@14" => :build
+  depends_on "yarn" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
+    ENV.prepend_path "PATH", "#{ENV["GOPATH"]}/bin"
+    system "make", "bootstrap", "static-dist", "dev-ui"
+    bin.install "bin/vault"
+  end
 
-    contents = buildpath.children - [buildpath/".brew_home"]
-    (buildpath/"src/github.com/hashicorp/vault").install contents
+  plist_options manual: "vault server -dev"
 
-    (buildpath/"bin").mkpath
-
-    cd "src/github.com/hashicorp/vault" do
-      system "make", "dev"
-      bin.install "bin/vault"
-      prefix.install_metafiles
-    end
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>KeepAlive</key>
+          <dict>
+            <key>SuccessfulExit</key>
+            <false/>
+          </dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_bin}/vault</string>
+            <string>server</string>
+            <string>-dev</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>WorkingDirectory</key>
+          <string>#{var}</string>
+          <key>StandardErrorPath</key>
+          <string>#{var}/log/vault.log</string>
+          <key>StandardOutPath</key>
+          <string>#{var}/log/vault.log</string>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do
+    port = free_port
+    ENV["VAULT_DEV_LISTEN_ADDRESS"] = "127.0.0.1:#{port}"
+    ENV["VAULT_ADDR"] = "http://127.0.0.1:#{port}"
+
     pid = fork { exec bin/"vault", "server", "-dev" }
-    sleep 1
-    ENV.append "VAULT_ADDR", "http://127.0.0.1:8200"
+    sleep 5
     system bin/"vault", "status"
     Process.kill("TERM", pid)
   end

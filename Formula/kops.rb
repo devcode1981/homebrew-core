@@ -1,16 +1,22 @@
 class Kops < Formula
   desc "Production Grade K8s Installation, Upgrades, and Management"
-  homepage "https://github.com/kubernetes/kops"
-  url "https://github.com/kubernetes/kops/archive/1.10.0.tar.gz"
-  sha256 "08f6ddf64e9003f12df8a33afe077418994aff40ab0b655b2fe162c63cfc7190"
+  homepage "https://kops.sigs.k8s.io/"
+  url "https://github.com/kubernetes/kops/archive/v1.21.0.tar.gz"
+  sha256 "b6246cc58e5ad2c9566238bbe99ba8ba1e9593b016336ba5dd6320f66040ac40"
+  license "Apache-2.0"
   head "https://github.com/kubernetes/kops.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "cdfbcb1dd38b71a8dd1f20e5b2155a56b7eda71bef72a98216356859332084eb" => :mojave
-    sha256 "8869572a3af21c8d08588b3605e5e0d63c02f18d5e39cc00578e94b39b0e484d" => :high_sierra
-    sha256 "9f41f7d73ba4c340ead714cadb882e793b39bcb807c4b67b801e685a1595d4fc" => :sierra
-    sha256 "c52f609532178a621b4da9f83801e4168377d2860070a7aa2e7dbffaebe7c6a3" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a7741e7c13fce8e0e46defc2ede4d65d19a668ca42afa298b90247d9649d081f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "23dec5163db7d299b12ab1ee3ec993ffa7bca1065ed4579d79e787332def6190"
+    sha256 cellar: :any_skip_relocation, catalina:      "53b6da54ecb3c4ec63296bed6f29359de2fcc60c193312a3b12c07dd046fbfab"
+    sha256 cellar: :any_skip_relocation, mojave:        "85a9c1af389f0bf9255dba02e2be8a35bbd8bab371f693bbae3bd1bf1b574f02"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "ff6152d695842c1098c952d8346e851a1b0774d783c7f1b53b7661915467fb50"
   end
 
   depends_on "go" => :build
@@ -25,11 +31,11 @@ class Kops < Formula
     bin.install("bin/kops")
 
     # Install bash completion
-    output = Utils.popen_read("#{bin}/kops completion bash")
+    output = Utils.safe_popen_read("#{bin}/kops", "completion", "bash")
     (bash_completion/"kops").write output
 
     # Install zsh completion
-    output = Utils.popen_read("#{bin}/kops completion zsh")
+    output = Utils.safe_popen_read("#{bin}/kops", "completion", "zsh")
     (zsh_completion/"_kops").write output
   end
 

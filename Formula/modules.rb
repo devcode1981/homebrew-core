@@ -1,43 +1,42 @@
 class Modules < Formula
   desc "Dynamic modification of a user's environment via modulefiles"
   homepage "https://modules.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/modules/Modules/modules-4.1.4/modules-4.1.4.tar.bz2"
-  sha256 "7eaf26b66cbf3ba101ec5a693b7bfb3a47f3c86cad09e47c4126f3d785864c55"
+  url "https://downloads.sourceforge.net/project/modules/Modules/modules-4.7.1/modules-4.7.1.tar.bz2"
+  sha256 "a6ab006ccc176ddc5b92659119be68563641fa15d72c518b97becba9f11e201f"
+  license "GPL-2.0-or-later"
 
-  bottle do
-    sha256 "1bfdf504b019fa4c8ffe7db7d9cef79a1a2c23e381b04d7eed98f041b3507987" => :mojave
-    sha256 "29eacb986d942b621d5aa161952c962250cc6d96acb9929425d8a5284f7a6ca2" => :high_sierra
-    sha256 "4e45ab192bad2a47c3b63e7de10d61c701a1f8a70a011956b21203074dee8418" => :sierra
-    sha256 "b3a8d7c48c0b6c56a706357da2a0b6087c593f2254acd7b84956e6870053b8e1" => :el_capitan
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/modules[._-]v?(\d+(?:\.\d+)+)\.t}i)
   end
 
-  depends_on "grep" => :build # configure checks for ggrep
-  depends_on :x11 => :optional
+  bottle do
+    sha256               arm64_big_sur: "8cc933f4ad6ffd306c36f080228d326181ac471e56b92e0c32c75e2c3e95eb9b"
+    sha256               big_sur:       "5d63553037af74beab1d31831b3880622eb2bdf4e981ac67ba20afbfc7b33b02"
+    sha256 cellar: :any, catalina:      "a6257daf6e36156bc6bbde38622778b2b3dabe4681eead1fd238e3aa7b5a71e9"
+    sha256 cellar: :any, mojave:        "9a2dc8c4e84f0c33dfa5c60210fd5716a5f087f5c0624bfd4ad3e6e492bff19b"
+  end
+
+  depends_on "tcl-tk"
 
   def install
-    ENV.prepend_path "PATH", Formula["coreutils"].opt_libexec/"gnubin"
-
-    # -DUSE_INTERP_ERRORLINE fixes
-    # error: no member named 'errorLine' in 'struct Tcl_Interp'
     args = %W[
-      --disable-dependency-tracking
       --prefix=#{prefix}
-      --with-tcl=#{MacOS.sdk_path}/System/Library/Frameworks/Tcl.framework
       --datarootdir=#{share}
-      --disable-versioning
-      CPPFLAGS=-DUSE_INTERP_ERRORLINE
+      --with-tcl=#{Formula["tcl-tk"].opt_lib}
+      --without-x
     ]
-    args << "--without-x" if build.without? "x11"
     system "./configure", *args
     system "make", "install"
   end
 
-  def caveats; <<~EOS
-    To activate modules, add the following at the end of your .zshrc:
-      source #{opt_prefix}/init/zsh
-    You will also need to reload your .zshrc:
-      source ~/.zshrc
-  EOS
+  def caveats
+    <<~EOS
+      To activate modules, add the following at the end of your .zshrc:
+        source #{opt_prefix}/init/zsh
+      You will also need to reload your .zshrc:
+        source ~/.zshrc
+    EOS
   end
 
   test do

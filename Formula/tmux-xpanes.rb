@@ -1,12 +1,15 @@
 class TmuxXpanes < Formula
   desc "Ultimate terminal divider powered by tmux"
   homepage "https://github.com/greymd/tmux-xpanes"
-  url "https://github.com/greymd/tmux-xpanes/archive/v3.1.0.tar.gz"
-  sha256 "453e9a5df245e024b66f0ef527e96880b559581576979622e5e8eb8b5f950cd2"
+  url "https://github.com/greymd/tmux-xpanes/archive/v4.1.3.tar.gz"
+  sha256 "d6c6ce10bb1a487c6455474fe2274eb56ff0a8a87ee9d5cae7dae676d13c19b2"
+  license "MIT"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "f6e53513b857505d83cdfb1aabe7ac7207521f17ac816c16c0228c14e0c3757f"
+  end
 
-  depends_on "tmux" => :recommended
+  depends_on "tmux"
 
   def install
     system "./install.sh", prefix

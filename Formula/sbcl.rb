@@ -1,25 +1,22 @@
 class Sbcl < Formula
   desc "Steel Bank Common Lisp system"
   homepage "http://www.sbcl.org/"
-  url "https://downloads.sourceforge.net/project/sbcl/sbcl/1.4.13/sbcl-1.4.13-source.tar.bz2"
-  sha256 "75bfef4e2eba160cf0242b6adcd1380d2c525becc8512ce999f49881beb51988"
+  url "https://downloads.sourceforge.net/project/sbcl/sbcl/2.1.6/sbcl-2.1.6-source.tar.bz2"
+  sha256 "8b210c5dd20a466ca438bc7f628812640d0b4acdfad20bec168a6a5dabc1cdef"
+  license all_of: [:public_domain, "MIT", "Xerox", "BSD-3-Clause"]
+  head "https://git.code.sf.net/p/sbcl/sbcl.git"
 
   bottle do
-    sha256 "f1273497c711a74967f82185d6259531554e726bb353f7ffd1596c23934edd34" => :mojave
-    sha256 "ec841f00797def2da40e3e30d052682c72dacf4287544eff80ebd0e657698779" => :high_sierra
-    sha256 "1e0a999a962c59a5962424aabd2f956def4ae1148220025dc19a60769e0e6356" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e7f428277f038d90fb853302e093f7b426eaa1695d26caedb8e4fdf88e54ba28"
+    sha256 cellar: :any_skip_relocation, big_sur:       "20222fb83903bb6c1316d05690ac9b9d8e4e35e803fccaa280fb45882f71c2d4"
+    sha256 cellar: :any_skip_relocation, catalina:      "aeab59a380a6ec9c3ee8ca4b3c28edd9ad1ea27700001299a68d43aa01b818bc"
+    sha256 cellar: :any_skip_relocation, mojave:        "a138d329408cfa2a2a36648e1eae1af7aeaee7269e4609e830af0a9a9447c8aa"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "59aaa5fcc459664872d1faeb93030689ec457924bc7d449111bfd364b50c4801"
   end
 
-  # Current binary versions are listed at https://sbcl.sourceforge.io/platform-table.html
-  resource "bootstrap64" do
-    url "https://downloads.sourceforge.net/project/sbcl/sbcl/1.2.11/sbcl-1.2.11-x86-64-darwin-binary.tar.bz2"
-    sha256 "057d3a1c033fb53deee994c0135110636a04f92d2f88919679864214f77d0452"
-  end
+  depends_on "ecl" => :build
 
-  patch :p0 do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/c5ffdb11/sbcl/patch-make-doc.diff"
-    sha256 "7c21c89fd6ec022d4f17670c3253bd33a4ac2784744e4c899c32fbe27203d87e"
-  end
+  uses_from_macos "zlib"
 
   def install
     # Remove non-ASCII values from environment as they cause build failures
@@ -30,12 +27,7 @@ class Sbcl < Formula
       ascii_val =~ /[\x80-\xff]/n
     end
 
-    tmpdir = Pathname.new(Dir.mktmpdir)
-    tmpdir.install resource("bootstrap64")
-
-    command = "#{tmpdir}/src/runtime/sbcl"
-    core = "#{tmpdir}/output/sbcl.core"
-    xc_cmdline = "#{command} --core #{core} --disable-debugger --no-userinit --no-sysinit"
+    xc_cmdline = "ecl --norc"
 
     args = [
       "--prefix=#{prefix}",
@@ -52,7 +44,9 @@ class Sbcl < Formula
     system "sh", "install.sh"
 
     # Install sources
-    bin.env_script_all_files(libexec/"bin", :SBCL_SOURCE_ROOT => pkgshare/"src")
+    bin.env_script_all_files libexec/"bin",
+                             SBCL_SOURCE_ROOT: pkgshare/"src",
+                             SBCL_HOME:        lib/"sbcl"
     pkgshare.install %w[contrib src]
     (lib/"sbcl/sbclrc").write <<~EOS
       (setf (logical-pathname-translations "SYS")

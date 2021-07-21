@@ -1,15 +1,17 @@
 class JpegTurbo < Formula
   desc "JPEG image codec that aids compression and decompression"
   homepage "https://www.libjpeg-turbo.org/"
-  url "https://downloads.sourceforge.net/project/libjpeg-turbo/2.0.0/libjpeg-turbo-2.0.0.tar.gz"
-  sha256 "778876105d0d316203c928fd2a0374c8c01f755d0a00b12a1c8934aeccff8868"
+  url "https://downloads.sourceforge.net/project/libjpeg-turbo/2.1.0/libjpeg-turbo-2.1.0.tar.gz"
+  sha256 "bef89803e506f27715c5627b1e3219c95b80fc31465d4452de2a909d382e4444"
+  license "IJG"
   head "https://github.com/libjpeg-turbo/libjpeg-turbo.git"
 
   bottle do
-    sha256 "a796ad23629db937b87691b7cd01e1bfbdd4c841a8c534cc92bc13bf80f161fe" => :mojave
-    sha256 "3419adae8718b8b9fc41cd7e7f74803bdc4437d2f754605a59e8768d2630512f" => :high_sierra
-    sha256 "68d14fd1b5a59c349e9bdd639d25841947f790f48d3eb788898599bb62515560" => :sierra
-    sha256 "5782250ca2948367083ccd42aacba569efe888bd5a2727faa01d6ad6234d02ab" => :el_capitan
+    sha256                               arm64_big_sur: "88c325eabb7b63c8df6c94e2830a61262cd1d1b1578f1e7a18c8a1ec35585a0d"
+    sha256                               big_sur:       "d75de3940ae5b5d5117e50b8167aed9cf672bf490a0ef0752f2a092079d64cff"
+    sha256                               catalina:      "6896a17259ac12146111d562538ed144a25ed18c704f503294a2043ae0d1e28a"
+    sha256                               mojave:        "b917a78fb0222d9423eda3728c4c0ee63a83ef232a7a4f21036307d92a27d68f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c146f92050fdc2395a2f8d046e9828cf0d9d10fda212f4c28bdca999b3b59943"
   end
 
   keg_only "libjpeg-turbo is not linked to prevent conflicts with the standard libjpeg"
@@ -18,7 +20,10 @@ class JpegTurbo < Formula
   depends_on "nasm" => :build
 
   def install
-    system "cmake", ".", "-DWITH_JPEG8=1", *std_cmake_args
+    args = std_cmake_args - %w[-DCMAKE_INSTALL_LIBDIR=lib]
+    system "cmake", ".", "-DWITH_JPEG8=1",
+                         "-DCMAKE_INSTALL_LIBDIR=#{lib}",
+                         *args
     system "make"
     system "make", "test"
     system "make", "install"

@@ -1,16 +1,21 @@
 class Povray < Formula
   desc "Persistence Of Vision RAYtracer (POVRAY)"
   homepage "https://www.povray.org/"
-  url "https://github.com/POV-Ray/povray/archive/v3.7.0.8.tar.gz"
-  sha256 "53d11ebd2972fc452af168a00eb83aefb61387662c10784e81b63e44aa575de4"
-  revision 1
+  url "https://github.com/POV-Ray/povray/archive/v3.7.0.9.tar.gz"
+  sha256 "c273f75864ac98f86b442f58597d842aa8b76e788ea5e9133724296d93fb3e6b"
+  license "AGPL-3.0-or-later"
+  head "https://github.com/POV-Ray/povray.git"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+\.\d{1,4})$/i)
+  end
 
   bottle do
-    rebuild 1
-    sha256 "eae4cf975215cdfdeadb665c53061c6ed2b4f9fa95121e7145222409b0e44c56" => :mojave
-    sha256 "4472bb00380eb26d3045dd5e67effa4f75934936263129009f9a80bbf5290633" => :high_sierra
-    sha256 "f21cb29c30c8367aa14f6a4485bf03377f23e30b2e7178be466d12bb84be26a9" => :sierra
-    sha256 "f2f0bf20fbe2d5b1ce91ecdf4eca52e4a544323910febae396d8b9fb1c0044ec" => :el_capitan
+    sha256 arm64_big_sur: "f58475cad4e1bc129e831b586e8ad0ed7c504a46f758ad217895f78ff1a5778c"
+    sha256 big_sur:       "06f7a322d371a831124fb970aacbd9310d0f1cfd478b7fe00d68b58e52d6ea7d"
+    sha256 catalina:      "c79203e5cf7306333a3511a79b226815f9e406136e7f10ae8254db555faf238f"
+    sha256 mojave:        "62ecf5b65b5581777dc7a7358846b36e39b75a99bd43f9927bbca393492cafeb"
   end
 
   depends_on "autoconf" => :build
@@ -19,10 +24,9 @@ class Povray < Formula
   depends_on "jpeg"
   depends_on "libpng"
   depends_on "libtiff"
-  depends_on :macos => :lion
-  depends_on "openexr"
-
-  needs :cxx11
+  # Check whether this can be switched to `openexr` at version bump
+  # Issue ref: https://github.com/POV-Ray/povray/issues/408
+  depends_on "openexr@2"
 
   def install
     ENV.cxx11
@@ -34,7 +38,7 @@ class Povray < Formula
       --prefix=#{prefix}
       --mandir=#{man}
       --with-boost=#{Formula["boost"].opt_prefix}
-      --with-openexr=#{Formula["openexr"].opt_prefix}
+      --with-openexr=#{Formula["openexr@2"].opt_prefix}
       --without-libsdl
       --without-x
     ]

@@ -1,29 +1,31 @@
 class Gexiv2 < Formula
   desc "GObject wrapper around the Exiv2 photo metadata library"
   homepage "https://wiki.gnome.org/Projects/gexiv2"
-  url "https://download.gnome.org/sources/gexiv2/0.10/gexiv2-0.10.9.tar.xz"
-  sha256 "8806234aa6fd1c345d46bf07a14e82771415071ca5ff63615b1ea62bd2fec0ed"
+  url "https://download.gnome.org/sources/gexiv2/0.12/gexiv2-0.12.2.tar.xz"
+  sha256 "2322b552aca330eef79724a699c51a302345d5e074738578b398b7f2ff97944c"
+  license "GPL-2.0-or-later"
 
   bottle do
-    sha256 "4af36560dece00e6cb5d68ca743f52a9de78121fa184ef1a4add25de6b97f598" => :mojave
-    sha256 "e8acce6d1a7fdcf5b14b5e64e641c04d0ca32f5198af59bbe08b2cc91513f5c2" => :high_sierra
-    sha256 "4b74b438069c0968d08d7b75aaf1333454cd6005577f2241ac5f78460f4a847f" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "34a026a5141ad0f252332d7e7c2a594f9436673068e6cc555eff0c0e537f750d"
+    sha256 cellar: :any, big_sur:       "281c26fef197eba6584e3250aeb131c0ab5daf8afbdc1d702de71ba1e664ccf3"
+    sha256 cellar: :any, catalina:      "b96f01c0d637c9b4e16bf0f4d3dc4d072d0d672396152893b5afcbc0ae60cd3a"
+    sha256 cellar: :any, mojave:        "35e12c640ea61bd4659a86afb45e03efa8f81bfb46cb3a5119cb34f445f2dff2"
   end
 
   depends_on "gobject-introspection" => :build
-  depends_on "meson-internal" => :build
+  depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
+  depends_on "python@3.9" => :build
   depends_on "vala" => :build
   depends_on "exiv2"
   depends_on "glib"
 
   def install
-    pyver = Language::Python.major_minor_version "python3"
+    pyver = Language::Python.major_minor_version Formula["python@3.9"].opt_bin/"python3"
 
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", "-Dpython3-girdir=#{lib}/python#{pyver}/site-packages/gi/overrides", ".."
+      system "meson", *std_meson_args, "-Dpython3_girdir=#{lib}/python#{pyver}/site-packages/gi/overrides", ".."
       system "ninja"
       system "ninja", "install"
     end

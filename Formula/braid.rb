@@ -2,18 +2,28 @@ class Braid < Formula
   desc "Simple tool to help track vendor branches in a Git repository"
   homepage "https://cristibalan.github.io/braid/"
   url "https://github.com/cristibalan/braid.git",
-      :tag      => "v1.1.2",
-      :revision => "4a7eea721fd9c841e305b19ebd6e8c7006c52f53"
-  revision 1
+      tag:      "v1.1.3",
+      revision: "74bde1426c2a2713f8a56a879e5ff2e1e4213ad8"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "f43df0863e356c8cd8e6bbe4a791f5de6ef8780e6e43e4b497dfc965a828651d" => :mojave
-    sha256 "a874f82399695d859a6e8d48fa5bd04f60e0a3426891832355558f60985bdd05" => :high_sierra
-    sha256 "4fc6aff7f3dc2efe529f00027f9255ac184c0853b3a7646cabe09a4f33fb8e17" => :sierra
+    rebuild 2
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "680fa799b8d8b2f7f77574f7a62e489096cb174d77728a1b88f4a84e94b77d47"
+    sha256 cellar: :any_skip_relocation, big_sur:       "0383392403f7924a8bbd09c08dfc0b28e4c147b98a21a66b63bf9a16ffca49f1"
+    sha256 cellar: :any_skip_relocation, catalina:      "1bbb75422a511aec7e439e350d4d428ed900ad9b78a3979d691430836c92a62a"
+    sha256 cellar: :any_skip_relocation, mojave:        "5e62988e4e3c52890e699afc017e62e24d42ff49560d6c41e425c2649096d28b"
   end
 
   depends_on "ruby" if MacOS.version <= :sierra
+
+  on_linux do
+    depends_on "ruby"
+
+    resource "json" do
+      url "https://rubygems.org/gems/json-2.1.0.gem"
+      sha256 "b76fd09b881088c6c64a12721a1528f2f747a1c2ee52fab4c1f60db8af946607"
+    end
+  end
 
   resource "arrayfields" do
     url "https://rubygems.org/gems/arrayfields-4.9.2.gem"
@@ -50,14 +60,14 @@ class Braid < Formula
   def install
     ENV["GEM_HOME"] = libexec
     resources.each do |r|
-      r.verify_download_integrity(r.fetch)
+      r.fetch
       system "gem", "install", r.cached_download, "--ignore-dependencies",
              "--no-document", "--install-dir", libexec
     end
     system "gem", "build", "braid.gemspec"
     system "gem", "install", "--ignore-dependencies", "braid-#{version}.gem"
     bin.install libexec/"bin/braid"
-    bin.env_script_all_files(libexec/"bin", :GEM_HOME => ENV["GEM_HOME"])
+    bin.env_script_all_files(libexec/"bin", GEM_HOME: ENV["GEM_HOME"])
   end
 
   test do

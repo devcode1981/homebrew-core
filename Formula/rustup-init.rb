@@ -1,32 +1,30 @@
 class RustupInit < Formula
-  desc "The Rust toolchain installer"
-  homepage "https://github.com/rust-lang-nursery/rustup.rs"
-  url "https://github.com/rust-lang-nursery/rustup.rs/archive/1.15.0.tar.gz"
-  sha256 "470441d59dbb33f4e3e52e3f7420734dae0066598802c2b3b4f89f5b3a6a9e45"
+  desc "Rust toolchain installer"
+  homepage "https://github.com/rust-lang/rustup"
+  url "https://github.com/rust-lang/rustup/archive/1.24.3.tar.gz"
+  sha256 "24a8cede4ccbbf45ab7b8de141d92f47d1881bb546b3b9180d5a51dc0622d0f6"
+  license "Apache-2.0"
 
   bottle do
-    sha256 "7c64015c8bca7660a92879073984fc5bdd8de896588c6ca6a15b15fdcce3c345" => :mojave
-    sha256 "26485e684c66e884606473d9f8f2c0575c3494028663d3a14d53912748760deb" => :high_sierra
-    sha256 "f79c6f3c1ce8c5faf028ca2ba67d70d9e12d5d5fac582fa30aaaaecca80a4fab" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d7de5aa4538303b308d1f136c475fdc83f8fa3b418da46a66cf8146a6f0d6ff2"
+    sha256 cellar: :any_skip_relocation, big_sur:       "d2bae6f97776cee5d796444ceb7c54f46e9dd56e51f9a1f439bbe7c842015572"
+    sha256 cellar: :any_skip_relocation, catalina:      "7807b533709be5c92d7db4bd4189ae81ecf9f881544673591c7acb340d081b68"
+    sha256 cellar: :any_skip_relocation, mojave:        "681169de63d0e8a0dddbbe88388a64c4c15963e9c5b0dbf4029e1f2e75778667"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5057bb4cf8c5c4e314358aad6790c1df9917a096baa010cf9f1de1eeb940f6ef"
   end
 
   depends_on "rust" => :build
 
-  # Fixes `rustup-init` not working when it is relative symlink.
-  # https://github.com/rust-lang-nursery/rustup.rs/issues/1512
-  # https://github.com/rust-lang-nursery/rustup.rs/pull/1521
-  patch do
-    url "https://github.com/rust-lang-nursery/rustup.rs/pull/1521/commits/ebbfced7ee4aeb5be4c775f8f85e351093d5818f.diff?full_index=1"
-    sha256 "34dc006d75d747b99dd9fe49bdde396a8bf5443d1e3df1a47c4776c06ec3f3c7"
+  uses_from_macos "curl"
+  uses_from_macos "xz"
+
+  on_linux do
+    depends_on "pkg-config" => :build
+    depends_on "openssl@1.1"
   end
 
   def install
-    cargo_home = buildpath/"cargo_home"
-    cargo_home.mkpath
-    ENV["CARGO_HOME"] = cargo_home
-
-    system "cargo", "install", "--root", prefix, "--path", ".",
-                    "--features", "no-self-update"
+    system "cargo", "install", "--features", "no-self-update", *std_cargo_args
   end
 
   test do

@@ -1,24 +1,29 @@
 class Bibtexconv < Formula
   desc "BibTeX file converter"
   homepage "https://www.uni-due.de/~be0001/bibtexconv/"
-  url "https://www.uni-due.de/~be0001/bibtexconv/download/bibtexconv-1.1.12.tar.gz"
-  sha256 "dce954b9e81b31f9b2aaaac4a4b1e528d7cc901376be095b40ba44525db3fd76"
+  url "https://github.com/dreibh/bibtexconv/archive/bibtexconv-1.2.0.tar.gz"
+  sha256 "0ace3aa17eedbc4c4950e5ef8763b1dd58bfa2d33cd00fa2b35f07febb6df940"
+  license "GPL-3.0-or-later"
   head "https://github.com/dreibh/bibtexconv.git"
 
   bottle do
-    cellar :any
-    sha256 "ed2cf1c4018b8605632c7d771da2eee7212ec1267d459fe77e1b1fd27ecafeaf" => :mojave
-    sha256 "ff0392f367020e150acc25eb36a5020ae78f43c97450ff144654d1c55da362c5" => :high_sierra
-    sha256 "22bef646b19754ee426d9e98158f1bbd7e18b59f674abc0c1c6f7c4012511122" => :sierra
-    sha256 "824b5ec5e79e9624510c834aa0ce76de90c3bb63100c4e995927fa4b06905706" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "e1695a1a03185cbf7f50c031cfab3d77777a6c8bd47c88ea1799fd097d4b8dfa"
+    sha256 cellar: :any,                 big_sur:       "aaab664beb497d6f9c7e84e7e3cf72fb68bbd813c3398e7b561b7fd611a5ed8a"
+    sha256 cellar: :any,                 catalina:      "5b9d6cc6d178116fe7e18d87c807cd4427d105e450feb0bd10a1649d64f61ed7"
+    sha256 cellar: :any,                 mojave:        "01522a08151261c2fb84298b690e00ad4699285ccfd2e2b021baedb1b6174bb6"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5bf8980f28f51667f569e7da89965e97adeffd5aa0212b12b047c84c9a53a8c3"
   end
 
   depends_on "cmake" => :build
-  depends_on "openssl"
+  depends_on "openssl@1.1"
+
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
+  uses_from_macos "curl"
 
   def install
     system "cmake", *std_cmake_args,
-                    "-DCRYPTO_LIBRARY=#{Formula["openssl"].opt_lib}/libcrypto.dylib"
+                    "-DCRYPTO_LIBRARY=#{Formula["openssl@1.1"].opt_lib}/#{shared_library("libcrypto")}"
     system "make", "install"
   end
 

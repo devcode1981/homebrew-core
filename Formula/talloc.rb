@@ -1,16 +1,24 @@
 class Talloc < Formula
   desc "Hierarchical, reference-counted memory pool with destructors"
   homepage "https://talloc.samba.org/"
-  url "https://www.samba.org/ftp/talloc/talloc-2.1.14.tar.gz"
-  sha256 "b185602756a628bac507fa8af8b9df92ace69d27c0add5dab93190ad7c3367ce"
+  url "https://www.samba.org/ftp/talloc/talloc-2.3.3.tar.gz"
+  sha256 "6be95b2368bd0af1c4cd7a88146eb6ceea18e46c3ffc9330bf6262b40d1d8aaa"
+  license "GPL-3.0-or-later"
+
+  livecheck do
+    url "https://www.samba.org/ftp/talloc/"
+    regex(/href=.*?talloc[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "f57a3c49190148c184c8c41e2872dacd7db4dba5174dab901a132594a806749b" => :mojave
-    sha256 "ec36bac486e6f474745eadc80c421f3647205d6df7f13559c8b720a1dffb6cac" => :high_sierra
-    sha256 "c95ae1f0a8bcb15608fa616dfc9282132ef575be9a9b3e1a79c6dcc8843dffb7" => :sierra
-    sha256 "560fb76da75d8fdb6e81168e3123ffcce31eb44a6c186c0d929b79fb7af5cf5d" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "d231c44591841730b29b8b28af7792a5b3c8ed1fa393770c68e3706b0abd02e9"
+    sha256 cellar: :any,                 big_sur:       "a99376ed4ddbe1ae05d843fc473c8eade0603c729f16fc880fe6e95e597b94bf"
+    sha256 cellar: :any,                 catalina:      "41b41189b1177004fab7ab3764b607fd78844228d30182305dd81e33a85d388c"
+    sha256 cellar: :any,                 mojave:        "da663459e3bf1cdaf72935823451b382bd3dee84cb151553f599921edb589d3d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "801236dc8f98f2e0d466ffc4ee0783ff66c78dff53f58b0905d9fe34a1725628"
   end
+
+  depends_on "python@3.9" => :build
 
   def install
     system "./configure", "--prefix=#{prefix}",
@@ -37,7 +45,7 @@ class Talloc < Formula
         return ret;
       }
     EOS
-    system ENV.cc, "-I#{include}", "-L#{lib}", "-ltalloc", "test.c", "-o", "test"
+    system ENV.cc, "test.c", "-I#{include}", "-L#{lib}", "-ltalloc", "-o", "test"
     system testpath/"test"
   end
 end

@@ -1,13 +1,22 @@
 class Mapnik < Formula
   desc "Toolkit for developing mapping applications"
   homepage "https://mapnik.org/"
-  url "https://github.com/mapnik/mapnik/releases/download/v3.0.21/mapnik-v3.0.21.tar.bz2"
-  sha256 "6db7918e8fd24346dfc81745e455c383a718335ffa64015cf625fed5ed92b524"
+  url "https://github.com/mapnik/mapnik/releases/download/v3.1.0/mapnik-v3.1.0.tar.bz2"
+  sha256 "43d76182d2a975212b4ad11524c74e577576c11039fdab5286b828397d8e6261"
+  license "LGPL-2.1-or-later"
+  revision 4
   head "https://github.com/mapnik/mapnik.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    sha256 "dad661596f6ccbc19dc3ba0943b37547faf3b874c2f27951683b1fde2aa9c5f5" => :mojave
-    sha256 "aafd2fcd785323de7be9e5460826a63852efe57b314e329b916a559fd73d0579" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "3ef717b40002e1bb09aa23fa69324a024a9af7322bd5bfa5fd2fe88f107d9d85"
+    sha256 cellar: :any, big_sur:       "9cf5f1873889a50fa8f661954cf3723dd80de77a97394097f47907c5a7ea27fc"
+    sha256 cellar: :any, catalina:      "f05ea69e03c726dde0d4b9711cd4fc94ce35e2e1f2a3abe75dc66949d34c563f"
+    sha256 cellar: :any, mojave:        "6416e7fa9760c9faed77382cce3e2209a28283e1174bde8bf394168d2cdc9947"
   end
 
   depends_on "pkg-config" => :build
@@ -21,16 +30,8 @@ class Mapnik < Formula
   depends_on "libpng"
   depends_on "libtiff"
   depends_on "postgresql"
-  depends_on "proj"
+  depends_on "proj@7"
   depends_on "webp"
-
-  # Upstream commit to fix build with boost >= 1.68
-  patch do
-    url "https://github.com/mapnik/mapnik/commit/c067eb7eec32fdd6d1c3d0e90b13a889459f2756.diff?full_index=1"
-    sha256 "e00e8475f04e9010dbb1724e5ae10403d2e7f1da8a83e67dfb54a7a969d81669"
-  end
-
-  needs :cxx11
 
   def install
     ENV.cxx11
@@ -38,6 +39,10 @@ class Mapnik < Formula
     # Work around "error: no member named 'signbit' in the global namespace"
     # encountered when trying to detect boost regex in configure
     ENV.delete("SDKROOT") if DevelopmentTools.clang_build_version >= 900
+
+    # Use Proj 6.0.0 compatibility headers
+    # https://github.com/mapnik/mapnik/issues/4036
+    ENV.append_to_cflags "-DACCEPT_USE_OF_DEPRECATED_PROJ_API_H"
 
     boost = Formula["boost"].opt_prefix
     freetype = Formula["freetype"].opt_prefix

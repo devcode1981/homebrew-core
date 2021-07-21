@@ -1,24 +1,28 @@
 class Fontforge < Formula
   desc "Command-line outline and bitmap font editor/converter"
   homepage "https://fontforge.github.io"
-  url "https://github.com/fontforge/fontforge/releases/download/20170731/fontforge-dist-20170731.tar.xz"
-  sha256 "840adefbedd1717e6b70b33ad1e7f2b116678fa6a3d52d45316793b9fd808822"
-  revision 3
+  url "https://github.com/fontforge/fontforge/releases/download/20201107/fontforge-20201107.tar.xz"
+  sha256 "68bcba8f602819eddc29cd356ee13fafbad7a80d19b652d354c6791343476c78"
+  license "GPL-3.0-or-later"
 
   bottle do
     rebuild 1
-    sha256 "7917392b435917468ce7f8e4c31822ba376d901cc9303ab354c44ef8155fad49" => :mojave
-    sha256 "5a04540e69d56213fb104a968ad9ce2bc5c2ca152d5c3e0ecfccbd93981f80dc" => :high_sierra
-    sha256 "7c4e3def1ac5f5b374e773d6dd7bda60b09eb304a19c6b231a292125d4d14915" => :sierra
+    sha256 arm64_big_sur: "240744fcd44612d9208c1f47e81d8f01b9d94108b50afe54170be14329a95a5a"
+    sha256 big_sur:       "20f92c9d7e6405ca51bdf9f9a2f0216b527bd78e38c2c3bedecbfab3eeb12747"
+    sha256 catalina:      "de48bd3b27ae91d21b8f7d8724cf2b9100683bf02db99794bcd9d9c4ca3483de"
+    sha256 mojave:        "fc6b9c92f02f1e01d8850bfb595dad4f18faf2c3ba079d7bf8084699ec006d53"
+    sha256 x86_64_linux:  "5377794ced753c4220bfa33f5064b3b041819fe264d09b785e8138703a7e0812"
   end
 
-  option "with-extra-tools", "Build with additional font tools"
-
+  depends_on "cmake" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "cairo"
   depends_on "fontconfig"
+  depends_on "freetype"
   depends_on "gettext"
   depends_on "giflib"
+  depends_on "glib"
   depends_on "jpeg"
   depends_on "libpng"
   depends_on "libspiro"
@@ -26,56 +30,56 @@ class Fontforge < Formula
   depends_on "libtool"
   depends_on "libuninameslist"
   depends_on "pango"
-  depends_on "python@2"
+  depends_on "python@3.9"
+  depends_on "readline"
 
-  # Remove for > 20170731
-  # Fix "fatal error: 'mem.h' file not found" for --with-extra-tools
-  # Upstream PR from 22 Sep 2017 https://github.com/fontforge/fontforge/pull/3156
-  patch do
-    url "https://github.com/fontforge/fontforge/commit/9f69bd0f9.patch?full_index=1"
-    sha256 "f8afa9a6ab7a71650a3f013d9872881754e1ba4a265f693edd7ba70f2ec1d525"
-  end
+  uses_from_macos "libxml2"
+
+  # Fix for rpath on ARM
+  # https://github.com/fontforge/fontforge/issues/4658
+  patch :DATA
 
   def install
-    ENV["PYTHON_CFLAGS"] = `python-config --cflags`.chomp
-    ENV["PYTHON_LIBS"] = `python-config --ldflags`.chomp
-
-    # Fix header includes to avoid crash at runtime:
-    # https://github.com/fontforge/fontforge/pull/3147
-    inreplace "fontforgeexe/startnoui.c", "#include \"fontforgevw.h\"", "#include \"fontforgevw.h\"\n#include \"encoding.h\""
-
-    system "./configure", "--prefix=#{prefix}",
-                          "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--without-x"
-    system "make", "install"
-
-    # The app here is not functional.
-    # If you want GUI/App support, check the caveats to see how to get it.
-    (pkgshare/"osx/FontForge.app").rmtree
-
-    # Build extra tools
-    cd "contrib/fonttools" do
-      system "make"
-      bin.install Dir["*"].select { |f| File.executable? f }
+    mkdir "build" do
+      system "cmake", "..",
+                      "-GNinja",
+                      "-DENABLE_GUI=OFF",
+                      "-DENABLE_FONTFORGE_EXTRAS=ON",
+                      *std_cmake_args
+      system "ninja"
+      system "ninja", "install"
     end
   end
 
-  def caveats; <<~EOS
-    This formula only installs the command line utilities.
+  def caveats
+    on_macos do
+      <<~EOS
+        This formula only installs the command line utilities.
 
-    FontForge.app can be downloaded directly from the website:
-      https://fontforge.github.io
+        FontForge.app can be downloaded directly from the website:
+          https://fontforge.github.io
 
-    Alternatively, install with Homebrew Cask:
-      brew cask install fontforge
-  EOS
+        Alternatively, install with Homebrew Cask:
+          brew install --cask fontforge
+      EOS
+    end
   end
 
   test do
     system bin/"fontforge", "-version"
     system bin/"fontforge", "-lang=py", "-c", "import fontforge; fontforge.font()"
-    ENV.append_path "PYTHONPATH", lib/"python2.7/site-packages"
-    system "python2.7", "-c", "import fontforge; fontforge.font()"
+    system Formula["python@3.9"].opt_bin/"python3", "-c", "import fontforge; fontforge.font()"
   end
 end
+
+__END__
+diff --git a/contrib/fonttools/CMakeLists.txt b/contrib/fonttools/CMakeLists.txt
+index 0d3f464bc..b9f210cde 100644
+--- a/contrib/fonttools/CMakeLists.txt
++++ b/contrib/fonttools/CMakeLists.txt
+@@ -18,3 +18,5 @@ target_link_libraries(dewoff PRIVATE ZLIB::ZLIB)
+ target_link_libraries(pcl2ttf PRIVATE MathLib::MathLib)
+ target_link_libraries(ttf2eps PRIVATE fontforge)
+ target_link_libraries(woff PRIVATE ZLIB::ZLIB)
++
++install(TARGETS acorn2sfd dewoff findtable pcl2ttf pfadecrypt rmligamarks showttf stripttc ttf2eps woff RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

@@ -1,19 +1,27 @@
 class Pjproject < Formula
   desc "C library for multimedia protocols such as SIP, SDP, RTP and more"
   homepage "https://www.pjsip.org/"
-  url "https://www.pjsip.org/release/2.7.2/pjproject-2.7.2.tar.bz2"
-  sha256 "9c2c828abab7626edf18e04b041ef274bfaa86f99adf2c25ff56f1509e813772"
-  head "https://svn.pjsip.org/repos/pjproject/trunk"
+  url "https://github.com/pjsip/pjproject/archive/2.10.tar.gz"
+  sha256 "936a4c5b98601b52325463a397ddf11ab4106c6a7b04f8dc7cdd377efbb597de"
+  license "GPL-2.0-or-later"
+  head "https://github.com/pjsip/pjproject.git"
 
-  bottle do
-    cellar :any
-    sha256 "2aa9d3fa63190d540d0a97203d086a096d7806db0d3fdb2995b1f1cc85674998" => :mojave
-    sha256 "eec232d8fe6c5b4e05521a87a4bd1a5cb4fcc6a4f0a996ddaacc33bd2d93255f" => :high_sierra
-    sha256 "f7d12f6bcb2a628df0e87e4bbaffc368ca004ed6de12d11d4d019b080257a2d0" => :sierra
-    sha256 "52a55c49ef0d0d53abf447fd060e7eaf8bd1d10c8f6b419582c5e453634d5b61" => :el_capitan
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
-  depends_on "openssl"
+  bottle do
+    rebuild 1
+    sha256 cellar: :any,                 big_sur:      "b62ae1e3e6b33e093d69968bf0fa6708634075fb500e6cfb88d07a90d47a85cd"
+    sha256 cellar: :any,                 catalina:     "ce9e2f67c5ae7148b7c7883ac3c6dbcc9dd7892695af93c02dc44b3e52f109dd"
+    sha256 cellar: :any,                 mojave:       "26c273e3e975fc955f3c8ffb03c8332629fd42f123a4144645adb30817f9f428"
+    sha256 cellar: :any,                 high_sierra:  "114939ba488f6f78f1d337d27eb1873aacfb9c55788b60543f6dbab7e23f745e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "9c21e926d07a2d72369a433fc3421a80a0078827326831202dd78533c57da7ac"
+  end
+
+  depends_on macos: :high_sierra # Uses Security framework API enum cases introduced in 10.13.4
+  depends_on "openssl@1.1"
 
   def install
     system "./configure", "--prefix=#{prefix}"
@@ -21,9 +29,13 @@ class Pjproject < Formula
     system "make"
     system "make", "install"
 
-    arch = Utils.popen_read("uname -m").chomp
-    rel = Utils.popen_read("uname -r").chomp
-    bin.install "pjsip-apps/bin/pjsua-#{arch}-apple-darwin#{rel}" => "pjsua"
+    arch = Utils.safe_popen_read("uname", "-m").chomp
+    on_macos do
+      bin.install "pjsip-apps/bin/pjsua-#{arch}-apple-darwin#{OS.kernel_version}" => "pjsua"
+    end
+    on_linux do
+      bin.install "pjsip-apps/bin/pjsua-#{arch}-unknown-linux-gnu" => "pjsua"
+    end
   end
 
   test do

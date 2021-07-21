@@ -1,13 +1,16 @@
 class Collectd < Formula
   desc "Statistics collection and monitoring daemon"
   homepage "https://collectd.org/"
-  url "https://collectd.org/files/collectd-5.8.1.tar.bz2"
-  sha256 "e796fda27ce06377f491ad91aa286962a68c2b54076aa77a29673d53204453da"
+  url "https://collectd.org/files/collectd-5.12.0.tar.bz2"
+  sha256 "5bae043042c19c31f77eb8464e56a01a5454e0b39fa07cf7ad0f1bfc9c3a09d6"
+  license "MIT"
+  revision 1
 
   bottle do
-    sha256 "ffa5b1bd3d607e47410ba26ef11b3d7132f42049a035c9b87ddadad385c3546f" => :mojave
-    sha256 "61e26ab9d8127ddf942dcd163c6c78f50890b05f309ed7e329c7b8f859205c96" => :high_sierra
-    sha256 "486dbe8acc823c12263308eddadf22e56c862161e190c7b2f1b57e6feeb99384" => :sierra
+    sha256 arm64_big_sur: "c0a9e32a3407d094ae4fe5f8bf0fc19d0b4f5f0bb40f8ce6335fe4d2241a72b3"
+    sha256 big_sur:       "73233ee8e731722660a1098db2a72ae276508b8b09475f101f50a8d5ddc49251"
+    sha256 catalina:      "33f0fa042a98883dbf363865a66d64fd53e2eaebc330829257e2d5c87c7b5a4d"
+    sha256 mojave:        "a38f5912b4ed2b48e37e7285e0dd6e4f97d31799e5e7c47f438cddd7806a1252"
   end
 
   head do
@@ -23,13 +26,9 @@ class Collectd < Formula
   depends_on "net-snmp"
   depends_on "riemann-client"
 
-  fails_with :clang do
-    build 318
-    cause <<~EOS
-      Clang interacts poorly with the collectd-bundled libltdl,
-      causing configure to fail.
-    EOS
-  end
+  uses_from_macos "bison"
+  uses_from_macos "flex"
+  uses_from_macos "perl"
 
   def install
     args = %W[
@@ -46,33 +45,11 @@ class Collectd < Formula
     system "make", "install"
   end
 
-  plist_options :manual => "#{HOMEBREW_PREFIX}/sbin/collectd -f -C #{HOMEBREW_PREFIX}/etc/collectd.conf"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>KeepAlive</key>
-        <true/>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{sbin}/collectd</string>
-          <string>-f</string>
-          <string>-C</string>
-          <string>#{etc}/collectd.conf</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>StandardErrorPath</key>
-        <string>#{var}/log/collectd.log</string>
-        <key>StandardOutPath</key>
-        <string>#{var}/log/collectd.log</string>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_sbin/"collectd", "-f", "-C", etc/"collectd.conf"]
+    keep_alive true
+    error_log_path var/"log/collectd.log"
+    log_path var/"log/collectd.log"
   end
 
   test do

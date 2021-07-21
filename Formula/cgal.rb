@@ -1,53 +1,52 @@
 class Cgal < Formula
-  desc "Computational Geometry Algorithm Library"
+  desc "Computational Geometry Algorithms Library"
   homepage "https://www.cgal.org/"
-  url "https://github.com/CGAL/cgal/releases/download/releases%2FCGAL-4.13/CGAL-4.13.tar.xz"
-  sha256 "3e3dd7a64febda58be54c3cbeba329ab6a73b72d4d7647ba4931ecd1fad0e3bc"
+  url "https://github.com/CGAL/cgal/releases/download/v5.3/CGAL-5.3.tar.xz"
+  sha256 "2c242e3f27655bc80b34e2fa5e32187a46003d2d9cd7dbec8fbcbc342cea2fb6"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "d969597f4c3fb993bf19363e4e92f0f74427e25f6f855fa28d1f9792084aea9b" => :mojave
-    sha256 "e6978f966bdd5a050f80185d8e506a38016a8adad6010b039b9ef42558ed14eb" => :high_sierra
-    sha256 "349890c9c6f40272b3173c15412701f6588003047e5ebc3e0cd2a03c870ba83d" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e894e9e89727aa1b23360c902ea971c8cfde4a86613c870acdf4a5c484b836ac"
+    sha256 cellar: :any_skip_relocation, big_sur:       "30fc29fc49aeb79af65c39a14b6ab4a1560e53358574ee796adc1914b499d6ae"
+    sha256 cellar: :any_skip_relocation, catalina:      "30fc29fc49aeb79af65c39a14b6ab4a1560e53358574ee796adc1914b499d6ae"
+    sha256 cellar: :any_skip_relocation, mojave:        "30fc29fc49aeb79af65c39a14b6ab4a1560e53358574ee796adc1914b499d6ae"
   end
 
-  option "with-qt", "Build ImageIO and Qt components of CGAL"
-
-  deprecated_option "imaging" => "with-qt"
-  deprecated_option "with-imaging" => "with-qt"
-  deprecated_option "with-qt5" => "with-qt"
-
-  depends_on "cmake" => :build
+  depends_on "cmake" => [:build, :test]
+  depends_on "qt@5" => [:build, :test]
   depends_on "boost"
   depends_on "eigen"
   depends_on "gmp"
   depends_on "mpfr"
-  depends_on "qt" => :optional
+
+  on_linux do
+    depends_on "openssl@1.1"
+  end
 
   def install
-    args = std_cmake_args + %W[
-      -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
-      -DCMAKE_INSTALL_NAME_DIR=#{HOMEBREW_PREFIX}/lib
-      -DWITH_Eigen3=ON
-      -DWITH_LAPACK=ON
+    args = std_cmake_args + %w[
+      -DCMAKE_CXX_FLAGS='-std=c++14'
+      -DWITH_CGAL_Qt5=ON
     ]
-
-    if build.without? "qt"
-      args << "-DWITH_CGAL_Qt5=OFF" << "-DWITH_CGAL_ImageIO=OFF"
-    else
-      args << "-DWITH_CGAL_Qt5=ON" << "-DWITH_CGAL_ImageIO=ON"
-    end
 
     system "cmake", ".", *args
     system "make", "install"
   end
 
   test do
-    # https://doc.cgal.org/latest/Algebraic_foundations/Algebraic_foundations_2interoperable_8cpp-example.html
+    # https://doc.cgal.org/latest/Triangulation_2/Triangulation_2_2draw_triangulation_2_8cpp-example.html and  https://doc.cgal.org/latest/Algebraic_foundations/Algebraic_foundations_2interoperable_8cpp-example.html
     (testpath/"surprise.cpp").write <<~EOS
+      #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+      #include <CGAL/Triangulation_2.h>
+      #include <CGAL/draw_triangulation_2.h>
       #include <CGAL/basic.h>
       #include <CGAL/Coercion_traits.h>
       #include <CGAL/IO/io.h>
+      #include <fstream>
+      typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+      typedef CGAL::Triangulation_2<K>                            Triangulation;
+      typedef Triangulation::Point                                Point;
+
       template <typename A, typename B>
       typename CGAL::Coercion_traits<A,B>::Type
       binary_func(const A& a , const B& b){
@@ -56,14 +55,33 @@ class Cgal < Formula
           typename CT::Cast cast;
           return cast(a)*cast(b);
       }
-      int main(){
-          std::cout<< binary_func(double(3), int(5)) << std::endl;
-          std::cout<< binary_func(int(3), double(5)) << std::endl;
-          return 0;
-      }
+
+      int main(int argc, char**) {
+        std::cout<< binary_func(double(3), int(5)) << std::endl;
+        std::cout<< binary_func(int(3), double(5)) << std::endl;
+        std::ifstream in("data/triangulation_prog1.cin");
+        std::istream_iterator<Point> begin(in);
+        std::istream_iterator<Point> end;
+        Triangulation t;
+        t.insert(begin, end);
+        if(argc == 3) // do not test Qt5 at runtime
+          CGAL::draw(t);
+        return EXIT_SUCCESS;
+       }
     EOS
-    system ENV.cxx, "-I#{include}", "-L#{lib}", "-lCGAL",
-                    "surprise.cpp", "-o", "test"
-    assert_equal "15\n15", shell_output("./test").chomp
+    (testpath/"CMakeLists.txt").write <<~EOS
+      cmake_minimum_required(VERSION 3.1...3.15)
+      find_package(CGAL COMPONENTS Qt5)
+      add_definitions(-DCGAL_USE_BASIC_VIEWER -DQT_NO_KEYWORDS)
+      include_directories(surprise BEFORE SYSTEM #{Formula["qt@5"].opt_include})
+      add_executable(surprise surprise.cpp)
+      target_include_directories(surprise BEFORE PUBLIC #{Formula["qt@5"].opt_include})
+      target_link_libraries(surprise PUBLIC CGAL::CGAL_Qt5)
+    EOS
+    system "cmake", "-L", "-DQt5_DIR=#{Formula["qt@5"].opt_lib}/cmake/Qt5",
+           "-DCMAKE_PREFIX_PATH=#{Formula["qt@5"].opt_lib}",
+           "-DCMAKE_BUILD_RPATH=#{HOMEBREW_PREFIX}/lib", "-DCMAKE_PREFIX_PATH=#{prefix}", "."
+    system "cmake", "--build", ".", "-v"
+    assert_equal "15\n15", shell_output("./surprise").chomp
   end
 end

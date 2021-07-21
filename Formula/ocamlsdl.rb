@@ -3,14 +3,16 @@ class Ocamlsdl < Formula
   homepage "https://ocamlsdl.sourceforge.io/"
   url "https://downloads.sourceforge.net/project/ocamlsdl/OCamlSDL/ocamlsdl-0.9.1/ocamlsdl-0.9.1.tar.gz"
   sha256 "abfb295b263dc11e97fffdd88ea1a28b46df8cc2b196777093e4fe7f509e4f8f"
-  revision 11
+  license "LGPL-2.1-or-later"
+  revision 13
 
   bottle do
-    cellar :any
-    sha256 "6ec2880f58082026c2eab293f52d97435d4587b1b984cb96ffdec12a7eeb170b" => :mojave
-    sha256 "320b81a09719ec758fb36b092cd01d4fe24a79de0fc5bbb2d8168214972823ab" => :high_sierra
-    sha256 "36c8bc0cf25b280d3db320d9e55ffb7a9a8c961671dcad2457c5917bcf5b641c" => :sierra
+    sha256 cellar: :any, catalina:    "8ccd0c9f59b9fad6fe084e57e726cd20d0f26497e71e4be94ff7f603512cbef8"
+    sha256 cellar: :any, mojave:      "6cd21f03d8a557368499d9cd61233dab4bab11fcd99c312036d58d660598c539"
+    sha256 cellar: :any, high_sierra: "6ae2abcf123aef7ce6cc2c5aad0d912bc459fdd9e7e2abfa99135d672767ddb7"
   end
+
+  disable! date: "2020-09-21", because: :unmaintained
 
   depends_on "ocaml"
   depends_on "sdl"

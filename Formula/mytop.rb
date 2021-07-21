@@ -1,24 +1,29 @@
 class Mytop < Formula
   desc "Top-like query monitor for MySQL"
-  homepage "http://www.mysqlfanboy.com/mytop-3/"
-  url "http://www.mysqlfanboy.com/mytop-3/mytop-1.9.1.tar.gz"
-  mirror "https://mirrorservice.org/sites/ftp.debian.org/debian/pool/main/m/mytop/mytop_1.9.1.orig.tar.gz"
-  mirror "https://mirrors.ocf.berkeley.edu/debian/pool/main/m/mytop/mytop_1.9.1.orig.tar.gz"
+  homepage "https://web.archive.org/web/20200221154243/www.mysqlfanboy.com/mytop-3/"
+  url "https://web.archive.org/web/20150602163826/www.mysqlfanboy.com/mytop-3/mytop-1.9.1.tar.gz"
+  mirror "https://deb.debian.org/debian/pool/main/m/mytop/mytop_1.9.1.orig.tar.gz"
   sha256 "179d79459d0013ab9cea2040a41c49a79822162d6e64a7a85f84cdc44828145e"
-  revision 6
+  license "GPL-2.0-or-later"
+  revision 9
+
+  livecheck do
+    skip "Upstream is gone and the formula uses archive.org URLs"
+  end
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "873b88c76650758b49e1749e35c765b5179ffd371ab489f146b35da1e3620029" => :mojave
-    sha256 "8d64c44dcfccde35179d48a1698f0108df3c621e68ee7f8716a6d6db35cc1448" => :high_sierra
-    sha256 "26a4812e17d0285a28176d8bd735e06a1196a794c7cefb4837f7ab9a9ed4272d" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "0443f8710ab6f1be3e60afc59c15546091982df6f76e31855ff16a1bd86fcb4b"
+    sha256 cellar: :any, big_sur:       "7bbece0e0eeb32f4c8217c232d190990290625e16fa9e542fd6c68dd8aad1727"
+    sha256 cellar: :any, catalina:      "8ec423770dabfb5da68e626af379f73290cd7e04c118db9608d2ce5decf0e489"
+    sha256 cellar: :any, mojave:        "a7512239e490916ef7753a380e638e383b2dd0e0967b6b560c48adf6597b491b"
   end
 
   depends_on "mysql-client"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
 
-  conflicts_with "mariadb", :because => "both install `mytop` binaries"
+  uses_from_macos "perl"
+
+  conflicts_with "mariadb", because: "both install `mytop` binaries"
 
   resource "List::Util" do
     url "https://cpan.metacpan.org/authors/id/P/PE/PEVANS/Scalar-List-Utils-1.46.tar.gz"
@@ -46,8 +51,7 @@ class Mytop < Formula
   # Pick up some patches from Debian to improve functionality & fix
   # some syntax warnings when using recent versions of Perl.
   patch do
-    url "https://mirrorservice.org/sites/ftp.debian.org/debian/pool/main/m/mytop/mytop_1.9.1-2.debian.tar.xz"
-    mirror "https://mirrors.ocf.berkeley.edu/debian/pool/main/m/mytop/mytop_1.9.1-2.debian.tar.xz"
+    url "https://deb.debian.org/debian/pool/main/m/mytop/mytop_1.9.1-2.debian.tar.xz"
     sha256 "9c97b7d2a2d4d169c5f263ce0adb6340b71e3a0afd4cdde94edcead02421489a"
     apply "patches/01_fix_pod.patch",
           "patches/02_remove_db_test.patch",
@@ -72,9 +76,9 @@ class Mytop < Formula
     end
 
     system "perl", "Makefile.PL", "INSTALL_BASE=#{prefix}"
-    system "make", "test", "install"
+    system "make", "install"
     share.install prefix/"man"
-    bin.env_script_all_files(libexec/"bin", :PERL5LIB => ENV["PERL5LIB"])
+    bin.env_script_all_files(libexec/"bin", PERL5LIB: ENV["PERL5LIB"])
   end
 
   test do

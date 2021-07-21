@@ -1,25 +1,24 @@
 class Dash < Formula
   desc "POSIX-compliant descendant of NetBSD's ash (the Almquist SHell)"
   homepage "http://gondor.apana.org.au/~herbert/dash/"
-  url "http://gondor.apana.org.au/~herbert/dash/files/dash-0.5.10.2.tar.gz"
-  mirror "https://dl.bintray.com/homebrew/mirror/dash-0.5.10.2.tar.gz"
-  sha256 "3c663919dc5c66ec991da14c7cf7e0be8ad00f3db73986a987c118862b5f6071"
-  revision 1
+  url "http://gondor.apana.org.au/~herbert/dash/files/dash-0.5.11.4.tar.gz"
+  sha256 "4e15b7ba5363bcc2a443549910cdc15b5ad601df8196b5f294c712eff037e08d"
+  license "BSD-3-Clause"
+  head "https://git.kernel.org/pub/scm/utils/dash/dash.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "aa6941a564fca697da6eb30e3691a8fa354de093d05ee84bbbc50c8045a55f66" => :mojave
-    sha256 "49ebe51a7662187224ab620aa50b0473b11c1f88372f7c17da328559d895f5e0" => :high_sierra
-    sha256 "4c7ca79c9b006065cb9bba57190103c518791b5a7ea078bb1f960e6f6c9dd7e9" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "c395d7a9947b74cb4dbe37380c47327702d93f40c3379652fdc8172824299fa6"
+    sha256 cellar: :any_skip_relocation, big_sur:       "11cc317053e0f398a3aa14f2dca06e5bc45b215859953e45153d2f4af7853435"
+    sha256 cellar: :any_skip_relocation, catalina:      "a4fd41a1b67977e509ae2612c6d57914d010c4352b606c0a5b49e7c81af8b6e7"
+    sha256 cellar: :any_skip_relocation, mojave:        "7c2387fa98bdb02ae966b055948baf6b911c494f54e996087a5e4c42f173f8bd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "371787f2430df1c94532e4a167e347902e88a1f2efbfa25c3dfa6cd8423af56e"
   end
 
-  head do
-    url "https://git.kernel.org/pub/scm/utils/dash/dash.git"
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-  end
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
 
   def install
+    ENV["ac_cv_func_stat64"] = "no" if Hardware::CPU.arm?
     system "./autogen.sh" if build.head?
 
     system "./configure", "--prefix=#{prefix}",

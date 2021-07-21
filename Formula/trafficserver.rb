@@ -1,19 +1,14 @@
 class Trafficserver < Formula
   desc "HTTP/1.1 compliant caching proxy server"
   homepage "https://trafficserver.apache.org/"
-
-  stable do
-    url "https://www.apache.org/dyn/closer.cgi?path=trafficserver/trafficserver-7.1.4.tar.bz2"
-    sha256 "1c5213f8565574ec8a66e08529fd20060c1b9a6cd9b803ba9bbb3b9847651b53"
-
-    needs :cxx11
-  end
+  url "https://downloads.apache.org/trafficserver/trafficserver-9.0.2.tar.bz2"
+  mirror "https://archive.apache.org/dist/trafficserver/trafficserver-9.0.2.tar.bz2"
+  sha256 "ff475367aeef27eadefed1290d07241464edb27bccaea86d2a024b6b2b8e0564"
+  license "Apache-2.0"
 
   bottle do
-    rebuild 1
-    sha256 "5fb5f9e4d0e7bc111c22d094de568ec45373400fa0e4189a751f4602afc0e533" => :mojave
-    sha256 "cd1e05ee174b9fa8c4aed38819649a5013d9390d90d607cd56705577bd0a16b2" => :high_sierra
-    sha256 "c7a1bb274aea0e1129ab7fb29106b47142b5dd62fc1a840722468b0e0f615c3a" => :sierra
+    sha256 catalina: "0f039f9a474488e1520747acb00bc7d216a1489a3965ec95233e7b6f7db301db"
+    sha256 mojave:   "f7ebd269befc2707764d2ed1e77ffa49d05e0277f1d80557d0f9316497d444a8"
   end
 
   head do
@@ -29,28 +24,25 @@ class Trafficserver < Formula
     end
   end
 
-  depends_on "openssl"
+  depends_on "pkg-config" => :build
+  depends_on "hwloc"
+  depends_on macos: :mojave # `error: call to unavailable member function 'value': introduced in macOS 10.14`
+  depends_on "openssl@1.1"
   depends_on "pcre"
+  depends_on "yaml-cpp"
 
   def install
-    ENV.cxx11 if build.stable?
-
     # Per https://luajit.org/install.html: If MACOSX_DEPLOYMENT_TARGET
     # is not set then it's forced to 10.4, which breaks compile on Mojave.
     ENV["MACOSX_DEPLOYMENT_TARGET"] = MacOS.version
-
-    # Needed for OpenSSL headers
-    if MacOS.version <= :lion
-      ENV.append_to_cflags "-Wno-deprecated-declarations"
-    end
 
     args = %W[
       --prefix=#{prefix}
       --mandir=#{man}
       --localstatedir=#{var}
       --sysconfdir=#{etc}/trafficserver
-      --with-openssl=#{Formula["openssl"].opt_prefix}
-      --with-tcl=#{MacOS.sdk_path}/System/Library/Frameworks/Tcl.framework
+      --with-openssl=#{Formula["openssl@1.1"].opt_prefix}
+      --with-yaml-cpp=#{Formula["yaml-cpp"].opt_prefix}
       --with-group=admin
       --disable-silent-rules
       --enable-experimental-plugins

@@ -1,14 +1,16 @@
 class Nghttp2 < Formula
   desc "HTTP/2 C Library"
   homepage "https://nghttp2.org/"
-  url "https://github.com/nghttp2/nghttp2/releases/download/v1.35.0/nghttp2-1.35.0.tar.xz"
-  sha256 "23610ddd446bf1a9ae12905b0e7f283afd46249794868b7acd581e693900544c"
-  revision 1
+  url "https://github.com/nghttp2/nghttp2/releases/download/v1.44.0/nghttp2-1.44.0.tar.xz"
+  sha256 "5699473b29941e8dafed10de5c8cb37a3581edf62ba7d04b911ca247d4de3c5d"
+  license "MIT"
 
   bottle do
-    sha256 "e52ffb4ae9629f1f4693c96c2e6625b446a61a376a510fc20bb96845e58b3981" => :mojave
-    sha256 "95f791e06ed5fbe0eed90941bf6b6365eed1f21c000950c0cb094a79d702cf14" => :high_sierra
-    sha256 "f95664923bc9c6a935098128e9e459cb125005f73dcb06efcd2470d95d3e6166" => :sierra
+    sha256 arm64_big_sur: "457a010c631153515c73fe61432b1bc5f43f47256b51fd91c499a72c238f63f0"
+    sha256 big_sur:       "8db30133ceaeeb92c004d98f43d8142c499c018654dea07aae604201037af848"
+    sha256 catalina:      "4029dae4ea56be84955735e6d1e9694d2bbbbbf85ffc3d0ce751d6c7d3333d74"
+    sha256 mojave:        "e545859a65c983367e439d642988533a4d9c3e664a06049c29fb770c9fafdc7d"
+    sha256 x86_64_linux:  "030dcffbdbe8b3495f6ede4b1dff3e5dd65a943a35413f14e69932c44a6a4ac7"
   end
 
   head do
@@ -19,67 +21,44 @@ class Nghttp2 < Formula
     depends_on "libtool" => :build
   end
 
-  option "with-python", "Build python3 bindings"
-
-  deprecated_option "with-python3" => "with-python"
-
-  depends_on "cunit" => :build
   depends_on "pkg-config" => :build
-  depends_on "sphinx-doc" => :build
   depends_on "c-ares"
-  depends_on "jansson"
   depends_on "jemalloc"
   depends_on "libev"
-  depends_on "libevent"
-  depends_on "libxml2" if MacOS.version <= :lion
-  depends_on "openssl"
-  depends_on "python" => :optional
+  depends_on "openssl@1.1"
 
-  resource "Cython" do
-    url "https://files.pythonhosted.org/packages/f0/66/6309291b19b498b672817bd237caec787d1b18013ee659f17b1ec5844887/Cython-0.29.tar.gz"
-    sha256 "94916d1ede67682638d3cc0feb10648ff14dc51fb7a7f147f4fedce78eaaea97"
+  uses_from_macos "libxml2"
+  uses_from_macos "zlib"
+
+  on_linux do
+    # Fix: shrpx_api_downstream_connection.cc:57:3: error:
+    # array must be initialized with a brace-enclosed initializer
+    # https://github.com/nghttp2/nghttp2/pull/1269
+    patch do
+      url "https://github.com/nghttp2/nghttp2/commit/829258e7038fe7eff849677f1ccaeca3e704eb67.patch?full_index=1"
+      sha256 "c4bcf5cf73d5305fc479206676027533bb06d4ff2840eb672f6265ba3239031e"
+    end
   end
 
-  # https://github.com/tatsuhiro-t/nghttp2/issues/125
-  # Upstream requested the issue closed and for users to use gcc instead.
-  # Given this will actually build with Clang with cxx11, just use that.
-  needs :cxx11
-
   def install
-    ENV.cxx11
+    # fix for clang not following C++14 behaviour
+    # https://github.com/macports/macports-ports/commit/54d83cca9fc0f2ed6d3f873282b6dd3198635891
+    inreplace "src/shrpx_client_handler.cc", "return dconn;", "return std::move(dconn);"
 
     args = %W[
       --prefix=#{prefix}
       --disable-silent-rules
       --enable-app
+      --disable-examples
+      --disable-hpack-tools
       --disable-python-bindings
+      --without-systemd
     ]
-
-    # requires thread-local storage features only available in 10.11+
-    args << "--disable-threads" if MacOS.version < :el_capitan
-    args << "--with-xml-prefix=/usr" if MacOS.version > :lion
 
     system "autoreconf", "-ivf" if build.head?
     system "./configure", *args
     system "make"
-    system "make", "check"
     system "make", "install"
-
-    if build.with? "python"
-      pyver = Language::Python.major_minor_version "python3"
-      ENV["PYTHONPATH"] = cythonpath = buildpath/"cython/lib/python#{pyver}/site-packages"
-      cythonpath.mkpath
-      ENV.prepend_create_path "PYTHONPATH", lib/"python#{pyver}/site-packages"
-
-      resource("Cython").stage do
-        system "python3", *Language::Python.setup_install_args(buildpath/"cython")
-      end
-
-      cd "python" do
-        system buildpath/"cython/bin/cython", "nghttp2.pyx"
-        system "python3", *Language::Python.setup_install_args(prefix)
-      end
-    end
   end
 
   test do

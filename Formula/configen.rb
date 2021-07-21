@@ -1,18 +1,19 @@
 class Configen < Formula
   desc "Configuration file code generator for use in Xcode projects"
   homepage "https://github.com/theappbusiness/ConfigGenerator"
-  url "https://github.com/theappbusiness/ConfigGenerator/archive/v1.0.2.tar.gz"
-  sha256 "272f6bc4cfc7b72831096a0579a708511410799b2ed551f835951b60d9708aef"
+  url "https://github.com/theappbusiness/ConfigGenerator/archive/1.1.2.tar.gz"
+  sha256 "24a0d51f90b36d56c2f75ced9653cf34fe396fd687305903b31eeb822d520608"
+  license "MIT"
   head "https://github.com/theappbusiness/ConfigGenerator.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "8c01dbbe02fbfcb5fd77db3a9deebdc90628a3dc6cc0836bc2ab732700e95fb8" => :mojave
-    sha256 "00d49b86720671684ac9ca4376ec793bfce9eadeabdb977ad1218a143c305406" => :high_sierra
-    sha256 "1317e904f74d0bacab2912d3eca95a4f58d6625ecd3fb22781c009348e2bdc68" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d7aa87ea082759093c1192bf7e0ee69c1146ef4626534731ff506a83ec682641"
+    sha256 cellar: :any_skip_relocation, big_sur:       "78a7c0604f2a98b2f488b2bfefebff47e08342e69d5f47b7123f15f71bcb9653"
+    sha256 cellar: :any_skip_relocation, catalina:      "9bdb2988618d5a1e9291a8579207d9dad1092f377d29d13af68cf6ef5afcb202"
+    sha256 cellar: :any_skip_relocation, mojave:        "befb8801be997ff110c9ca0b817fed82b4e233842f5afe05e7ae372a10c4007f"
   end
 
-  depends_on :xcode => ["9.0", :build]
+  depends_on xcode: ["10.2", :build]
 
   def install
     xcodebuild "SYMROOT=build"

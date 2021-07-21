@@ -1,28 +1,35 @@
 class BerkeleyDb < Formula
   desc "High performance key/value database"
-  homepage "https://www.oracle.com/technology/products/berkeley-db/index.html"
-  # Requires registration to download so we mirror it
-  url "https://dl.bintray.com/homebrew/mirror/berkeley-db-18.1.25.tar.gz"
-  sha256 "2ea8b8bc0611d9b4c2b9fee84a4a312dddfec007067af6e02ed46a26354181bb"
+  homepage "https://www.oracle.com/database/technologies/related/berkeleydb.html"
+  url "https://download.oracle.com/berkeley-db/db-18.1.40.tar.gz"
+  mirror "https://fossies.org/linux/misc/db-18.1.40.tar.gz"
+  sha256 "0cecb2ef0c67b166de93732769abdeba0555086d51de1090df325e18ee8da9c8"
+  license "AGPL-3.0-only"
 
-  bottle do
-    cellar :any
-    sha256 "033c836af359a4169a73b7778b837814d0df74fa514e5dd01efdc0b2272e830f" => :mojave
-    sha256 "b3ee1f3ef01f18bb4c958cac6b84b593718d9fb8e43cf480abd44dad2c6a1c8a" => :high_sierra
-    sha256 "95ffd72a00ed6faa8131b13482dd4592311410f8d4010934949b43b7a273c03e" => :sierra
-    sha256 "12b3dcf8c9549ee7a6afdafbc0ff7235fe069af06a28d26525e57b8f8ae37a61" => :el_capitan
+  livecheck do
+    url "https://www.oracle.com/database/technologies/related/berkeleydb-downloads.html"
+    regex(%r{href=.*?/berkeley-db/db[._-]v?(\d+(?:\.\d+)+)\.t}i)
   end
 
-  depends_on :java => [:optional, :build]
-  depends_on "openssl"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "fb300ebe3dcc5b308c6fbc383856545a6b35e883889c95f0bfeee40d6d07b02d"
+    sha256 cellar: :any,                 big_sur:       "dc8c2c76f315ea02737e9277f74cc9f8faba1733c10c20e2ef62d50b4abce4b7"
+    sha256 cellar: :any,                 catalina:      "f4d82916099a1023af6a72675dce0a445000efd2286866d1f36bf0b1063b24aa"
+    sha256 cellar: :any,                 mojave:        "ef85a6b6fb93f8dcee4144acf22665a331c5b2398822a5f183aed0fb863718f5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6f33ddf91965070b68d81c110cda45797bfd5e75f1e23d90f4b66497335833dc"
+  end
+
+  depends_on "openssl@1.1"
 
   def install
     # BerkeleyDB dislikes parallel builds
     ENV.deparallelize
+
     # --enable-compat185 is necessary because our build shadows
     # the system berkeley db 1.x
     args = %W[
       --disable-debug
+      --disable-static
       --prefix=#{prefix}
       --mandir=#{man}
       --enable-cxx
@@ -32,16 +39,14 @@ class BerkeleyDb < Formula
       --enable-dbm
       --enable-stl
     ]
-    args << "--enable-java" if build.with? "java"
 
     # BerkeleyDB requires you to build everything from the build_unix subdirectory
     cd "build_unix" do
       system "../dist/configure", *args
-      system "make", "install"
+      system "make", "install", "DOCLIST=license"
 
-      # use the standard docs location
-      doc.parent.mkpath
-      mv prefix/"docs", doc
+      # delete docs dir because it is huge
+      rm_rf prefix/"docs"
     end
   end
 

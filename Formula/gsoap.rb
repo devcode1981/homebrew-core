@@ -1,23 +1,30 @@
 class Gsoap < Formula
   desc "SOAP stub and skeleton compiler for C and C++"
   homepage "https://www.genivia.com/products.html"
-  url "https://downloads.sourceforge.net/project/gsoap2/gsoap-2.8/gsoap_2.8.70.zip"
-  sha256 "5b6933394ae1c76faa9a4814c44f74fc8aeef521b57f18d62ae952ecf38d0edd"
+  url "https://downloads.sourceforge.net/project/gsoap2/gsoap_2.8.116.zip"
+  sha256 "2a41e42aaddbcd603b99004af95bb83559dbd4fd2d842920f003d24867599192"
+  license any_of: ["GPL-2.0-or-later", "gSOAP-1.3b"]
 
-  bottle do
-    sha256 "c5d761c13270f868f1fa8117a726c51efaf22a67daf89b1b8149ff7c9a855292" => :mojave
-    sha256 "4ad420be497835975ba852db4926094db298aebd8cd3ec1752ff410d585772f7" => :high_sierra
-    sha256 "3bf37d24a2ac2de5d5e68a1366e17112a34c123fa4b3375c6ffeddae82f47481" => :sierra
-    sha256 "ba21b07c74d4976cb1a802b12dbbcb4233fbabf4592caad65693f929af797be2" => :el_capitan
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/gsoap[._-]v?(\d+(?:\.\d+)+)\.zip}i)
   end
 
-  depends_on "openssl"
+  bottle do
+    sha256 arm64_big_sur: "230a66223a335f4b143aadb242d0f4a212f879e255e45f9007aaa97c9b697875"
+    sha256 big_sur:       "1f528f320803fd3ce59b68a8da56be641bdcc1c0c98ed0fcc82e571d7ca9dc30"
+    sha256 catalina:      "ca600b6086e751ff0823b322e2e1112787bbbe75851d95f7b8364dea6e4c6058"
+    sha256 mojave:        "027e14cc3144ddaeb6818f74368bddf9b2377b227fac876ed13d1d3d720ba502"
+  end
+
+  depends_on "autoconf" => :build
+  depends_on "openssl@1.1"
+
+  uses_from_macos "bison"
+  uses_from_macos "flex"
+  uses_from_macos "zlib"
 
   def install
-    # Contacted upstream by email and been told this should be fixed by 2.8.37,
-    # it is due to the compilation of symbol2.c and soapcpp2_yacc.h not being
-    # ordered correctly in parallel.
-    ENV.deparallelize
     system "./configure", "--prefix=#{prefix}"
     system "make"
     system "make", "install"

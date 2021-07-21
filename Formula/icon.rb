@@ -1,18 +1,21 @@
 class Icon < Formula
   desc "General-purpose programming language"
   homepage "https://www.cs.arizona.edu/icon/"
-  url "https://www.cs.arizona.edu/icon/ftp/packages/unix/icon-v951src.tgz"
-  version "9.5.1"
-  sha256 "062a680862b1c10c21789c0c7c7687c970a720186918d5ed1f7aad9fdc6fa9b9"
+  url "https://github.com/gtownsend/icon/archive/v9.5.20i.tar.gz"
+  version "9.5.20i"
+  sha256 "3ebfcc89f3f3f7acc5afe61402f6b3b168b8cd83f79021c98bbd791e92c4cbe8"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+[a-z]?)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "824e189b6c174efa7e0f675c7bd4d90f19810f379d71b0195b508d2f6ec43986" => :mojave
-    sha256 "7c2d0794956448b8bebf166c97a65aa23fde0847eeb7c6c9f8197eff2835ffb5" => :high_sierra
-    sha256 "13d3963ef90d3f94f13a97e922185ea640233aee356e3bf8c2a0336de278482c" => :sierra
-    sha256 "5218afb915b7892d4c242c659218735293136c3b100f54aa7199bcc716915939" => :el_capitan
-    sha256 "44450b176b56db833a91ca6ae681e3876b2864a094b254340bcb5cd136957f17" => :yosemite
-    sha256 "ca5ba233b4713e54680525ffd3ee7554988aa48f6a959f78b53c24e58d8c1c59" => :mavericks
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "427ea97df09541d16bb99cc53dab255578569da00e1e40cbc49691991a750916"
+    sha256 cellar: :any_skip_relocation, big_sur:       "86bf64dcc7c29f0f6e20d36c135764cfa1b60381b63ff5826dbfcba9234066cd"
+    sha256 cellar: :any_skip_relocation, catalina:      "8f2ea4a3265901d2bc21032d216f9191fbc9f574c4954370a24e4542e3cfaa88"
+    sha256 cellar: :any_skip_relocation, mojave:        "fa51b1932b8b2a3d43cfd35bc4dea95625b2932360166fe3c5f38f4d0fc6d3ac"
   end
 
   def install

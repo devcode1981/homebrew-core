@@ -1,23 +1,25 @@
 class Genact < Formula
   desc "Nonsense activity generator"
   homepage "https://github.com/svenstaro/genact"
-  url "https://github.com/svenstaro/genact/archive/0.6.0.tar.gz"
-  sha256 "ab20d1c9c20f3b25d0be62fdb8aba74c0e2f046e647327d85a0ecc84d40f8a94"
+  url "https://github.com/svenstaro/genact/archive/v0.11.0.tar.gz"
+  sha256 "6ec8c1e717f78968c825513ae86dfc7cf5d71798b94b97d012cb185a4ca5a0a2"
+  license "MIT"
 
   bottle do
-    sha256 "4cdc64c4dd871ae661146692db42cbbb11985e5c33f2ebe5972a7b8f947911ae" => :mojave
-    sha256 "d0e5347b24fbd59bf0ca8119c9a4c9a5790e552bf076e8d9a0f986877b6da1f0" => :high_sierra
-    sha256 "c387de211ad08b4e5f1b071683bda99886a810327cdcf141d8868fcb68ea95e8" => :sierra
-    sha256 "e30beb8e8f46f2a4f53b6c6e74252ed88b9b141594afb978384efbab00ea12f8" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "48325385454894eddd9bf33bad8a370ca36a1ea126bc8981307c9f1d735782bf"
+    sha256 cellar: :any_skip_relocation, big_sur:       "faa9f1370b20ac2d6e92eaa5be5bf376f7ef8ba85dac841f735ccf491f9c4b4f"
+    sha256 cellar: :any_skip_relocation, catalina:      "4d94d3fd54d7821be5684690520cfacb13f8d9d3741edd927b0f8b9829e1d63f"
+    sha256 cellar: :any_skip_relocation, mojave:        "fb724747b034a14552cc66c88126ed22a6f4c001c9d63b3a437fdb8a4c2ad86e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f164ea3f660c60ca1071bba73b6d2b7d0ba3bc9e6e54126bfadf5ee4212d9238"
   end
 
   depends_on "rust" => :build
 
   def install
-    system "cargo", "install", "--root", prefix, "--path", "."
+    system "cargo", "install", *std_cargo_args
   end
 
   test do
-    assert_match /Available modules:/, shell_output("#{bin}/genact --list-modules")
+    assert_match "Available modules:", shell_output("#{bin}/genact --list-modules")
   end
 end

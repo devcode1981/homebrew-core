@@ -1,14 +1,20 @@
 class Ngspice < Formula
   desc "Spice circuit simulator"
   homepage "https://ngspice.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/28/ngspice-28.tar.gz"
-  sha256 "94804fa78c8db2f90f088902e8c27f7b732a66767a58c70f37612bff5a16df66"
-  revision 1
+  url "https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/34/ngspice-34.tar.gz"
+  sha256 "2263fffc6694754972af7072ef01cfe62ac790800dad651bc290bfcae79bd7b5"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/ngspice[._-]v?(\d+(?:\.\d+)*)\.t}i)
+  end
 
   bottle do
-    sha256 "42896bc07cf06a7aba74d22340e68453d9dc09adae82a2d56ba95d80276d0a97" => :mojave
-    sha256 "a5a641e0cc5305b7741dbdfbb18230e71d8ae3add7ed314c85ac801a48424cb2" => :high_sierra
-    sha256 "e2276123df61e171bda40781e5db332befba04f0c75dfdb97b4b57ffeb8fa7b9" => :sierra
+    sha256 arm64_big_sur: "b7e6619a5f7f1b951b0464d4fa18cba7a5d933ec85eccbeb47c67cf22f817520"
+    sha256 big_sur:       "6f8f86cccb6242f21a09359f1009344acadcd7d7726766327019e4e5a0ad5655"
+    sha256 catalina:      "9dd5b4b1e8164e5b35729838237e68c61d44c94c3aa5209e2613e9ab659f3e0d"
+    sha256 mojave:        "0003f68a5390917cd6e0c6b5179a22b02f6fccd0b1f4a359ad17cdd831c456ad"
+    sha256 x86_64_linux:  "7ea619d3d84a191503ec53a5ee3673ed8c445cff8b782660075d98db51bdf0a2"
   end
 
   head do
@@ -20,10 +26,8 @@ class Ngspice < Formula
     depends_on "libtool" => :build
   end
 
-  deprecated_option "with-x" => "with-x11"
-
+  depends_on "fftw"
   depends_on "readline"
-  depends_on :x11 => :optional
 
   def install
     system "./autogen.sh" if build.head?
@@ -33,12 +37,8 @@ class Ngspice < Formula
       --prefix=#{prefix}
       --with-readline=yes
       --enable-xspice
+      --without-x
     ]
-    if build.with? "x11"
-      args << "--with-x"
-    else
-      args << "--without-x"
-    end
 
     system "./configure", *args
     system "make", "install"

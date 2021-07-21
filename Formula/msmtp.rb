@@ -1,32 +1,34 @@
 class Msmtp < Formula
   desc "SMTP client that can be used as an SMTP plugin for Mutt"
   homepage "https://marlam.de/msmtp/"
-  url "https://marlam.de/msmtp/releases/msmtp-1.6.6.tar.xz"
-  sha256 "da15db1f62bd0201fce5310adb89c86188be91cd745b7cb3b62b81a501e7fb5e"
+  url "https://marlam.de/msmtp/releases/msmtp-1.8.15.tar.xz"
+  sha256 "2265dc639ebf2edf3069fffe0a3bd76749f8b58f4001d5cdeae19873949099ce"
+  license "GPL-3.0-or-later"
 
-  bottle do
-    sha256 "a2747598c1f5d9d8223a01b8454d15e60d013e303f94e8651fbaab1d14492c90" => :mojave
-    sha256 "e9161f534cfa50edb5beae511d7689fe02a53b68f90623ebc751a41ba34b4037" => :high_sierra
-    sha256 "d0b8a2a76d7ee8ed6beda0c383acd28d7a85d9d677c8d89a8a2e6b717055fe70" => :sierra
-    sha256 "115ce90fcc11a1fbda6bf4496200b50e89d4cccdb32f999cf6b3b749635f8e3e" => :el_capitan
-    sha256 "6f5227576bf8ac42fed7190c22f2e62b0fb2a3af59fa085e783426661c606758" => :yosemite
+  livecheck do
+    url "https://marlam.de/msmtp/download/"
+    regex(/href=.*?msmtp[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  option "with-gsasl", "Use GNU SASL authentication library"
+  bottle do
+    sha256 arm64_big_sur: "9e321f6cbb4178c04ead2f89ee357d7a216d886e27e8902780180f7ee583b5e9"
+    sha256 big_sur:       "f2f12ecc517a43485ad6b4de45bba8a3a0434f6e568ff40f0dcd9b0ca0aab7b3"
+    sha256 catalina:      "905c4115c7457ef7a063a94b0eb7f31e5c9713858b75edf711410b39c4c0991e"
+    sha256 mojave:        "beffeb0167849f87a790624c01ab67ad2e007c2c0b0b2e3bd9a7f7522ca1ea29"
+    sha256 x86_64_linux:  "f0419a89b057dea2b2630330ca311e23b729c278b7253807c0841f589f32596d"
+  end
 
   depends_on "pkg-config" => :build
-  depends_on "openssl"
-  depends_on "gsasl" => :optional
+  depends_on "gnutls"
 
   def install
     args = %W[
+      --disable-debug
       --disable-dependency-tracking
+      --disable-silent-rules
       --with-macosx-keyring
       --prefix=#{prefix}
-      --with-tls=openssl
     ]
-
-    args << "--with-libsasl" if build.with? "gsasl"
 
     system "./configure", *args
     system "make", "install"

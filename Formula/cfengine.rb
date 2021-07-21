@@ -1,34 +1,52 @@
 class Cfengine < Formula
   desc "Help manage and understand IT infrastructure"
   homepage "https://cfengine.com/"
-  url "https://cfengine-package-repos.s3.amazonaws.com/tarballs/cfengine-3.12.0.tar.gz"
-  sha256 "d71ba98a272390c6fa8bc20e8ea27f0050a0a72a3e6b206a4762b4646be332ec"
+  url "https://cfengine-package-repos.s3.amazonaws.com/tarballs/cfengine-3.18.0.tar.gz"
+  sha256 "d601a3af30f3fba7d51a37476c9e1a00b750682149bf96f4a0002e804bc87783"
+  license all_of: ["BSD-3-Clause", "GPL-2.0-or-later", "GPL-3.0-only", "LGPL-2.0-or-later"]
 
-  bottle do
-    sha256 "b1e2079b0bd8aa12ab6232d555c4707f4ccb0cb5ec8f771dffcc29d7bc900f6a" => :mojave
-    sha256 "6d17d250d32a04ba47bd234abb1c5ee8d7fd69df1dfc517b1ab95c3995a270f3" => :high_sierra
-    sha256 "67ee78d55c3b1e1877f0e03954dc270ff1874e0151d05d9a402365d118aa2bfa" => :sierra
-    sha256 "468f1d8fc3726456fe25f14af8795e0410aa7bc558f7e841ce99082e738de149" => :el_capitan
+  livecheck do
+    url "https://cfengine.com/release-data/community/releases.json"
+    regex(/"version": ?"(\d+(?:\.\d+)+)"/i)
   end
 
-  depends_on "libxml2" if MacOS.version < :mountain_lion
+  bottle do
+    sha256 arm64_big_sur: "3e755d3d93d4f9af8e38a035ae5dc43ee42fd6b5ff11e4dd8d9a42addc193de0"
+    sha256 big_sur:       "369f0b971ef4b7968d2e1a8934ce03e4d841b88c9c0a789ca52e8e5d3b619acd"
+    sha256 catalina:      "397a614052632c146a1a8668a5e0a1e8ab1569296d6bd94b411b5bf15a61c736"
+    sha256 mojave:        "bc4f67e00fa8dc773ab0fcc1b9bb1376513f507fa958bceae50ef943ef5ff670"
+    sha256 x86_64_linux:  "c0182838df4ece465cc5e1084657b650bc1190c1272a0cd50a6af1f7562dae32"
+  end
+
   depends_on "lmdb"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
   depends_on "pcre"
 
+  on_linux do
+    depends_on "linux-pam"
+  end
+
   resource "masterfiles" do
-    url "https://cfengine-package-repos.s3.amazonaws.com/tarballs/cfengine-masterfiles-3.12.0.tar.gz"
-    sha256 "1c50e3d8c702097e13a21258626d936d6ff2e6492e893dfe286ff0d6204d7a65"
+    url "https://cfengine-package-repos.s3.amazonaws.com/tarballs/cfengine-masterfiles-3.18.0.tar.gz"
+    sha256 "968faee4920936739f914b5fcae441cd03354e909bb26c5dcdeb6750f1fde156"
   end
 
   def install
-    system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}",
-                          "--with-workdir=#{var}/cfengine",
-                          "--with-lmdb=#{Formula["lmdb"].opt_prefix}",
-                          "--with-pcre=#{Formula["pcre"].opt_prefix}",
-                          "--without-mysql",
-                          "--without-postgresql"
+    args = %W[
+      --disable-dependency-tracking
+      --prefix=#{prefix}
+      --with-workdir=#{var}/cfengine
+      --with-lmdb=#{Formula["lmdb"].opt_prefix}
+      --with-pcre=#{Formula["pcre"].opt_prefix}
+      --without-mysql
+      --without-postgresql
+    ]
+
+    on_linux do
+      args << "--with-systemd-service=no"
+    end
+
+    system "./configure", *args
     system "make", "install"
     (pkgshare/"CoreBase").install resource("masterfiles")
   end

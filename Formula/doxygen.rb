@@ -1,40 +1,28 @@
 class Doxygen < Formula
   desc "Generate documentation for several programming languages"
-  homepage "http://www.doxygen.org/"
-  url "https://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.14.src.tar.gz"
-  mirror "https://downloads.sourceforge.net/project/doxygen/rel-1.8.14/doxygen-1.8.14.src.tar.gz"
-  sha256 "d1757e02755ef6f56fd45f1f4398598b920381948d6fcfa58f5ca6aa56f59d4d"
+  homepage "https://www.doxygen.org/"
+  url "https://doxygen.nl/files/doxygen-1.9.1.src.tar.gz"
+  mirror "https://downloads.sourceforge.net/project/doxygen/rel-1.9.1/doxygen-1.9.1.src.tar.gz"
+  sha256 "67aeae1be4e1565519898f46f1f7092f1973cce8a767e93101ee0111717091d1"
+  license "GPL-2.0-only"
   head "https://github.com/doxygen/doxygen.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "df47755b88e08c978e06714ac8fb3422fc2bfb1c82c57aa66ae88680f65455b5" => :mojave
-    sha256 "a241e29223f4004e69c81be8e01476602866103e1467cbe631b3e4ef0aa3a4af" => :high_sierra
-    sha256 "c7bda918635189eee83c0716503d43f530b4366deb60639f842a7904debc09e3" => :sierra
-    sha256 "c5c177bb4a290f1e35327b03317dcf3034397db46ae544bebec9fadb9241c86f" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "2b5b2de93ac8703785860bfaf3e14f3268a07dc29bac9def13172785bcac7c5f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b8e1ea1bb601d8cc7cd7cf66b67a544e9e5534c2793cee5ac90bef5d076ad1e5"
+    sha256 cellar: :any_skip_relocation, catalina:      "10e13f7bf6977bee6487366b3fc1dc55b4c191d5d505cb816997838504b3e0a4"
+    sha256 cellar: :any_skip_relocation, mojave:        "0422adc9bfa6e1558cdcca24f8f4266f0927cf4c10fe3e245fe8e3017a7717b5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "271d0e58a246109803f08cb46a3f4a28092bdee17b7fa78b541f259554bb03a7"
   end
 
-  option "with-graphviz", "Build with dot command support from Graphviz."
-  option "with-qt", "Build GUI frontend with Qt support."
-  option "with-llvm", "Build with libclang support."
-
-  deprecated_option "with-dot" => "with-graphviz"
-  deprecated_option "with-doxywizard" => "with-qt"
-  deprecated_option "with-libclang" => "with-llvm"
-  deprecated_option "with-qt5" => "with-qt"
-
+  depends_on "bison" => :build
   depends_on "cmake" => :build
-  depends_on "graphviz" => :optional
-  depends_on "llvm" => :optional
-  depends_on "qt" => :optional
+
+  uses_from_macos "flex" => :build
 
   def install
-    args = std_cmake_args << "-DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=#{MacOS.version}"
-    args << "-Dbuild_wizard=ON" if build.with? "qt"
-    args << "-Duse_libclang=ON -DLLVM_CONFIG=#{Formula["llvm"].opt_bin}/llvm-config" if build.with? "llvm"
-
     mkdir "build" do
-      system "cmake", "..", *args
+      system "cmake", "..", *std_cmake_args
       system "make"
     end
     bin.install Dir["build/bin/*"]

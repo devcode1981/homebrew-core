@@ -1,15 +1,18 @@
 class Msgpack < Formula
   desc "Library for a binary-based efficient data interchange format"
   homepage "https://msgpack.org/"
-  url "https://github.com/msgpack/msgpack-c/releases/download/cpp-3.1.1/msgpack-3.1.1.tar.gz"
-  sha256 "8592d12e19ac3796889b8358bc8f78df9272e6aa7a9ea1834bafd68e4073549a"
+  url "https://github.com/msgpack/msgpack-c/releases/download/cpp-3.3.0/msgpack-3.3.0.tar.gz"
+  sha256 "6e114d12a5ddb8cb11f669f83f32246e484a8addd0ce93f274996f1941c1f07b"
+  license "BSL-1.0"
   head "https://github.com/msgpack/msgpack-c.git"
 
   bottle do
-    sha256 "b708aac89fc31da2a6bed1c6341554215159ff36d0e08ce0f8e1eaf73aefeeb4" => :mojave
-    sha256 "a0cfd5ae310c3e1abe7415d388faa423b503b3536bc57784de1777260de6c596" => :high_sierra
-    sha256 "3f55efbc271b3945eec23cd7bcb00c8810f33b37c20052e58175d5702bcddaf0" => :sierra
-    sha256 "12741b879defd02e2c4a0955ebe559addff483d30189504d4bdeb4572e99226a" => :el_capitan
+    sha256                               arm64_big_sur: "c66ea6e1ec61f9fa18e8146c9aa8306e39adcb0b31d2d6c6784ddd3d17a479f7"
+    sha256                               big_sur:       "434fdf5aea4bdee584755531889cbbe40a093a4a85dbb993dcca60516a6aaeab"
+    sha256                               catalina:      "bb3e3af7ce4994911518db90db9ff4747e72492832b3aa98ff7c82fd3d5990b2"
+    sha256                               mojave:        "f418d11d056dd08160b27088d19ee12d4a9e36dbd913ffae8d2c9838a1449475"
+    sha256                               high_sierra:   "7424d6d9dee3edd0f07c4ea6f11567255dea4f1bbffbb6c41f20c5412952028d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e1a92fbd0fa30cce0c6d415d48f3e89334b5352a39fd6f1d04a86acd20bc503a"
   end
 
   depends_on "cmake" => :build
@@ -20,7 +23,7 @@ class Msgpack < Formula
   end
 
   test do
-    # Reference: https://github.com/msgpack/msgpack-c/blob/master/QUICKSTART-C.md
+    # Reference: https://github.com/msgpack/msgpack-c/blob/HEAD/QUICKSTART-C.md
     (testpath/"test.c").write <<~EOS
       #include <msgpack.h>
       #include <stdio.h>

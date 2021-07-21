@@ -1,47 +1,49 @@
 class Xonsh < Formula
   include Language::Python::Virtualenv
 
-  desc "Python-ish, BASHwards-compatible shell language and command prompt"
+  desc "Python-powered, cross-platform, Unix-gazing shell language and command prompt"
   homepage "https://xon.sh/"
-  url "https://github.com/xonsh/xonsh/archive/0.8.3.tar.gz"
-  sha256 "f91a9b5a71a82a6450e5a3dbeacc11ff0a9faceea4fbb241aaa3a18f7a6e6437"
-  head "https://github.com/xonsh/xonsh.git"
+  url "https://files.pythonhosted.org/packages/39/af/ba93eb37f0340c3f225dcb45858aa6169c05b03f9044c528fe2e770952a0/xonsh-0.9.27.tar.gz"
+  sha256 "82aa7c50eb161c74e0b12c4f9c772d228a1e90b21afb948c0dc9dfb2b63f5fd5"
+  license "BSD-2-Clause-Views"
+  head "https://github.com/xonsh/xonsh.git", branch: "main"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "6a121eda90468568fe6fa6ca31ea976371cc1f97e52aacf04bfb4216bb71697c" => :mojave
-    sha256 "30e5d3c0da7df3e4df25fc57cf93c427e1de4348f577744ec951bbea09e3a8cb" => :high_sierra
-    sha256 "5ddb3623d0d413652937ed7721ad2764506a2388f7cdf4b6de6450867235c23c" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a789ba640efa248ae6dce5fab63d43e094e50fe2a3d6fab12a46aee3b0e8431f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "84a20d6b486a3bc5ce800e0980763ecefe79fd5efe1458553e5aef9581118397"
+    sha256 cellar: :any_skip_relocation, catalina:      "ef5af547e8fdfa464c0ad814fbf0a880792ee58472cecdc5e20f66ea56110a57"
+    sha256 cellar: :any_skip_relocation, mojave:        "47dbc76b608d3da25a4ab5dd911fcd06447571172a18a68b625619f39d5b7f83"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f05be843cb6f0c783a4bd1faaba44511c104b494979a308c35666a5b2dba08d3"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   # Resources based on `pip3 install xonsh[ptk,pygments,proctitle]`
   # See https://xon.sh/osx.html#dependencies
 
-  resource "prompt_toolkit" do
-    url "https://files.pythonhosted.org/packages/d9/a5/4b2dd1a05403e34c3ba0d9c00f237c01967c0a4f59a427c9b241129cdfe4/prompt_toolkit-2.0.7.tar.gz"
-    sha256 "fd17048d8335c1e6d5ee403c3569953ba3eb8555d710bfc548faf0712666ea39"
+  resource "prompt-toolkit" do
+    url "https://files.pythonhosted.org/packages/b1/32/2a6b734dc25b249467bfc1d844b077a252ea393d1b90733f4e899aa56506/prompt_toolkit-3.0.16.tar.gz"
+    sha256 "0fa02fa80363844a4ab4b8d6891f62dd0645ba672723130423ca4037b80c1974"
   end
 
   resource "Pygments" do
-    url "https://files.pythonhosted.org/packages/71/2a/2e4e77803a8bd6408a2903340ac498cb0a2181811af7c9ec92cb70b0308a/Pygments-2.2.0.tar.gz"
-    sha256 "dbae1046def0efb574852fab9e90209b23f556367b5a320c0bcb871c77c3e8cc"
+    url "https://files.pythonhosted.org/packages/19/d0/dec5604a275b19b0ebd2b9c43730ce39549c8cd8602043eaf40c541a7256/Pygments-2.8.0.tar.gz"
+    sha256 "37a13ba168a02ac54cc5891a42b1caec333e59b66addb7fa633ea8a6d73445c0"
+  end
+
+  resource "pyperclip" do
+    url "https://files.pythonhosted.org/packages/a7/2c/4c64579f847bd5d539803c8b909e54ba087a79d01bb3aba433a95879a6c5/pyperclip-1.8.2.tar.gz"
+    sha256 "105254a8b04934f0bc84e9c24eb360a591aaf6535c9def5f29d92af107a9bf57"
   end
 
   resource "setproctitle" do
-    url "https://files.pythonhosted.org/packages/5a/0d/dc0d2234aacba6cf1a729964383e3452c52096dc695581248b548786f2b3/setproctitle-1.1.10.tar.gz"
-    sha256 "6283b7a58477dd8478fbb9e76defb37968ee4ba47b05ec1c053cb39638bd7398"
-  end
-
-  resource "six" do
-    url "https://files.pythonhosted.org/packages/16/d8/bc6316cf98419719bd59c91742194c111b6f2e85abac88e496adefaf7afe/six-1.11.0.tar.gz"
-    sha256 "70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9"
+    url "https://files.pythonhosted.org/packages/a1/7f/a1d4f4c7b66f0fc02f35dc5c85f45a8b4e4a7988357a29e61c14e725ef86/setproctitle-1.2.2.tar.gz"
+    sha256 "7dfb472c8852403d34007e01d6e3c68c57eb66433fb8a5c77b13b89a160d97df"
   end
 
   resource "wcwidth" do
-    url "https://files.pythonhosted.org/packages/55/11/e4a2bb08bb450fdbd42cc709dd40de4ed2c472cf0ccb9e64af22279c5495/wcwidth-0.1.7.tar.gz"
-    sha256 "3df37372226d6e63e1b1e1eda15c594bca98a22d33a23832a90998faa96bc65e"
+    url "https://files.pythonhosted.org/packages/89/38/459b727c381504f361832b9e5ace19966de1a235d73cdbdea91c771a1155/wcwidth-0.2.5.tar.gz"
+    sha256 "c4d647b99872929fdb7bdcaa4fbe7f01413ed3d98077df798530e5b04f116c83"
   end
 
   def install

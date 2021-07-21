@@ -1,44 +1,51 @@
 class Z3 < Formula
   desc "High-performance theorem prover"
   homepage "https://github.com/Z3Prover/z3"
-  url "https://github.com/Z3Prover/z3/archive/z3-4.8.3.tar.gz"
-  sha256 "21620b68c373cdea0d3b2cf24020be4ecfb22eddc6629663f6e9ce31cfdc78de"
+  url "https://github.com/Z3Prover/z3/archive/z3-4.8.12.tar.gz"
+  sha256 "e3aaefde68b839299cbc988178529535e66048398f7d083b40c69fe0da55f8b7"
+  license "MIT"
   head "https://github.com/Z3Prover/z3.git"
 
-  bottle do
-    cellar :any
-    sha256 "d5d6b5c05e279d5caa53f80143f235f9dd3dc67eed67788df5a046f354afabda" => :mojave
-    sha256 "ba793d139b46ede624b12daf90c9d754d675359dcd048707491ffddf7ffeea7b" => :high_sierra
-    sha256 "21041ebbfe6cdbd62c0c112a400be6cdf2135ba819841ad448fcea7e9c0473bb" => :sierra
+  livecheck do
+    url :stable
+    strategy :github_latest
+    regex(%r{href=.*?/tag/z3[._-]v?(\d+(?:\.\d+)+)["' >]}i)
   end
 
-  option "without-python@2", "Build without python 2 support"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "7718352b7b7b7e3cc454892a563212ac8b02259e90005a1d73ba30062b7e7df3"
+    sha256 cellar: :any,                 big_sur:       "ec65441e86922c521bfee1ec48ddcedd7ddcadcaac5b0301ffa5b6ba4cde4895"
+    sha256 cellar: :any,                 catalina:      "55d80044e8f62f8846d787c813fa0da76d20b84e278ea173cec922741854790b"
+    sha256 cellar: :any,                 mojave:        "0c7796128c833fb0a0da6cafb1d3564d8f42484df722b84035ccbc07a737f69a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "1ded592aadd4c67db5f1dcee03799d7363e48579882cfd34a4c00b71cb87ca28"
+  end
 
-  deprecated_option "with-python3" => "with-python"
-  deprecated_option "without-python" => "without-python@2"
+  # Has Python bindings but are supplementary to the main library
+  # which does not need Python.
+  depends_on "python@3.9" => :build
 
-  depends_on "python@2" => :recommended
-  depends_on "python" => :optional
+  on_linux do
+    depends_on "gcc" # For C++17
+  end
+
+  fails_with gcc: "5"
 
   def install
-    if build.without?("python") && build.without?("python@2")
-      odie "z3: --with-python must be specified when using --without-python@2"
+    python3 = Formula["python@3.9"].opt_bin/"python3"
+    xy = Language::Python.major_minor_version python3
+    system python3, "scripts/mk_make.py",
+                     "--prefix=#{prefix}",
+                     "--python",
+                     "--pypkgdir=#{lib}/python#{xy}/site-packages",
+                     "--staticlib"
+
+    cd "build" do
+      system "make"
+      system "make", "install"
     end
 
-    Language::Python.each_python(build) do |python, version|
-      system python, "scripts/mk_make.py", "--prefix=#{prefix}", "--python", "--pypkgdir=#{lib}/python#{version}/site-packages", "--staticlib"
-      cd "build" do
-        system "make"
-        system "make", "install"
-      end
-    end
-
-    # qprofdiff is not yet part of the source release (it will be as soon as a
-    # version is released after 4.5.0), so we only include it in HEAD builds
-    if build.head?
-      system "make", "-C", "contrib/qprofdiff"
-      bin.install "contrib/qprofdiff/qprofdiff"
-    end
+    system "make", "-C", "contrib/qprofdiff"
+    bin.install "contrib/qprofdiff/qprofdiff"
 
     pkgshare.install "examples"
   end

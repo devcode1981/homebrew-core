@@ -1,43 +1,37 @@
 class Hub < Formula
   desc "Add GitHub support to git on the command-line"
   homepage "https://hub.github.com/"
-  url "https://github.com/github/hub/archive/v2.6.0.tar.gz"
-  sha256 "c4df5ce953aa5dd5c4fa57ada96559b4b76bbd30a9e961e10e881be869cf4f2c"
+  url "https://github.com/github/hub/archive/v2.14.2.tar.gz"
+  sha256 "e19e0fdfd1c69c401e1c24dd2d4ecf3fd9044aa4bd3f8d6fd942ed1b2b2ad21a"
+  license "MIT"
   head "https://github.com/github/hub.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "5cf7e0ce208621db5d7f34befbf99dae405d00a1d70c43572afa1a0b4e843359" => :mojave
-    sha256 "6abd961ef398b2f99b79f97ad6a574279473402e4533da34880092cfb8a66951" => :high_sierra
-    sha256 "96ebcd7cc838502eb823af6a40520847b88cecc70a2d2b1565ce09bb2c5cac7e" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "19d761270350d4c4b6d5118d096dc7c012e7b58b43c0d81f9c6d8bded1888dd9"
+    sha256 cellar: :any_skip_relocation, big_sur:       "7c480f3de5f449a741f88718194c129d597f0fe0db8b2130c1ccf4daa9a8dfca"
+    sha256 cellar: :any_skip_relocation, catalina:      "fdf05855839a9d7ec6e7bee6796e3cb5fc473500cffc002366cf98c09a805b69"
+    sha256 cellar: :any_skip_relocation, mojave:        "bcbae9c683d76f3395665467ba0f0c00c60c12c84022f72faba4b8981724b563"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "8800cda4532784bf764ea6116a06c81d8d90bb3d36d8ecf295e64f9dd647c4ad"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "213636e856404251ffd7897357ab91cc9519d3852e4b28cbb43575988d9bbc1b"
   end
 
   depends_on "go" => :build
 
-  # System Ruby uses old TLS versions no longer supported by RubyGems.
-  depends_on "ruby" => :build if MacOS.version <= :sierra
+  uses_from_macos "groff" => :build
+  uses_from_macos "ruby" => :build
+
+  on_linux do
+    depends_on "util-linux"
+  end
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/github/hub").install buildpath.children
-    cd "src/github.com/github/hub" do
-      begin
-        deleted = ENV.delete "SDKROOT"
-        ENV["GEM_HOME"] = buildpath/"gem_home"
-        system "gem", "install", "bundler"
-        ENV.prepend_path "PATH", buildpath/"gem_home/bin"
-        system "make", "man-pages"
-      ensure
-        ENV["SDKROOT"] = deleted
-      end
-      system "make", "install", "prefix=#{prefix}"
+    system "make", "install", "prefix=#{prefix}"
 
-      prefix.install_metafiles
+    prefix.install_metafiles
 
-      bash_completion.install "etc/hub.bash_completion.sh"
-      zsh_completion.install "etc/hub.zsh_completion" => "_hub"
-      fish_completion.install "etc/hub.fish_completion" => "hub.fish"
-    end
+    bash_completion.install "etc/hub.bash_completion.sh"
+    zsh_completion.install "etc/hub.zsh_completion" => "_hub"
+    fish_completion.install "etc/hub.fish_completion" => "hub.fish"
   end
 
   test do

@@ -1,29 +1,29 @@
 class KyotoCabinet < Formula
   desc "Library of routines for managing a database"
   homepage "https://fallabs.com/kyotocabinet/"
-  url "https://fallabs.com/kyotocabinet/pkg/kyotocabinet-1.2.76.tar.gz"
-  sha256 "812a2d3f29c351db4c6f1ff29d94d7135f9e601d7cc1872ec1d7eed381d0d23c"
+  url "https://fallabs.com/kyotocabinet/pkg/kyotocabinet-1.2.79.tar.gz"
+  sha256 "67fb1da4ae2a86f15bb9305f26caa1a7c0c27d525464c71fd732660a95ae3e1d"
+  license "GPL-3.0-or-later"
+
+  livecheck do
+    url "https://dbmx.net/kyotocabinet/pkg/"
+    regex(/href=.*?kyotocabinet[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "0430d49ce4fd72454dd8e5d3a326f8172ff85e449d2766ca51f79e9045e8e2c0" => :mojave
-    sha256 "2ba12ca100464a78f42b5b9d3540d99e26458d8bcac0bb9a530858b5bc49bc0a" => :high_sierra
-    sha256 "24d4adf0747bebe9c3d90c509290bb630531f5184793d1866cd8ea7a39a1adce" => :sierra
-    sha256 "c4b2e78762b188a19b3c6c2aec1733c59b03fd69d23aa2ae41ba8e756704c795" => :el_capitan
-    sha256 "149125dc24b899ac4d6dd48a11aebb2ac092252b8e9cccac6472d3713062f914" => :yosemite
-    sha256 "bfed1b4b4aa5e742c89f9aa0ba83375ad4ff1d5daaf0e060260d16df4024582d" => :mavericks
+    sha256 arm64_big_sur: "fa9322ae66dc8295d2f60365999a371c6602bcfd98f050e0897992e745c53d93"
+    sha256 big_sur:       "8a7873835b5790ece37b54d398daf834e7aa75570202cd7a174ba7e5ebecf6a3"
+    sha256 catalina:      "c78b84f7dc1e82f12a8bdbeb934abeb9858968fa8c53dee9a405b1e55b49155d"
+    sha256 mojave:        "214ade984ae17b36058ceca13c37fb5612da6daa0c7cbd919e635c1c714a4a1b"
+    sha256 x86_64_linux:  "4e6693149609f558bf30685031113391e230fab20a738ab0ad98c08ef8bc1545"
   end
 
-  fails_with :clang do
-    build 421
-    cause <<~EOS
-      Kyoto-cabinet relies on GCC atomic intrinsics, but Clang does not
-      implement them for non-integer types.
-    EOS
-  end
+  uses_from_macos "zlib"
 
-  patch :DATA if MacOS.version >= :mavericks
+  patch :DATA
 
   def install
+    ENV.cxx11
     system "./configure", "--disable-debug", "--prefix=#{prefix}"
     system "make" # Separate steps required
     system "make", "install"

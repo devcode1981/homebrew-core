@@ -1,15 +1,16 @@
 class LibbitcoinClient < Formula
   desc "Bitcoin Client Query Library"
   homepage "https://github.com/libbitcoin/libbitcoin-client"
-  url "https://github.com/libbitcoin/libbitcoin-client/archive/v3.5.0.tar.gz"
-  sha256 "bafa26647f334ecad04fc4bbef507a1954d7e0682f07bd38b90ab66dba5fe0d2"
-  revision 2
+  url "https://github.com/libbitcoin/libbitcoin-client/archive/v3.6.0.tar.gz"
+  sha256 "75969ac0a358458491b101cae784de90452883b5684199d3e3df619707802420"
+  license "AGPL-3.0"
+  revision 7
 
   bottle do
-    cellar :any
-    sha256 "ee4d1be96426fc44c909be4b92af03f43bced539d47fa2c625a239def9752afb" => :mojave
-    sha256 "9734c7fc693ddfb6b80ca671d98c013fb201b957125c4adc493effaabc6c3b3e" => :high_sierra
-    sha256 "d5adf715bc0c7d3a25afed61c82736c97b0832a1f09c61663375748247e60fd9" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "1436d1f380bb51199a8b92053c9822e314c0febac9bc8757bf0f4c51fbcc7798"
+    sha256 cellar: :any, big_sur:       "8c0a09aefcaf36a2b9831884c7ce698d2ad533f3aca8b4d30a4f63611022535a"
+    sha256 cellar: :any, catalina:      "d44ec063ad2da0e31a12d9f59c65962b03e60c1fedfbe002b62dbae6cedc727a"
+    sha256 cellar: :any, mojave:        "fed0d06847db159818373b9c8845f185dc58dbeaa761f0f8a8bc6267f3b4030a"
   end
 
   depends_on "autoconf" => :build
@@ -19,16 +20,19 @@ class LibbitcoinClient < Formula
   depends_on "libbitcoin-protocol"
 
   def install
+    ENV.cxx11
     ENV.prepend_path "PKG_CONFIG_PATH", Formula["libbitcoin"].opt_libexec/"lib/pkgconfig"
 
     system "./autogen.sh"
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
-                          "--prefix=#{prefix}"
+                          "--prefix=#{prefix}",
+                          "--with-boost-libdir=#{Formula["boost"].opt_lib}"
     system "make", "install"
   end
 
   test do
+    boost = Formula["boost"]
     (testpath/"test.cpp").write <<~EOS
       #include <bitcoin/client.hpp>
       class stream_fixture
@@ -88,7 +92,7 @@ class LibbitcoinClient < Formula
     system ENV.cxx, "-std=c++11", "test.cpp", "-o", "test",
                     "-L#{Formula["libbitcoin"].opt_lib}", "-lbitcoin",
                     "-L#{lib}", "-lbitcoin-client",
-                    "-L#{Formula["boost"].opt_lib}", "-lboost_system"
+                    "-L#{boost.opt_lib}", "-lboost_system"
     system "./test"
   end
 end

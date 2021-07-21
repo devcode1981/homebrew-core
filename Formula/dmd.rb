@@ -1,31 +1,33 @@
 class Dmd < Formula
   desc "D programming language compiler for macOS"
   homepage "https://dlang.org/"
+  license "BSL-1.0"
 
   stable do
-    url "https://github.com/dlang/dmd/archive/v2.083.0.tar.gz"
-    sha256 "29a983f3019a1c2be450e2086ed8216805848ecbb2a8aba683a13cf78413f8bc"
+    url "https://github.com/dlang/dmd/archive/v2.097.0.tar.gz"
+    sha256 "1f8f1bcc23c2d4d8254b6b0c34cecbeba69195d8b3d5c52c1b2ed68c1dcd3ac0"
 
     resource "druntime" do
-      url "https://github.com/dlang/druntime/archive/v2.083.0.tar.gz"
-      sha256 "33e357e709e582ec7356bc15ce8714959d2293a0e98d66b884441acf98756938"
+      url "https://github.com/dlang/druntime/archive/v2.097.0.tar.gz"
+      sha256 "9de7aaa57da5e8a6ab922ac455e9667b1c8bdd6a0df298662ae908cfa1304836"
     end
 
     resource "phobos" do
-      url "https://github.com/dlang/phobos/archive/v2.083.0.tar.gz"
-      sha256 "4a1d9fb88f46bd4db54addbf47443786cb2576071376e40c3a695a39e4f6c77e"
+      url "https://github.com/dlang/phobos/archive/v2.097.0.tar.gz"
+      sha256 "720d4b8c71cfa31411aa94a5040673f384b06f7da6f1233e726224f9d62180e8"
     end
 
     resource "tools" do
-      url "https://github.com/dlang/tools/archive/v2.083.0.tar.gz"
-      sha256 "070d66c25d10cab58bdb744abfe4d4aeb2d3e4a425f94ccdd30d628f9498105a"
+      url "https://github.com/dlang/tools/archive/v2.097.0.tar.gz"
+      sha256 "39bfc5e32ec400f8b4c8931e3f7353036f5840f5439acbb746a2272d02a7f5b3"
     end
   end
 
   bottle do
-    sha256 "e325146a99540e69a87c12da1b777ffcc6b95621f6f66a1518c60a3706ef572b" => :mojave
-    sha256 "264514a063709e8719f4b0921d734ec379c3dd23555c791244cd7a4775634597" => :high_sierra
-    sha256 "f757c0cea995d31f82ccaa7e7470301b16563bc85c154d807ae39f7c4cbe162c" => :sierra
+    sha256 big_sur:      "7b13c3953ee766dd708d49f739acc6c211441bf849a09ea8cffc7da1a26b47da"
+    sha256 catalina:     "fe1f3676f1a382ea3ff1086e2e0a2446c8eff174387d02a263bec32a72104b95"
+    sha256 mojave:       "ac360eb79ccbdbd555fc6795b189f8f71aa2eebe2d9b37c272935af2c5033c33"
+    sha256 x86_64_linux: "ed13bebe1a84eb7a42833f713172ecff0af9f521388f7c5beb0cb4bc83730efb"
   end
 
   head do
@@ -44,10 +46,28 @@ class Dmd < Formula
     end
   end
 
-  def install
-    make_args = ["INSTALL_DIR=#{prefix}", "MODEL=#{Hardware::CPU.bits}", "BUILD=release", "-f", "posix.mak"]
+  depends_on arch: :x86_64
 
-    dmd_make_args = ["SYSCONFDIR=#{etc}", "TARGET_CPU=X86", "AUTO_BOOTSTRAP=1", "ENABLE_RELEASE=1"]
+  uses_from_macos "unzip" => :build
+  uses_from_macos "xz" => :build
+
+  def install
+    # DMD defaults to v2.088.0 to bootstrap as of DMD 2.090.0
+    # On MacOS Catalina, a version < 2.087.1 would not work due to TLS related symbols missing
+
+    make_args = %W[
+      INSTALL_DIR=#{prefix}
+      MODEL=64
+      BUILD=release
+      -f posix.mak
+    ]
+
+    dmd_make_args = %W[
+      SYSCONFDIR=#{etc}
+      TARGET_CPU=X86
+      AUTO_BOOTSTRAP=1
+      ENABLE_RELEASE=1
+    ]
 
     system "make", *dmd_make_args, *make_args
 
@@ -64,13 +84,18 @@ class Dmd < Formula
       system "make", "install", *make_args
     end
 
-    bin.install "generated/osx/release/64/dmd"
+    on_macos do
+      bin.install "generated/osx/release/64/dmd"
+    end
+    on_linux do
+      bin.install "generated/linux/release/64/dmd"
+    end
     pkgshare.install "samples"
     man.install Dir["docs/man/*"]
 
     (include/"dlang/dmd").install Dir["druntime/import/*"]
     cp_r ["phobos/std", "phobos/etc"], include/"dlang/dmd"
-    lib.install Dir["druntime/lib/*", "phobos/**/libphobos2.a"]
+    lib.install Dir["druntime/**/libdruntime.*", "phobos/**/libphobos2.*"]
 
     (buildpath/"dmd.conf").write <<~EOS
       [Environment]

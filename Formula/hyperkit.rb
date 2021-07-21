@@ -1,46 +1,42 @@
 class Hyperkit < Formula
   desc "Toolkit for embedding hypervisor capabilities in your application"
   homepage "https://github.com/moby/hyperkit"
-  url "https://github.com/moby/hyperkit/archive/v0.20180403.tar.gz"
-  sha256 "e2739b034f20d9437696de48ace42600f55b7213292ec255032b2ef55f508297"
+  url "https://github.com/moby/hyperkit/archive/v0.20200908.tar.gz"
+  sha256 "e13bdb9dc5c18ca59ae6cd2b447d704d8d58f27cf4ae5a1f0a026deeb13bd0d7"
+  license "BSD-2-Clause"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "575873fb7533d317e1044a2332d30c29eeef4d92653c2c16e780940e3695b32a" => :mojave
-    sha256 "7a720e8737ac10ca41fb6db08e382eb40d87430a088891af694ce333e99d66ce" => :high_sierra
-    sha256 "f4422d832468f23c3b845546205179edd61c4bb9a4c38ae39dd46018684f4a43" => :sierra
+    sha256 cellar: :any_skip_relocation, catalina:    "26a203b17733ff5166d8c31069e3ecd5af15c74448a51d8b682689cb07e911e8"
+    sha256 cellar: :any_skip_relocation, mojave:      "f662bb10b9bab8a2f3b8e92f51b2fae3f1d8d24310732cc77a164e63d7eaa5d2"
+    sha256 cellar: :any_skip_relocation, high_sierra: "f057fe7b3856421d0fdf1df3d9981e0729ee77c27ed3d4cb918e9523f7d5d9be"
   end
 
   depends_on "aspcud" => :build
   depends_on "ocaml" => :build
   depends_on "opam" => :build
-  depends_on :xcode => ["9.0", :build]
+  depends_on xcode: ["9.0", :build]
 
   depends_on "libev"
 
   resource "tinycorelinux" do
-    url "https://dl.bintray.com/markeissler/homebrew/hyperkit-kernel/tinycorelinux_8.x.tar.gz"
+    url "https://github.com/Homebrew/homebrew-core/files/6405545/tinycorelinux_8.x.tar.gz"
     sha256 "560c1d2d3a0f12f9b1200eec57ca5c1d107cf4823d3880e09505fcd9cd39141a"
   end
 
   def install
-    system "opam", "init", "--no-setup"
+    system "opam", "init", "--disable-sandboxing", "--no-setup"
     opam_dir = "#{buildpath}/.brew_home/.opam"
     ENV["CAML_LD_LIBRARY_PATH"] = "#{opam_dir}/system/lib/stublibs:#{Formula["ocaml"].opt_lib}/ocaml/stublibs"
+    ENV["OPAMEXTERNALSOLVER"] = "aspcud"
     ENV["OPAMUTF8MSGS"] = "1"
     ENV["PERL5LIB"] = "#{opam_dir}/system/lib/perl5"
     ENV["OCAML_TOPLEVEL_PATH"] = "#{opam_dir}/system/lib/toplevel"
     ENV.prepend_path "PATH", "#{opam_dir}/system/bin"
 
-    inreplace "#{opam_dir}/compilers/4.05.0/4.05.0/4.05.0.comp",
-      '["./configure"', '["./configure" "-no-graph"' # Avoid X11
-
-    ENV.deparallelize { system "opam", "switch", "4.05.0" }
-
     system "opam", "config", "exec", "--",
-           "opam", "install", "-y", "uri", "qcow", "conduit.1.0.0", "lwt.3.1.0",
-           "qcow-tool", "mirage-block-unix.2.9.0", "conf-libev", "logs", "fmt",
-           "mirage-unix", "prometheus-app"
+           "opam", "install", "-y", "uri.3.1.0", "qcow.0.11.0", "conduit.2.1.0", "lwt.5.3.0",
+           "qcow-tool.0.11.0", "mirage-block-unix.2.12.0", "conf-libev.4-11", "logs.0.7.0", "fmt.0.8.8",
+           "mirage-unix.4.0.0", "prometheus-app.0.7"
 
     args = []
     args << "GIT_VERSION=#{version}"

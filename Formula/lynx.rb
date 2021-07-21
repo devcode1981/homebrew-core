@@ -4,17 +4,33 @@ class Lynx < Formula
   url "https://invisible-mirror.net/archives/lynx/tarballs/lynx2.8.9rel.1.tar.bz2"
   version "2.8.9rel.1"
   sha256 "387f193d7792f9cfada14c60b0e5c0bff18f227d9257a39483e14fa1aaf79595"
+  license "GPL-2.0"
+  revision 1
 
-  bottle do
-    sha256 "61c9bfb70ad4c2b036f7c471b5e23502625b20ea835e13e42fc42743536f93e2" => :mojave
-    sha256 "efd1ec304b8f8c76c840b09abc0ca564c7c393bc33e0f572ff8979086ea81a73" => :high_sierra
-    sha256 "14c607d4f273ab4f6974bea3d8b2892eaaa919c48d6ea4637b5e97759c9365d1" => :sierra
-    sha256 "2240132091626d4577ec75e0e24ffba4052d13534ce8bf28f766b3b255d0286d" => :el_capitan
+  livecheck do
+    url "https://invisible-mirror.net/archives/lynx/tarballs/?C=M&O=D"
+    regex(/href=.*?lynx[._-]?v?(\d+(?:\.\d+)+(?:rel\.?\d+))\.t/i)
   end
 
-  depends_on "openssl"
+  bottle do
+    sha256 arm64_big_sur: "c79e9528464e79e45a7ece951ffaa5304e988f294234172ccb59b3cb9f0a2fec"
+    sha256 big_sur:       "a3b88b08c22efa2c898573395a253e1ddcb3fb90888ef963c00f9e5b69cd1aa1"
+    sha256 catalina:      "b7b36f0697736fc1744026c18968bec4d5c1433356678e853d734406f9dc3612"
+    sha256 mojave:        "3b4c3a636d19106a2fea571889a4159fd49b82fbd2694c206d4851b15281fddd"
+    sha256 high_sierra:   "68eb083eff0962b83dc121e9194d430d4e9c2eb7d559cb998ba992da9b566479"
+    sha256 sierra:        "b8ee13323a4e8760f21a82da3b579d3373e282398ff7efe56c7ec8ae9cb0d064"
+    sha256 x86_64_linux:  "7067fe13b0e2be8fed0b06b0f83ea0f5b44142db148a6f82866e77e1c90c6b68"
+  end
+
+  depends_on "openssl@1.1"
+
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
 
   def install
+    # Using --with-screen=ncurses to due to behaviour change in Big Sur
+    # https://github.com/Homebrew/homebrew-core/pull/58019
+
     system "./configure", "--disable-debug", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
                           "--mandir=#{man}",
@@ -22,8 +38,10 @@ class Lynx < Formula
                           "--enable-default-colors",
                           "--with-zlib",
                           "--with-bzlib",
-                          "--with-ssl=#{Formula["openssl"].opt_prefix}",
-                          "--enable-ipv6"
+                          "--with-ssl=#{Formula["openssl@1.1"].opt_prefix}",
+                          "--enable-ipv6",
+                          "--with-screen=ncurses",
+                          "--disable-config-info"
     system "make", "install"
   end
 

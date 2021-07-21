@@ -1,28 +1,25 @@
 class Terragrunt < Formula
   desc "Thin wrapper for Terraform e.g. for locking state"
-  homepage "https://github.com/gruntwork-io/terragrunt"
-  url "https://github.com/gruntwork-io/terragrunt/archive/v0.17.3.tar.gz"
-  sha256 "5502b87131d642886cfcc5266092f7360b27f4f3f21b6dbb1f3ac2996dcd7da5"
-  head "https://github.com/gruntwork-io/terragrunt.git"
+  homepage "https://terragrunt.gruntwork.io/"
+  url "https://github.com/gruntwork-io/terragrunt/archive/v0.31.0.tar.gz"
+  sha256 "85878641f3e3912948c694530fe015c8af8d1d1039f168336859ac85cb028d96"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "97f03a78c0362e789fdd8d9bca5385e5a9c32b2cff1b3b6bd8c41e25c37189c5" => :mojave
-    sha256 "02f82aa4820ae881777183ef8a978ce1b56f0ce05d6776a648c9a3fce8235105" => :high_sierra
-    sha256 "c5a42572202a23a8839f1bb3ef981c3eec9af4434e539cff74e12669a90fc5e9" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "4d066c3cbfed15778e734eae7fcce07297eeee1467da4198f9e46ee0ccfb166c"
+    sha256 cellar: :any_skip_relocation, big_sur:       "7b8dc70aa56b19ceefe0a6769f14607b7d905d2d85921284a42745a7c7fdc550"
+    sha256 cellar: :any_skip_relocation, catalina:      "7b5b37c16d92f8f7a47ccb64350ed13c43d4aeaeae70f3724a032402898b4f11"
+    sha256 cellar: :any_skip_relocation, mojave:        "210453c49031412cfe2b3030f84195fedb926376f5dd5bd91cf8b7d7779decda"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "97ca4167493072e30ee31fa0135e8e8a3afecfdbc779615a0531196611136077"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
   depends_on "terraform"
 
+  conflicts_with "tgenv", because: "tgenv symlinks terragrunt binaries"
+
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/gruntwork-io/terragrunt").install buildpath.children
-    cd "src/github.com/gruntwork-io/terragrunt" do
-      system "dep", "ensure", "-vendor-only"
-      system "go", "build", "-o", bin/"terragrunt", "-ldflags", "-X main.VERSION=v#{version}"
-    end
+    system "go", "build", *std_go_args(ldflags: "-s -w -X main.VERSION=v#{version}")
   end
 
   test do

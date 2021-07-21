@@ -1,33 +1,32 @@
 class Asciinema < Formula
+  include Language::Python::Virtualenv
+
   desc "Record and share terminal sessions"
   homepage "https://asciinema.org"
-  url "https://github.com/asciinema/asciinema/archive/v2.0.1.tar.gz"
-  sha256 "7087b247dae36d04821197bc14ebd4248049592b299c9878d8953c025ac802e4"
-  revision 1
+  url "https://files.pythonhosted.org/packages/a7/71/771c859795e02c71c187546f34f7535487b97425bc1dad1e5f6ad2651357/asciinema-2.0.2.tar.gz"
+  sha256 "32f2c1a046564e030708e596f67e0405425d1eca9d5ec83cd917ef8da06bc423"
+  license "GPL-3.0"
+  revision 3
   head "https://github.com/asciinema/asciinema.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d5beedf1dd255d1bc2793aee0d5ed024730f2c9162b4fa52680311371d0c9c11" => :mojave
-    sha256 "7673916f20d752ad61c5bc859fef8d5a4baec23e684b1bff0363fac3e789ae68" => :high_sierra
-    sha256 "7673916f20d752ad61c5bc859fef8d5a4baec23e684b1bff0363fac3e789ae68" => :sierra
-    sha256 "7673916f20d752ad61c5bc859fef8d5a4baec23e684b1bff0363fac3e789ae68" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "b681c70de003112e00b3c31555e06453e0d22483095713fd27cfe9113e5363c6"
+    sha256 cellar: :any_skip_relocation, big_sur:       "0a5101fb3da7411764b53fb8dc6b8ab8a7c4a54ced892f9c832301ecbb9964a0"
+    sha256 cellar: :any_skip_relocation, catalina:      "caa76523c644cf5916cde300c407d89282509a0291cfa9c4812d888c26ce7f77"
+    sha256 cellar: :any_skip_relocation, mojave:        "b1a1aff9cf3f46328f0df80773a85898db70453fff4785e26e7ee4d6f12ef408"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "4ce78d8edeeb635ad7cf2f5edd88770baaa72d623ecc471fb0e8f5e12efb0e04"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "acec6c4fc08e352c797826270ec89d4eeab169172912bb22ea4b785635f7481e"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   def install
-    xy = Language::Python.major_minor_version "python3"
-    ENV.prepend_create_path "PYTHONPATH", libexec/"lib/python#{xy}/site-packages"
-    system "python3", *Language::Python.setup_install_args(libexec)
-
-    bin.install Dir[libexec/"bin/*"]
-    bin.env_script_all_files(libexec/"bin", :PYTHONPATH => ENV["PYTHONPATH"])
+    virtualenv_install_with_resources
   end
 
   test do
     ENV["LC_ALL"] = "en_US.UTF-8"
-    system "#{bin}/asciinema", "--version"
-    system "#{bin}/asciinema", "--help"
+    output = shell_output("#{bin}/asciinema auth")
+    assert_match "Open the following URL in a web browser to link your install ID", output
   end
 end

@@ -1,26 +1,31 @@
 class Jsonnet < Formula
   desc "Domain specific configuration language for defining JSON data"
   homepage "https://jsonnet.org/"
-  url "https://github.com/google/jsonnet/archive/v0.11.2.tar.gz"
-  sha256 "c7c33f159a9391e90ab646b3b5fd671dab356d8563dc447ee824ecd77f4609f8"
+  url "https://github.com/google/jsonnet/archive/v0.17.0.tar.gz"
+  sha256 "076b52edf888c01097010ad4299e3b2e7a72b60a41abbc65af364af1ed3c8dbe"
+  license "Apache-2.0"
   head "https://github.com/google/jsonnet.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "085740ce03c6801c58895b554ab23eae2ac8a8e2a1c528519324ccf543965e42" => :mojave
-    sha256 "c146c572e65547f42d39580bbaed91539928c7d54ed6c1970d24e4507c53d638" => :high_sierra
-    sha256 "b35454f33de80b8129bab932aa4979374bc729a4b69211e3ac2800ac4a47849a" => :sierra
-    sha256 "813122fb2e3cb40932a4c270ed9b9163055df3898a2868bda9e18cf06b403e24" => :el_capitan
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
-  depends_on :macos => :mavericks
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "96cbd225f3a8d64bda895c4052b2af3a3e1d5bbe137ba017aa3d4c8127cf9d68"
+    sha256 cellar: :any_skip_relocation, big_sur:       "dd84e7d6175e98b4839c009120569ece03b5b98db3f152f97ca05b5ae7169843"
+    sha256 cellar: :any_skip_relocation, catalina:      "4e06530634324040a69a9f22018e154febc71467cadf2498806d9ba07b06a1b3"
+    sha256 cellar: :any_skip_relocation, mojave:        "1e4faf2a09e9a233275d78ede532a0e757d3f8cc9b0ab152326ff9ea9d244dba"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5e86d04d342629c577c07656417e91d7d9b5896a7e167bfbee4d2990c0b5ee94"
+  end
 
-  needs :cxx11
+  conflicts_with "go-jsonnet", because: "both install binaries with the same name"
 
   def install
     ENV.cxx11
     system "make"
     bin.install "jsonnet"
+    bin.install "jsonnetfmt"
   end
 
   test do

@@ -1,52 +1,72 @@
 class Arangodb < Formula
-  desc "The Multi-Model NoSQL Database"
+  desc "Multi-Model NoSQL Database"
   homepage "https://www.arangodb.com/"
-  url "https://download.arangodb.com/Source/ArangoDB-3.3.20.tar.gz"
-  sha256 "8881699a3e0c84e90234823fe4913158dd1167173528b0a02c6d36d20a5a70a9"
-  head "https://github.com/arangodb/arangodb.git", :branch => "unstable"
+  url "https://download.arangodb.com/Source/ArangoDB-3.7.12.tar.gz"
+  sha256 "c59340f57c0096c010126d2f08dc7ab48bc024fb96adf332b24eebcf680d4345"
+  license "Apache-2.0"
+  head "https://github.com/arangodb/arangodb.git", branch: "devel"
 
   bottle do
-    sha256 "a728acef3fabf95a2968d1f9fdfa8ffc6c5439c5232924f800d5d69bab42d267" => :mojave
-    sha256 "fa992f69d7cec75888924045163d57a2879c2e986611598acb78a40f61dc8d78" => :high_sierra
-    sha256 "e5c1df276d95f8fe90a96d5f34c2abb135ed98efdb2b273672fc26269ea1b07e" => :sierra
+    sha256 big_sur:  "c26f312e0bf7f3e91d7d29d65c3ccca39149164e70b3d128373ee9b5a194d02c"
+    sha256 catalina: "5d3a07342eaf5eaba075f42cad77e87c3b19f3afb5d6b926a1a5695060273b60"
+    sha256 mojave:   "56e53d405de58b9784d89cbadda06e04e6b4aa78c65d1fed29777553d942e72b"
   end
 
+  depends_on "ccache" => :build
   depends_on "cmake" => :build
-  depends_on "go" => :build
-  depends_on :macos => :yosemite
-  depends_on "openssl"
+  depends_on "go@1.13" => :build
+  depends_on "python@3.9" => :build
+  depends_on macos: :mojave
+  depends_on "openssl@1.1"
 
-  fails_with :clang do
-    build 600
-    cause "Fails with compile errors"
+  # the ArangoStarter is in a separate github repository;
+  # it is used to easily start single server and clusters
+  # with a unified CLI
+  resource "starter" do
+    url "https://github.com/arangodb-helper/arangodb.git",
+        tag:      "0.15.0",
+        revision: "74b0760828c3b84b63267184ec8eb8492cdf4c6b"
   end
-
-  needs :cxx11
 
   def install
-    ENV.cxx11
+    on_macos do
+      ENV["MACOSX_DEPLOYMENT_TARGET"] = MacOS.version
+    end
+
+    resource("starter").stage do
+      ENV["GO111MODULE"] = "on"
+      ENV["DOCKERCLI"] = ""
+      system "make", "deps"
+      ldflags = %W[
+        -s -w
+        -X main.projectVersion=#{resource("starter").version}
+        -X main.projectBuild=#{Utils.git_head}
+      ]
+      system "go", "build", *std_go_args, "-ldflags", ldflags.join(" "), "github.com/arangodb-helper/arangodb"
+    end
 
     mkdir "build" do
+      openssl = Formula["openssl@1.1"]
       args = std_cmake_args + %W[
         -DHOMEBREW=ON
-        -DUSE_OPTIMIZE_FOR_ARCHITECTURE=OFF
-        -DASM_OPTIMIZATIONS=OFF
-        -DCMAKE_INSTALL_DATADIR=#{share}
-        -DCMAKE_INSTALL_DATAROOTDIR=#{share}
-        -DCMAKE_INSTALL_SYSCONFDIR=#{etc}
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        -DUSE_MAINTAINER_MODE=Off
+        -DUSE_JEMALLOC=Off
+        -DCMAKE_SKIP_RPATH=On
+        -DOPENSSL_USE_STATIC_LIBS=On
+        -DCMAKE_LIBRARY_PATH=#{openssl.opt_lib}
+        -DOPENSSL_ROOT_DIR=#{openssl.opt_lib}
+        -DCMAKE_OSX_DEPLOYMENT_TARGET=#{MacOS.version}
+        -DTARGET_ARCHITECTURE=nehalem
+        -DUSE_CATCH_TESTS=Off
+        -DUSE_GOOGLE_TESTS=Off
         -DCMAKE_INSTALL_LOCALSTATEDIR=#{var}
       ]
 
-      if ENV.compiler == "gcc-6"
-        ENV.append "V8_CXXFLAGS", "-O3 -g -fno-delete-null-pointer-checks"
-      end
+      ENV["V8_CXXFLAGS"] = "-O3 -g -fno-delete-null-pointer-checks" if ENV.compiler == "gcc-6"
 
       system "cmake", "..", *args
       system "make", "install"
-
-      %w[arangod arango-dfdb arangosh foxx-manager].each do |f|
-        inreplace etc/"arangodb3/#{f}.conf", pkgshare, opt_pkgshare
-      end
     end
   end
 
@@ -56,37 +76,41 @@ class Arangodb < Formula
   end
 
   def caveats
-    s = <<~EOS
+    <<~EOS
       An empty password has been set. Please change it by executing
         #{opt_sbin}/arango-secure-installation
     EOS
-
-    s
   end
 
-  plist_options :manual => "#{HOMEBREW_PREFIX}/opt/arangodb/sbin/arangod"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>KeepAlive</key>
-        <true/>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>Program</key>
-        <string>#{opt_sbin}/arangod</string>
-        <key>RunAtLoad</key>
-        <true/>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run opt_sbin/"arangod"
+    keep_alive true
   end
 
   test do
+    require "pty"
+
     testcase = "require('@arangodb').print('it works!')"
     output = shell_output("#{bin}/arangosh --server.password \"\" --javascript.execute-string \"#{testcase}\"")
     assert_equal "it works!", output.chomp
+
+    ohai "#{bin}/arangodb --starter.instance-up-timeout 1m --starter.mode single"
+    PTY.spawn("#{bin}/arangodb", "--starter.instance-up-timeout", "1m",
+              "--starter.mode", "single", "--starter.disable-ipv6",
+              "--server.arangod", "#{sbin}/arangod",
+              "--server.js-dir", "#{share}/arangodb3/js") do |r, _, pid|
+      loop do
+        available = IO.select([r], [], [], 60)
+        refute_equal available, nil
+
+        line = r.readline.strip
+        ohai line
+
+        break if line.include?("Your single server can now be accessed")
+      end
+    ensure
+      Process.kill "SIGINT", pid
+      ohai "shutting down #{pid}"
+    end
   end
 end

@@ -1,27 +1,36 @@
 class Verilator < Formula
   desc "Verilog simulator"
   homepage "https://www.veripool.org/wiki/verilator"
-  url "https://www.veripool.org/ftp/verilator-3.926.tgz"
-  sha256 "f92516ccfffa8d7edecaf85d277ab0950df673a038481c4c8b53f7fa82948a38"
+  url "https://www.veripool.org/ftp/verilator-4.200.tgz"
+  sha256 "773913f4410512a7a51de3d04964766438dc11fc22b213eab5c6c29730df3e36"
+  license any_of: ["LGPL-3.0-only", "Artistic-2.0"]
+
+  livecheck do
+    url "https://github.com/verilator/verilator.git"
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    sha256 "95501636d884bfb4ae2304c6b72bbd4eb45bfa2256708ad6631e78fd26736192" => :mojave
-    sha256 "988e548a635ea2495a37054256f44cbbee17e9bbc63ef390ebe92bcffc2a7a4e" => :high_sierra
-    sha256 "8daf899371dd789aceb61646d9fdfdb50e9b2a3f8a6a428a403ad36a5e1404df" => :sierra
-    sha256 "0fee91b2a977b76f68612bfb0308830d8d405a77415a72618a9be318f073f013" => :el_capitan
+    sha256 arm64_big_sur: "fe191d41a9bf04fd0536c7564cf1368535e22a0e1245e5c1672bc5e056848181"
+    sha256 big_sur:       "cd3937360e860cc0792fbf109cd245d3f48b0cb70d489bfda7db170eb1451e1a"
+    sha256 catalina:      "e2825ec3ef68a3344f102d15fd5a5c7915a18bacaf57d9ffdd1dc870e1e152e7"
+    sha256 mojave:        "f777b5823ce0aeb7fae25d6f8040d29aebd8f02e02a588b78773f7702bf83e7c"
+    sha256 x86_64_linux:  "6eb4b51aeef84c2dc4a6bb9a8becd6ab31fa8ee0d569a1bfc3bc82db1a2c5393"
   end
 
   head do
-    url "http://git.veripool.org/git/verilator", :using => :git
+    url "https://git.veripool.org/git/verilator", using: :git
     depends_on "autoconf" => :build
     depends_on "automake" => :build
   end
 
-  skip_clean "bin" # Allows perl scripts to keep their executable flag
+  depends_on "python@3.9" => :build
 
-  # Needs a newer flex on Lion (and presumably below)
-  # https://www.veripool.org/issues/720-Verilator-verilator-not-building-on-Mac-OS-X-Lion-10-7-
-  depends_on "flex" if MacOS.version <= :lion
+  uses_from_macos "bison"
+  uses_from_macos "flex"
+  uses_from_macos "perl"
+
+  skip_clean "bin" # Allows perl scripts to keep their executable flag
 
   def install
     system "autoconf" if build.head?

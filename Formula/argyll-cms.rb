@@ -1,16 +1,20 @@
 class ArgyllCms < Formula
   desc "ICC compatible color management system"
   homepage "https://www.argyllcms.com/"
-  url "https://www.argyllcms.com/Argyll_V2.0.1_src.zip"
-  version "2.0.1"
-  sha256 "7d6542c16118bb93ba252d72bc9562bf2b01d3ae62cc0583cf4331e766b3a512"
+  url "https://www.argyllcms.com/Argyll_V2.2.0_src.zip"
+  sha256 "c612a2e49fd51e089616cd27b6d4717d0f20fc8edbd906462f0d0dbbabbc711c"
+  license "AGPL-3.0-only"
+
+  livecheck do
+    url "https://www.argyllcms.com/downloadsrc.html"
+    regex(/href=.*?Argyll[._-]v?(\d+(?:\.\d+)+)[._-]src\.zip/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "94100f30f5b6b9bf796a0dcf9eeefbcae6cb5fcacb4f31d5ad726c07c108b1f8" => :mojave
-    sha256 "c7b3fb56921cc2285eb9a965530128aff808a625ee1807fe605be0c872e93123" => :high_sierra
-    sha256 "547e64c39eaaaecd4796a175f83e9217197ee90929b33b1572e9be483d097f3c" => :sierra
-    sha256 "433106360daf2a1af397b19ab3790c742c701a8a49e595b60a847d29154d5bb5" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "3ae919d00b2a8977c21692d8b5a473982085a05a5718f9f15fa8647f2111362a"
+    sha256 cellar: :any, big_sur:       "a33f069f86d63448d1f2b8d04465ea84d902300a1ecb656cbf0808a3b8776791"
+    sha256 cellar: :any, catalina:      "d7fd1d597134461887b6477b4460fcc8fb2143d9c97e49b5dcc7ecf53758fe9a"
+    sha256 cellar: :any, mojave:        "941603de5eacbc65d306339aef0c955cf111679247b710fa8c099ffe82ea5db4"
   end
 
   depends_on "jam" => :build
@@ -18,15 +22,25 @@ class ArgyllCms < Formula
   depends_on "libpng"
   depends_on "libtiff"
 
-  conflicts_with "num-utils", :because => "both install `average` binaries"
+  conflicts_with "num-utils", because: "both install `average` binaries"
+
+  # Fixes a missing header, which is an error by default on arm64 but not x86_64
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/f6ede0dff06c2d9e3383416dc57c5157704b6f3a/argyll-cms/unistd_import.diff"
+    sha256 "5ce1e66daf86bcd43a0d2a14181b5e04574757bcbf21c5f27b1f1d22f82a8a6e"
+  end
 
   def install
     # dyld: lazy symbol binding failed: Symbol not found: _clock_gettime
     # Reported 20 Aug 2017 to graeme AT argyllcms DOT com
-    if MacOS.version == :el_capitan && MacOS::Xcode.installed? && MacOS::Xcode.version >= "8.0"
+    if MacOS.version == :el_capitan && MacOS::Xcode.version >= "8.0"
       inreplace "numlib/numsup.c", "CLOCK_MONOTONIC", "UNDEFINED_GIBBERISH"
     end
 
+    # These two inreplaces make sure /opt/homebrew can be found by the
+    # Jamfile, which otherwise fails to locate system libraries
+    inreplace "Jamtop", "/usr/include/x86_64-linux-gnu$(subd)", "#{HOMEBREW_PREFIX}/include$(subd)"
+    inreplace "Jamtop", "/usr/lib/x86_64-linux-gnu", "#{HOMEBREW_PREFIX}/lib"
     system "sh", "makeall.sh"
     system "./makeinstall.sh"
     rm "bin/License.txt"

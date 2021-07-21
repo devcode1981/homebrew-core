@@ -1,15 +1,22 @@
 class Libyaml < Formula
   desc "YAML Parser"
   homepage "https://github.com/yaml/libyaml"
-  url "https://github.com/yaml/libyaml/archive/0.2.1.tar.gz"
-  sha256 "1d2aeb87f7d317f1496e4c39410d913840714874a354970300f375eec9303dc4"
+  url "https://github.com/yaml/libyaml/archive/0.2.5.tar.gz"
+  sha256 "fa240dbf262be053f3898006d502d514936c818e422afdcf33921c63bed9bf2e"
+  license "MIT"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any
-    sha256 "75e21c4d4b49696e527ab91b7af6f061e844b10b7de99e6019724dbaa0fe04f9" => :mojave
-    sha256 "8771eba64f60fea66813d1e373606ddd9333e3731f51e36a1fc8ea780610015d" => :high_sierra
-    sha256 "376cfe0eb3328d5446f3621ee7eae39fdf8a7c25155bdfa399aacb903eecf40b" => :sierra
-    sha256 "24656930e8eeadd31f07b75aede75aa186dae9e3f122598535d93a7feff61384" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "fe1082f3475a144261b41e2c3e0728b9331911b1cbfadfbc1f3d70d454709154"
+    sha256 cellar: :any,                 big_sur:       "83547fba540a38c30705a59a2e746952c68857212e823c6ee97c186e088f75cd"
+    sha256 cellar: :any,                 catalina:      "56d3549b342cffb181e3eb05356697bbb362b9733c73e0eeff9b637ecf92cd23"
+    sha256 cellar: :any,                 mojave:        "a04988b3868cfadf7bcaff6b753b59388cbea70b38f2fa41a25229150d073696"
+    sha256 cellar: :any,                 high_sierra:   "d3e22ad09c3d6872c5f7ee7c7f1146c9f14c178ff4c3a3488a20bf584bc854d5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "354677a745b6c62109e792ddbd0cbdaf9e6a471d84fdbde3a7d9bae36d832da8"
   end
 
   depends_on "autoconf" => :build

@@ -1,22 +1,31 @@
 class Scummvm < Formula
   desc "Graphic adventure game interpreter"
   homepage "https://www.scummvm.org/"
-  url "https://www.scummvm.org/frs/scummvm/2.0.0/scummvm-2.0.0.tar.xz"
-  sha256 "9784418d555ba75822d229514a05cf226b8ce1a751eec425432e6b7e128fca60"
+  url "https://downloads.scummvm.org/frs/scummvm/2.2.0/scummvm-2.2.0.tar.xz"
+  sha256 "1469657e593bd8acbcfac0b839b086f640ebf120633e93f116cab652b5b27387"
+  license "GPL-2.0-or-later"
+  revision 1
   head "https://github.com/scummvm/scummvm.git"
 
-  bottle do
-    sha256 "2248018926e2f50dcb66d7162215362ced94733b4ed88bce08a9ca4310223c3c" => :mojave
-    sha256 "1de93783f408c2cfc634d8f13c8cb7db1e2544d021f15e0484e64a92af2ed3db" => :high_sierra
-    sha256 "bd2da4d91eb4e0f8fcf69ad9383a89979c73e539f1b1a5df8d7d99dc01fb67c5" => :sierra
-    sha256 "26dce34185c67fe8034effb99e248b9b68344063194ccb20c8c166b2f6c58dfb" => :el_capitan
+  livecheck do
+    url "https://www.scummvm.org/frs/scummvm/"
+    regex(%r{href=.*?v?(\d+(?:\.\d+)+)/?["']}i)
   end
 
+  bottle do
+    sha256 arm64_big_sur: "f446b713a5390ddb37f57de1dafad4b0a5fec77af75f65bf4b3f1c81d70d193d"
+    sha256 big_sur:       "f1e3edd576feee9c8360d2276a4ec1821826f32f31675c2d6f3fbe4f3dc4e594"
+    sha256 catalina:      "fa569b125a50401242cdc26b27b1c01edde13555aa3018eeb81bc5cb910581e9"
+    sha256 mojave:        "ad5d75fffe9d076923c42bc813b43db5a2088270f5c21266ce8850dfaa67d4d8"
+  end
+
+  depends_on "a52dec"
   depends_on "faad2"
   depends_on "flac"
-  depends_on "fluid-synth"
+  depends_on "fluid-synth@2.1"
   depends_on "freetype"
-  depends_on "jpeg"
+  depends_on "jpeg-turbo"
+  depends_on "libmpeg2"
   depends_on "libpng"
   depends_on "libvorbis"
   depends_on "mad"
@@ -24,7 +33,9 @@ class Scummvm < Formula
   depends_on "theora"
 
   def install
-    system "./configure", "--prefix=#{prefix}", "--enable-release"
+    system "./configure", "--prefix=#{prefix}",
+                          "--enable-release",
+                          "--with-sdl-prefix=#{Formula["sdl2"].opt_prefix}"
     system "make"
     system "make", "install"
     (share+"pixmaps").rmtree
@@ -32,6 +43,11 @@ class Scummvm < Formula
   end
 
   test do
+    on_linux do
+      # Test fails on headless CI: Could not initialize SDL: No available video device
+      return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+    end
+
     system "#{bin}/scummvm", "-v"
   end
 end

@@ -1,55 +1,50 @@
 class Gnumeric < Formula
   desc "GNOME Spreadsheet Application"
   homepage "https://projects.gnome.org/gnumeric/"
-  url "https://download.gnome.org/sources/gnumeric/1.12/gnumeric-1.12.43.tar.xz"
-  sha256 "87c9abd6260cf29401fa1e0fcce374e8c7bcd1986608e4049f6037c9d32b5fd5"
+  url "https://download.gnome.org/sources/gnumeric/1.12/gnumeric-1.12.50.tar.xz"
+  sha256 "758819ba1bd6983829f9e7c6d71a7fa20cd75a3652a271e5bb003d5d8bcc14b8"
+  license any_of: ["GPL-3.0-only", "GPL-2.0-only"]
 
   bottle do
-    sha256 "1317c0b0a36c781ea587b3411a2b7c7ccff9206fed085e002e4bbef339130e99" => :mojave
-    sha256 "f4a007bcb9422d69d6217c08f9af877ed61cdf51d919fc88eb6d905c1aedaf3f" => :high_sierra
-    sha256 "d7db9d5d98fb58473c411d22683e8de5e73fe6e965dae5bdbd8d3fd243a59826" => :sierra
-    sha256 "c987c86ec64c80322d7f602234ca1e3e144889bf72d6144f9d1b5ffa76879ec8" => :el_capitan
+    sha256 arm64_big_sur: "e35e87954fd36d10ba7d5eb67eb55cda22480501b0244d11d73227efac32eb84"
+    sha256 big_sur:       "308986adac6fc8ee0439f78fc88b3800dec488f3c19059e188d7b89703976517"
+    sha256 catalina:      "c6629015a88979e534383df04b19b371e4f579670538abd057159371d769d9f6"
+    sha256 mojave:        "783045a4b518267f8dad893ba2768701065af8d3f170d37cb2ae1658d96d5474"
+    sha256 x86_64_linux:  "8028a3a6bdad2a160df06aad38c2476a61a448879764cc8311e896d888c7e20f"
   end
-
-  option "with-python-scripting", "Enable Python scripting."
-
-  deprecated_option "python-scripting" => "with-python-scripting"
 
   depends_on "intltool" => :build
   depends_on "pkg-config" => :build
   depends_on "adwaita-icon-theme"
   depends_on "gettext"
   depends_on "goffice"
-  depends_on "pygobject" if build.with? "python-scripting"
+  depends_on "itstool"
+  depends_on "libxml2"
   depends_on "rarian"
 
-  # Issue from 26 Nov 2017 "itstool-2.0.4: problem with gnumeric-1.12.35"
-  # See https://github.com/itstool/itstool/issues/22
-  resource "itstool" do
-    url "http://files.itstool.org/itstool/itstool-2.0.2.tar.bz2"
-    sha256 "bf909fb59b11a646681a8534d5700fec99be83bb2c57badf8c1844512227033a"
-  end
+  uses_from_macos "bison"
 
-  # For itstool
-  resource "py_libxml2" do
-    url "http://xmlsoft.org/sources/libxml2-2.9.7.tar.gz"
-    sha256 "f63c5e7d30362ed28b38bfa1ac6313f9a80230720b7fb6c80575eeab3ff5900c"
+  on_linux do
+    depends_on "perl"
+
+    resource "XML::Parser" do
+      url "https://cpan.metacpan.org/authors/id/T/TO/TODDR/XML-Parser-2.44.tar.gz"
+      sha256 "1ae9d07ee9c35326b3d9aad56eae71a6730a73a116b9fe9e8a4758b7cc033216"
+    end
   end
 
   def install
-    resource("py_libxml2").stage do
-      cd "python" do
-        system "python", "setup.py", "install", "--prefix=#{buildpath}/vendor"
+    on_linux do
+      ENV.prepend_create_path "PERL5LIB", libexec/"lib/perl5"
+
+      resources.each do |res|
+        res.stage do
+          system "perl", "Makefile.PL", "INSTALL_BASE=#{libexec}"
+          system "make", "PERL5LIB=#{ENV["PERL5LIB"]}"
+          system "make", "install"
+        end
       end
     end
-
-    resource("itstool").stage do
-      ENV.append_path "PYTHONPATH", "#{buildpath}/vendor/lib/python2.7/site-packages"
-      system "./configure", "--prefix=#{buildpath}/vendor"
-      system "make", "install"
-    end
-
-    ENV.prepend_path "PATH", buildpath/"vendor/bin"
 
     # ensures that the files remain within the keg
     inreplace "component/Makefile.in",

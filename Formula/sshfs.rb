@@ -1,37 +1,46 @@
 class Sshfs < Formula
   desc "File system client based on SSH File Transfer Protocol"
-  homepage "https://osxfuse.github.io/"
-  url "https://github.com/libfuse/sshfs/releases/download/sshfs-2.10/sshfs-2.10.tar.gz"
-  sha256 "70845dde2d70606aa207db5edfe878e266f9c193f1956dd10ba1b7e9a3c8d101"
+  homepage "https://github.com/libfuse/sshfs"
+  url "https://github.com/libfuse/sshfs/archive/sshfs-3.7.2.tar.gz"
+  sha256 "8a9b0d980e9d34d0d18eacb9e1ca77fc499d1cf70b3674cc3e02f3eafad8ab14"
+  license any_of: ["LGPL-2.1-only", "GPL-2.0-only"]
 
   bottle do
-    cellar :any
-    sha256 "e4c05b69dfe45387aa294ca3fa675cf487db6c99b795859730ec6900fa61ec46" => :mojave
-    sha256 "283859a4868df7d91fc4a6fcef6ddc590957a661f833fbf81da25f6f2c72a585" => :high_sierra
-    sha256 "534fc64f25ee6757e4fd802988deee9d2df8f1c38604d36c525a12a67b1d23fa" => :sierra
-    sha256 "27c5e0d7f9bed4219c12267bd459fbd25a143abf0a9e3f5fa12fd0b587f10007" => :el_capitan
-    sha256 "61c578fbd666a6c2b5b452a7429e3fd5a64da153652d428386c41b4ebb6e30fa" => :yosemite
+    sha256 x86_64_linux: "1fcf1f7994d56b8fac40224364d2b554084a4fde6fb07a8c4323d0e5957c92bb"
   end
 
-  option "without-sshnodelay", "Don't compile NODELAY workaround for ssh"
-
-  depends_on "autoconf" => :build
-  depends_on "automake" => :build
-  depends_on "libtool" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "glib"
-  depends_on :osxfuse
+
+  on_macos do
+    disable! date: "2021-04-08", because: "requires closed-source macFUSE"
+  end
+
+  on_linux do
+    depends_on "libfuse"
+  end
 
   def install
-    args = %W[
-      --disable-dependency-tracking
-      --prefix=#{prefix}
-    ]
+    mkdir "build" do
+      system "meson", ".."
+      system "meson", "configure", "--prefix", prefix
+      system "ninja", "--verbose"
+      system "ninja", "install", "--verbose"
+    end
+  end
 
-    args << "--disable-sshnodelay" if build.without? "sshnodelay"
+  def caveats
+    on_macos do
+      <<~EOS
+        The reasons for disabling this formula can be found here:
+          https://github.com/Homebrew/homebrew-core/pull/64491
 
-    system "./configure", *args
-    system "make", "install"
+        An external tap may provide a replacement formula. See:
+          https://docs.brew.sh/Interesting-Taps-and-Forks
+      EOS
+    end
   end
 
   test do

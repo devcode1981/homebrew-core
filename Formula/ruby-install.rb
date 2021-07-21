@@ -1,16 +1,17 @@
 class RubyInstall < Formula
   desc "Install Ruby, JRuby, Rubinius, TruffleRuby, or mruby"
   homepage "https://github.com/postmodern/ruby-install#readme"
-  url "https://github.com/postmodern/ruby-install/archive/v0.7.0.tar.gz"
-  sha256 "500a8ac84b8f65455958a02bcefd1ed4bfcaeaa2bb97b8f31e61ded5cd0fd70b"
+  url "https://github.com/postmodern/ruby-install/archive/v0.8.2.tar.gz"
+  sha256 "72a998b76f787c32a1575f10494594ec2d963f5ad5748004292841b33f8013e7"
+  license "MIT"
   head "https://github.com/postmodern/ruby-install.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "df0319ebf05c4b0700f16b0bd3150f53d3034a4b664d8d10c3f190af266cdbe4" => :mojave
-    sha256 "0e88bbe463d29a1e1cc0a91816023346a860a8a08c3daff660c24b313d2b4511" => :high_sierra
-    sha256 "0e88bbe463d29a1e1cc0a91816023346a860a8a08c3daff660c24b313d2b4511" => :sierra
-    sha256 "0e88bbe463d29a1e1cc0a91816023346a860a8a08c3daff660c24b313d2b4511" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d19d4a89f08d447d522387e362b5e4627de5438e06396e2035fe735dc192d7de"
+    sha256 cellar: :any_skip_relocation, big_sur:       "cd1ffd6780ab70d0701e812784ed7a7bb2276c6fc8f3303570fbf200a4f2ccde"
+    sha256 cellar: :any_skip_relocation, catalina:      "cd1ffd6780ab70d0701e812784ed7a7bb2276c6fc8f3303570fbf200a4f2ccde"
+    sha256 cellar: :any_skip_relocation, mojave:        "cd1ffd6780ab70d0701e812784ed7a7bb2276c6fc8f3303570fbf200a4f2ccde"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d19d4a89f08d447d522387e362b5e4627de5438e06396e2035fe735dc192d7de"
   end
 
   def install

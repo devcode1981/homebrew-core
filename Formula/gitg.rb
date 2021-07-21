@@ -1,17 +1,18 @@
 class Gitg < Formula
   desc "GNOME GUI client to view git repositories"
   homepage "https://wiki.gnome.org/Apps/Gitg"
-  url "https://download.gnome.org/sources/gitg/3.30/gitg-3.30.0.tar.xz"
-  sha256 "a710ae86fbd62124560ebeae0299f158662f7b31ab646c4dd09d8a03c8570a97"
+  url "https://download.gnome.org/sources/gitg/3.32/gitg-3.32.1.tar.xz"
+  sha256 "24a4aabf8a42aa2e783e1fb5996ebb3c2a82a01b9689269f1329517ef124ef5a"
+  revision 6
 
   bottle do
-    sha256 "0dba644784645a1a977233da73d97a4299ff08fed57e9745e74f6e5fa27e5617" => :mojave
-    sha256 "351b3dfa3ebb00def0bb4543f273cf2496fc9578fe1bd6d314a24d51e3b7255a" => :high_sierra
-    sha256 "66bf910fe6d96457982e0fad397a3b17cd2e2e7368da92c78e2bada3c519c52a" => :sierra
+    sha256 big_sur:  "b2451ec4e4ef9126af4cb262d58d03beda0a06fcad12c9200f206af46b277bd2"
+    sha256 catalina: "6f9af292508a1a80622bc544f2aa182a46b63345ed8c9dc89e3034a9e2a2178d"
+    sha256 mojave:   "c771ecd10a224156e0810d46d3834421c548a75080d6d239d30b714875a21065"
   end
 
   depends_on "intltool" => :build
-  depends_on "meson-internal" => :build
+  depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "vala" => :build
@@ -21,6 +22,7 @@ class Gitg < Formula
   depends_on "gtksourceview3"
   depends_on "gtkspell3"
   depends_on "hicolor-icon-theme"
+  depends_on "libdazzle"
   depends_on "libgee"
   depends_on "libgit2"
   depends_on "libgit2-glib"
@@ -28,14 +30,18 @@ class Gitg < Formula
   depends_on "libsecret"
   depends_on "libsoup"
 
-  # reported upstream: https://gitlab.gnome.org/GNOME/gitg/issues/145
-  patch :DATA
+  # Fix libgitg compile on macOS from https://gitlab.gnome.org/GNOME/gitg/-/merge_requests/142
+  # Remove for next version
+  patch do
+    url "https://gitlab.gnome.org/GNOME/gitg/-/commit/67f5cd6925e8bf1e4c7e5b65fe9370c2cdd1d273.diff"
+    sha256 "b9b842d1be3e435ce14a57d30702138a0e08ba0f9ef95249876fc05aeac2417c"
+  end
 
   def install
     ENV["DESTDIR"] = "/"
 
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", "-Dpython=false", ".."
+      system "meson", *std_meson_args, "-Dpython=false", ".."
       system "ninja"
       system "ninja", "install"
     end
@@ -138,77 +144,3 @@ class Gitg < Formula
     system "./test"
   end
 end
-
-__END__
-diff --git a/libgitg/meson.build b/libgitg/meson.build
-index 793f2c2..fbc42da 100644
---- a/libgitg/meson.build
-+++ b/libgitg/meson.build
-@@ -114,14 +114,13 @@ if gdk_targets.contains('quartz')
-   sources += files('gitg-platform-support-osx.c')
-   gio_system_pkg = 'gio-unix-2.0'
-   deps += [
--    dependency(gio_system_pkg),
--    find_library('objc')
-+    dependency(gio_system_pkg)
-   ]
-   cflags += '-xobjective-c'
-
-   test_ldflags += [
--    '-framework Foundation',
--    '-framework AppKit'
-+    '-Wl,-framework', '-Wl,Foundation',
-+    '-Wl,-framework', '-Wl,AppKit'
-   ]
- elif gdk_targets.contains('win32')
-   sources += files('gitg-platform-support-win32.c')
-@@ -134,9 +133,7 @@ else
- endif
-
- foreach test_ldflag: test_ldflags
--  if cc.has_argument(test_ldflag)
-     ldflags += test_ldflag
--  endif
- endforeach
-
- libgitg = shared_library(
-diff --git a/meson.build b/meson.build
-index 0790c5e..61c7417 100644
---- a/meson.build
-+++ b/meson.build
-@@ -79,11 +79,9 @@ endif
-
- if gitg_debug
-   test_cflags = [
--    '-Werror=format=2',
-     '-Werror=implicit-function-declaration',
-     '-Werror=init-self',
-     '-Werror=missing-include-dirs',
--    '-Werror=missing-prototypes',
-     '-Werror=pointer-arith',
-     '-Werror=return-type',
-     '-Wmissing-declarations',
-diff --git a/plugins/diff/meson.build b/plugins/diff/meson.build
-index efc0d5d..d92c558 100644
---- a/plugins/diff/meson.build
-+++ b/plugins/diff/meson.build
-@@ -17,5 +17,6 @@ libdiff = shared_module(
-   dependencies: plugin_deps,
-   c_args: plugin_cflags,
-   install: true,
--  install_dir: plugin_dir
-+  install_dir: plugin_dir,
-+  name_suffix: 'so'
- )
-diff --git a/plugins/files/meson.build b/plugins/files/meson.build
-index 74e34cc..f072fd3 100644
---- a/plugins/files/meson.build
-+++ b/plugins/files/meson.build
-@@ -24,5 +24,6 @@ libfiles = shared_module(
-   dependencies: plugin_deps,
-   c_args: plugin_cflags,
-   install: true,
--  install_dir: plugin_dir
-+  install_dir: plugin_dir,
-+  name_suffix: 'so'
- )

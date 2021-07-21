@@ -1,15 +1,17 @@
 class Flatbuffers < Formula
   desc "Serialization library for C++, supporting Java, C#, and Go"
   homepage "https://google.github.io/flatbuffers"
-  url "https://github.com/google/flatbuffers/archive/v1.10.0.tar.gz"
-  sha256 "3714e3db8c51e43028e10ad7adffb9a36fc4aa5b1a363c2d0c4303dd1be59a7c"
+  url "https://github.com/google/flatbuffers/archive/v2.0.0.tar.gz"
+  sha256 "9ddb9031798f4f8754d00fca2f1a68ecf9d0f83dfac7239af1311e4fd9a565c4"
+  license "Apache-2.0"
   head "https://github.com/google/flatbuffers.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "bc51298d7bcf8e3787a3b67f92573571a06e5d54c11ae9551c4c2dcaf6143a3b" => :mojave
-    sha256 "e5605a8aad6a90cec130a9c80b4c1ab9128175bbeafe9c7bf47e2a47967fc0c0" => :high_sierra
-    sha256 "6bcfce8e2e75744a7599eb3cd9ed3773b5790db8d5b605c4672747e891e8fa3c" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "bd07b2efac10b35609da3ab52c9549d360c6db6b6193d5b916dc5eb98c27267b"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c5a82ba1d1ce4c4b77053bc294af6a5e6094c5b7e59e4b4c946b4301dd71b6b3"
+    sha256 cellar: :any_skip_relocation, catalina:      "149eda4aca1b555fd228e9edc2bf4987eee46e0445ae1bff79404177149e6f72"
+    sha256 cellar: :any_skip_relocation, mojave:        "3827dfa116cdaf777f7bb5023b3eaecb2820265bcc57dce833724f84d2c17065"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "cfcaa60b345226421198d8413ba4973db4d9f56ce471c6e95a7d50e0cabee3f9"
   end
 
   depends_on "cmake" => :build
@@ -20,48 +22,50 @@ class Flatbuffers < Formula
   end
 
   test do
-    def testfbs; <<~EOS
-      // example IDL file
+    def testfbs
+      <<~EOS
+        // example IDL file
 
-      namespace MyGame.Sample;
+        namespace MyGame.Sample;
 
-      enum Color:byte { Red = 0, Green, Blue = 2 }
+        enum Color:byte { Red = 0, Green, Blue = 2 }
 
-      union Any { Monster }  // add more elements..
+        union Any { Monster }  // add more elements..
 
-        struct Vec3 {
-          x:float;
-          y:float;
-          z:float;
-        }
+          struct Vec3 {
+            x:float;
+            y:float;
+            z:float;
+          }
 
-        table Monster {
-          pos:Vec3;
-          mana:short = 150;
-          hp:short = 100;
-          name:string;
-          friendly:bool = false (deprecated);
-          inventory:[ubyte];
-          color:Color = Blue;
-        }
+          table Monster {
+            pos:Vec3;
+            mana:short = 150;
+            hp:short = 100;
+            name:string;
+            friendly:bool = false (deprecated);
+            inventory:[ubyte];
+            color:Color = Blue;
+          }
 
-      root_type Monster;
+        root_type Monster;
 
-    EOS
+      EOS
     end
     (testpath/"test.fbs").write(testfbs)
 
-    def testjson; <<~EOS
-      {
-        pos: {
-          x: 1,
-          y: 2,
-          z: 3
-        },
-        hp: 80,
-        name: "MyMonster"
-      }
-    EOS
+    def testjson
+      <<~EOS
+        {
+          pos: {
+            x: 1,
+            y: 2,
+            z: 3
+          },
+          hp: 80,
+          name: "MyMonster"
+        }
+      EOS
     end
     (testpath/"test.json").write(testjson)
 

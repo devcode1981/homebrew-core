@@ -1,15 +1,23 @@
 class HapiFhirCli < Formula
   desc "Command-line interface for the HAPI FHIR library"
-  homepage "http://hapifhir.io/doc_cli.html"
-  url "https://github.com/jamesagnew/hapi-fhir/releases/download/v3.6.0/hapi-fhir-3.6.0-cli.zip"
-  sha256 "1295c5c6a2efea2277f1cadf240550e66c39fad5f7f99005a45bb8290124c6e5"
+  homepage "https://hapifhir.io/"
+  url "https://github.com/hapifhir/hapi-fhir/releases/download/v5.4.0/hapi-fhir-5.4.0-cli.zip"
+  sha256 "142022d1d5b1d849e9a894bac0a8269bfccf3be4b1364b3eaeb685c588966995"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
-  depends_on :java => "1.8+"
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "d4b76b90a1600c2356dd8a5d5746421317b72adddef280a7786c9a77657d68b0"
+  end
+
+  depends_on "openjdk"
 
   resource "test_resource" do
-    url "https://github.com/jamesagnew/hapi-fhir/raw/v3.6.0/hapi-fhir-structures-dstu3/src/test/resources/specimen-example.json"
+    url "https://github.com/hapifhir/hapi-fhir/raw/v5.4.0/hapi-fhir-structures-dstu3/src/test/resources/specimen-example.json"
     sha256 "4eacf47eccec800ffd2ca23b704c70d71bc840aeb755912ffb8596562a0a0f5e"
   end
 
@@ -17,6 +25,7 @@ class HapiFhirCli < Formula
     inreplace "hapi-fhir-cli", /SCRIPTDIR=(.*)/, "SCRIPTDIR=#{libexec}"
     libexec.install "hapi-fhir-cli.jar"
     bin.install "hapi-fhir-cli"
+    bin.env_script_all_files libexec/"bin", JAVA_HOME: Formula["openjdk"].opt_prefix
   end
 
   test do

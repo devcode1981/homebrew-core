@@ -1,16 +1,24 @@
 class Perltidy < Formula
   desc "Indents and reformats Perl scripts to make them easier to read"
   homepage "https://perltidy.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/perltidy/20180220/Perl-Tidy-20180220.tar.gz"
-  sha256 "e9973ce28b7518108c1e68fa767c6566822480e739df275375a0dfcc9c2b3370"
+  url "https://downloads.sourceforge.net/project/perltidy/20210625/Perl-Tidy-20210625.tar.gz"
+  sha256 "c10c8de95c22bed6375ac224c8aab5091ab5b0351fc2cbb7ac923be90b33ee48"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/Perl-Tidy[._-]v?(\d+(?:\.\d+)*)\.t}i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "3eea0c9c4f72dfe772301c153a0aaed43105020086cda3721b785389bd3515ce" => :mojave
-    sha256 "74062f9591fa421b637127521c7aa79b140d7741042671a1f21d2148cb50c3f0" => :high_sierra
-    sha256 "62a1de49e77f4214b8f689c74f0b5de888e6df0d2e51741d2e5650c2df09ed02" => :sierra
-    sha256 "ed1fbd3fcb92487349a6d5431a32f1c9824ce63ecce9e7d2d9371636da42a3a6" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "9961eb5988d5ef0a72957f5dff0d3797429cd823e91050bd92beec246c44db62"
+    sha256 cellar: :any_skip_relocation, big_sur:       "8b856d782c45d129da7b6308722e0658b81a1229179e64a7506d6685c6a01354"
+    sha256 cellar: :any_skip_relocation, catalina:      "6e0bbd48c43054d724310decf24934ec04a8474a655997a5ad41fc4f2734f91a"
+    sha256 cellar: :any_skip_relocation, mojave:        "b3aeef16e90081421cb98359f106da72412be36183ecf513acfe688b55bdf964"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "13240ae192e791e4d720c54adb9fc4735976a06c0272ab17725ff83eb3a48454"
   end
+
+  uses_from_macos "perl"
 
   def install
     ENV.prepend_create_path "PERL5LIB", libexec/"lib/perl5"
@@ -19,9 +27,8 @@ class Perltidy < Formula
                                   "INSTALLSITEMAN1DIR=#{man1}",
                                   "INSTALLSITEMAN3DIR=#{man3}"
     system "make"
-    system "make", "test"
     system "make", "install"
-    bin.env_script_all_files(libexec/"bin", :PERL5LIB => ENV["PERL5LIB"])
+    bin.env_script_all_files(libexec/"bin", PERL5LIB: ENV["PERL5LIB"])
   end
 
   test do

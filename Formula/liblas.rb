@@ -3,19 +3,20 @@ class Liblas < Formula
   homepage "https://liblas.org/"
   url "https://download.osgeo.org/liblas/libLAS-1.8.1.tar.bz2"
   sha256 "9adb4a98c63b461ed2bc82e214ae522cbd809cff578f28511122efe6c7ea4e76"
-  revision 1
+  license "BSD-3-Clause"
+  revision 3
   head "https://github.com/libLAS/libLAS.git"
 
   bottle do
-    rebuild 1
-    sha256 "132fc923c89408039e5569e1a25b47faccf26e77cd2faf7557c7cb85e0a04016" => :mojave
-    sha256 "b36963b697eca8a6860e40bbab35d6b07204b8e2902946ea11bf15d3ebb26cf3" => :high_sierra
-    sha256 "04c3faa7f0aa841bc5baa731b3b1428805c3a292c8f4961952c29091c29d67a0" => :sierra
+    sha256 catalina:    "c63d0d75db5b8e129c13add1de8fe94b2a38d5c15d101b62d6a7f59b796f53a3"
+    sha256 mojave:      "3224d154574e4cd07837dd1d1bd3e336964e8bede4cf4bb34dbaf4a63c75ed11"
+    sha256 high_sierra: "b47d0b9c82040703d212e22a436b7e11aff24632f0649db959e2073e0ae48548"
   end
+
+  deprecate! date: "2018-01-01", because: :unsupported
 
   depends_on "cmake" => :build
   depends_on "boost"
-  depends_on "gdal"
   depends_on "libgeotiff"
 
   # Fix build for Xcode 9 with upstream commit
@@ -28,11 +29,9 @@ class Liblas < Formula
   # Fix compilation against GDAL 2.3
   # Remove in next version
   patch do
-    url "https://github.com/libLAS/libLAS/commit/ec10e274.diff?full_index=1"
-    sha256 "3f5cc283d3e908d991b05b4dcf5cc0440824441ec270396e11738f96a0a23a9f"
+    url "https://github.com/libLAS/libLAS/commit/ec10e274.patch?full_index=1"
+    sha256 "3f8aefa1073aa32de01175cd217773020d93e5fb44a4592d76644a242bb89a3c"
   end
-
-  needs :cxx11
 
   def install
     ENV.cxx11
@@ -45,10 +44,9 @@ class Liblas < Formula
       ENV["Boost_LIBRARY_DIRS"] = "#{HOMEBREW_PREFIX}/lib"
 
       system "cmake", "..", *std_cmake_args,
-                            "-DWITH_GDAL=ON",
+                            "-DWITH_GDAL=OFF",
                             "-DWITH_GEOTIFF=ON"
       system "make"
-      system "make", "test" if build.bottle?
       system "make", "install"
     end
   end

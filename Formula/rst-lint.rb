@@ -3,21 +3,24 @@ class RstLint < Formula
 
   desc "ReStructuredText linter"
   homepage "https://github.com/twolfson/restructuredtext-lint"
-  url "https://github.com/twolfson/restructuredtext-lint/archive/1.2.1.tar.gz"
-  sha256 "a6a37cc1f06a7347d53ec39e41e101d9d26e8118e4ac2f602985990960a51b25"
+  url "https://files.pythonhosted.org/packages/45/69/5e43d0e8c2ca903aaa2def7f755b97a3aedc5793630abbd004f2afc3b295/restructuredtext_lint-1.3.2.tar.gz"
+  sha256 "d3b10a1fe2ecac537e51ae6d151b223b78de9fafdd50e5eb6b08c243df173c80"
+  license "Unlicense"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "fda6b9e208ae80012c883a159e9bc9322b6d12b8c9b3a5f54f8a2cb37a137a1d" => :mojave
-    sha256 "ce1b1d7179d16f81917d85a72dd84488dc32c8323f1ecbb5029cc6f4095bbc2e" => :high_sierra
-    sha256 "36e4a419033b0dedb26121fed365cea8f882d93645d95f433cc879188f00570f" => :sierra
+    rebuild 2
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "f156a31ad65e1a3e56b7f45b1da4eb511ac5d3a371cfc8a3cbf4989aafae0f45"
+    sha256 cellar: :any_skip_relocation, big_sur:       "297a26765ed29b28f2ec1e6cf28e8fafed936a2c255f0e690b412b08714bb3a0"
+    sha256 cellar: :any_skip_relocation, catalina:      "4b462c6a7aad71c3c30db75f957616d8130c371ce0b4e0578ff3d3558d7a4127"
+    sha256 cellar: :any_skip_relocation, mojave:        "d4b15aa742bb6c4131abca592f5de3ad7095cdc41353c66ef605abb2f4e4d71c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "061745ebccbb1e881785cc42b95a4e792172482176c36db4cc63990a939a2cf3"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   resource "docutils" do
-    url "https://files.pythonhosted.org/packages/84/f4/5771e41fdf52aabebbadecc9381d11dea0fa34e4759b4071244fa094804c/docutils-0.14.tar.gz"
-    sha256 "51e64ef2ebfb29cae1faa133b3710143496eca21c530f3f71424d77687764274"
+    url "https://files.pythonhosted.org/packages/2f/e0/3d435b34abd2d62e8206171892f174b180cd37b09d57b924ca5c2ef2219d/docutils-0.16.tar.gz"
+    sha256 "c2de3a60e9e7d07be26b7f2b00ca0309c207e06c100f9cc2a94931fc75a478fc"
   end
 
   def install

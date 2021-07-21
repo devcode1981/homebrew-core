@@ -1,16 +1,17 @@
 class OpenMesh < Formula
   desc "Generic data structure to represent and manipulate polygonal meshes"
   homepage "https://openmesh.org/"
-  url "https://www.openmesh.org/media/Releases/7.1/OpenMesh-7.1.tar.bz2"
-  sha256 "71cd5eb25893b0369ac766bb8305a525ffbb39b7f796d2878c7f9b8e0827cbac"
+  url "https://www.openmesh.org/media/Releases/8.1/OpenMesh-8.1.tar.bz2"
+  sha256 "9bc43a3201ba27ed63de66c4c09e23746272882c37a3451e71f0cf956f9be076"
   head "https://www.graphics.rwth-aachen.de:9000/OpenMesh/OpenMesh.git"
 
   bottle do
-    cellar :any
-    sha256 "569d019aa380afeff5ab62e031426ef62660b391ee6eb5b55ef1fd793860015e" => :mojave
-    sha256 "b7cefbc94249260c254e22d7502c2e21d86149784c20580ad5708f69a177ad81" => :high_sierra
-    sha256 "5d7fbe275ebec95a6f3abe24ac13d6b9bdb1df2e07bb43c92dd8e9e6383105c5" => :sierra
-    sha256 "77e73ad0a825ceae51b0bb906005a1c3e6fab6527adf7f2fcde9a12351d89dc8" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "4602ad1fc42a6aa33f4198ad3a3ea165e65303936d16444a5002821d013463cb"
+    sha256 cellar: :any,                 big_sur:       "1162cfaad47a077402ef01854605a5fe5ab7e696ea56ab9352f753c25df231d6"
+    sha256 cellar: :any,                 catalina:      "40eabd6160d88b74bb3298b42dfce249c327bee9a596b5911a4015462b457dfb"
+    sha256 cellar: :any,                 mojave:        "3c523efbed147ef236ba22b7fdfc8fddae883b4ce7b9f03e970af199416adbe5"
+    sha256 cellar: :any,                 high_sierra:   "a1b6514505ea011f01e8a61fd20dec9f31b900a42e8581e24a23beca738dc5f3"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "0df53a37289dcca304749919744bfea1cb028291638b668dff65b804c9094dd1"
   end
 
   depends_on "cmake" => :build
@@ -19,7 +20,7 @@ class OpenMesh < Formula
     ENV.cxx11
 
     mkdir "build" do
-      system "cmake", "..", "-DBUILD_APPS=OFF", *std_cmake_args
+      system "cmake", "..", "-DBUILD_APPS=OFF", *std_cmake_args, "-DCMAKE_INSTALL_RPATH=#{rpath}"
       system "make", "install"
     end
   end
@@ -67,6 +68,8 @@ class OpenMesh < Formula
       -L#{lib}
       -lOpenMeshCore
       -lOpenMeshTools
+      --std=c++11
+      -Wl,-rpath,#{lib}
     ]
     system ENV.cxx, "test.cpp", "-o", "test", *flags
     system "./test"

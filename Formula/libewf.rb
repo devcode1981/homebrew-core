@@ -1,18 +1,17 @@
 class Libewf < Formula
   desc "Library for support of the Expert Witness Compression Format"
   homepage "https://github.com/libyal/libewf"
-  url "https://mirrors.ocf.berkeley.edu/debian/pool/main/libe/libewf/libewf_20140608.orig.tar.gz"
-  mirror "https://mirrors.kernel.org/debian/pool/main/libe/libewf/libewf_20140608.orig.tar.gz"
-  version "20140608"
-  sha256 "d14030ce6122727935fbd676d0876808da1e112721f3cb108564a4d9bf73da71"
-  revision 2
+  # The main libewf repository is currently "experimental".
+  url "https://github.com/libyal/libewf-legacy/releases/download/20140812/libewf-20140812.tar.gz"
+  sha256 "be90b7af2a63cc3f15d32ce722a19fbd5bbb0173ce20995ba2b27cc9072d6f25"
+  license "LGPL-3.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "2a93f99c3ff1dea02ea18505644e57aa688248c19dcf410bb0073b07c80d6e0c" => :mojave
-    sha256 "10efe12416e50457d968107669bfd2b1bb6e79865301950eb4335ffd6ed43c59" => :high_sierra
-    sha256 "c77f644a80bf109f62a9b410917954a79e03ed47fff73b3d0da4f25de6afdf95" => :sierra
-    sha256 "5a9c6ce83af6069f84aaf30a5a6ae42eff2e98078835af1c06555852c696b5b4" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "a86d3ab0f59dcb04fbf49ce271c79817694b4890a3f041ad297847b26117b968"
+    sha256 cellar: :any,                 big_sur:       "01223ea80696527795667054cf517c08160e5beb015ed9d7098639f3786d540c"
+    sha256 cellar: :any,                 catalina:      "16f6fe5bc2d8a30f216241ecc70ef23b3122043e4e75992d166fda26dad1463c"
+    sha256 cellar: :any,                 mojave:        "5669d19089228d1702a8b6469189d0fff7af625514fcd5a56b08f1f98ff81a33"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "9647ae8e75c956ee90c8e836b8938c13d9d052fa37e33d9d8440b8c75b7fa086"
   end
 
   head do
@@ -24,8 +23,10 @@ class Libewf < Formula
   end
 
   depends_on "pkg-config" => :build
-  depends_on "openssl"
-  depends_on :osxfuse => :optional
+  depends_on "openssl@1.1"
+
+  uses_from_macos "bzip2"
+  uses_from_macos "zlib"
 
   def install
     if build.head?
@@ -37,9 +38,8 @@ class Libewf < Formula
       --disable-dependency-tracking
       --disable-silent-rules
       --prefix=#{prefix}
+      --with-libfuse=no
     ]
-
-    args << "--with-libfuse=no" if build.without? "osxfuse"
 
     system "./configure", *args
     system "make", "install"

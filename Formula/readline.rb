@@ -1,42 +1,44 @@
 class Readline < Formula
   desc "Library for command-line editing"
   homepage "https://tiswww.case.edu/php/chet/readline/rltop.html"
-  url "https://ftp.gnu.org/gnu/readline/readline-7.0.tar.gz"
-  mirror "https://ftpmirror.gnu.org/readline/readline-7.0.tar.gz"
-  version "7.0.5"
-  sha256 "750d437185286f40a369e1e4f4764eda932b9459b5ec9a731628393dd3d32334"
+  url "https://ftp.gnu.org/gnu/readline/readline-8.1.tar.gz"
+  mirror "https://ftpmirror.gnu.org/readline/readline-8.1.tar.gz"
+  sha256 "f8ceb4ee131e3232226a17f51b164afc46cd0b9e6cef344be87c65962cb82b02"
+  license "GPL-3.0-or-later"
+
+  livecheck do
+    url :stable
+    regex(/href=.*?readline[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "5976a79f0dbd5ccb2a261f692763319d612309caa2b8cf703f209270764c657c" => :mojave
-    sha256 "0cc8fcf8ee733e41c40b859a09eb00f723222a40398fdd15d32891df1eca2eef" => :high_sierra
-    sha256 "962ae47be894e6d3a354b24953fc6b456c42dc054bcd44092cabf65e734a152b" => :sierra
-    sha256 "a7f92cf74dfd299b0c368a983c6f83fc50395b0392b8465316133c625744bcc5" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "940e7c2b80ef7f59b26726a5669a31fcb8ba7cbbb17eb1f2ca589dafa6e68e5e"
+    sha256 cellar: :any,                 big_sur:       "2cc3a9582e3c7e21eb3c2c8964abd33e9720fb4a9588c626d8424ff8cc9b1aed"
+    sha256 cellar: :any,                 catalina:      "fe4de019cf549376a7743dcb0c86db8a08ca2b6d0dd2f8cb796dd7cf973dc2e9"
+    sha256 cellar: :any,                 mojave:        "1ea5a8050482911b319dc3e1436ee03310ba79d75d855d40114ba6067e01b9c5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5bc5b3d31d0d0903099f9b02217e1dcd72843c348c889a6155521d6e4d2c198e"
   end
 
-  keg_only :shadowed_by_macos, <<~EOS
-    macOS provides the BSD libedit library, which shadows libreadline.
-    In order to prevent conflicts when programs look for libreadline we are
-    defaulting this GNU Readline installation to keg-only
-  EOS
+  keg_only :shadowed_by_macos, "macOS provides BSD libedit"
 
-  %w[
-    001 9ac1b3ac2ec7b1bf0709af047f2d7d2a34ccde353684e57c6b47ebca77d7a376
-    002 8747c92c35d5db32eae99af66f17b384abaca961653e185677f9c9a571ed2d58
-    003 9e43aa93378c7e9f7001d8174b1beb948deefa6799b6f581673f465b7d9d4780
-    004 f925683429f20973c552bff6702c74c58c2a38ff6e5cf305a8e847119c5a6b64
-    005 ca159c83706541c6bbe39129a33d63bbd76ac594303f67e4d35678711c51b753
-  ].each_slice(2) do |p, checksum|
-    patch :p0 do
-      url "https://ftp.gnu.org/gnu/readline/readline-7.0-patches/readline70-#{p}"
-      mirror "https://ftpmirror.gnu.org/readline/readline-7.0-patches/readline70-#{p}"
-      sha256 checksum
-    end
-  end
+  uses_from_macos "ncurses"
 
   def install
-    system "./configure", "--prefix=#{prefix}"
-    system "make", "install"
+    args = ["--prefix=#{prefix}"]
+    on_linux do
+      args << "--with-curses"
+    end
+    system "./configure", *args
+
+    args = []
+    on_linux do
+      args << "SHLIB_LIBS=-lcurses"
+    end
+    # There is no termcap.pc in the base system, so we have to comment out
+    # the corresponding Requires.private line.
+    # Otherwise, pkg-config will consider the readline module unusable.
+    inreplace "readline.pc", /^(Requires.private: .*)$/, "# \\1"
+    system "make", "install", *args
   end
 
   test do

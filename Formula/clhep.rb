@@ -1,15 +1,21 @@
 class Clhep < Formula
   desc "Class Library for High Energy Physics"
   homepage "https://proj-clhep.web.cern.ch/proj-clhep/"
-  url "https://proj-clhep.web.cern.ch/proj-clhep/DISTRIBUTION/tarFiles/clhep-2.4.1.0.tgz"
-  sha256 "d14736eb5c3d21f86ce831dc1afcf03d423825b35c84deb6f8fd16773528c54d"
+  url "https://proj-clhep.web.cern.ch/proj-clhep/dist1/clhep-2.4.4.2.tgz"
+  sha256 "0782964fc19f06b55998a091d5a0b70e1adb682f6c062bcb5a25467a2c060e8d"
+  license "GPL-3.0"
+
+  livecheck do
+    url :homepage
+    regex(%r{atest release.*?<b>v?(\d+(?:\.\d+)+)</b>}im)
+  end
 
   bottle do
-    cellar :any
-    sha256 "c067826cdae1e029b9e08a21e485484ad11947394060ffce21247d6f638dc49e" => :mojave
-    sha256 "ce6e421df5e06d3f85bc36c9eb4bb1e5ee5635d2a7b6a5c28d04490c12deb155" => :high_sierra
-    sha256 "3cfaf1bea915e52b57c44d7df7c40312fb7e0fab6cac5b8a8310ac4dcc55b74d" => :sierra
-    sha256 "4be2ee76db5d27890df9f0237e7c0342bcfae9f622dd3bfa156f6bbd79a2a2ee" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "bb4176442facaae5d335409ef825aab4a561a4d3a59316c04b66268d49f9d808"
+    sha256 cellar: :any,                 big_sur:       "73ed5e5dcdf0b6d8b50f91cb6e8839fb967be25a02f8374e185cc1cdc6718dce"
+    sha256 cellar: :any,                 catalina:      "e441759f93337bcadd69460a709ec0adc4c1655fdf1677893471f7497d840bac"
+    sha256 cellar: :any,                 mojave:        "77c920470ac55af4f79d2b6fced83301cbe187c13b2e238ab637d9bceb642120"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e0dcde280fa3b9614294b705cab45858ce01a934b742e8790a6098c4b8034afb"
   end
 
   head do
@@ -42,7 +48,7 @@ class Clhep < Formula
         return 0;
       }
     EOS
-    system ENV.cxx, "-L#{lib}", "-lCLHEP", "-I#{include}/CLHEP",
+    system ENV.cxx, "-std=c++11", "-L#{lib}", "-lCLHEP", "-I#{include}/CLHEP",
            testpath/"test.cpp", "-o", "test"
     assert_equal "r: 3.74166 phi: 1.10715 cos(theta): 0.801784",
                  shell_output("./test").chomp

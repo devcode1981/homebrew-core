@@ -1,28 +1,26 @@
 class Opa < Formula
   desc "Open source, general-purpose policy engine"
   homepage "https://www.openpolicyagent.org"
-  url "https://github.com/open-policy-agent/opa/archive/v0.10.1.tar.gz"
-  sha256 "6b6121cbf7efc42b6ebc3f5ba6a2533e4e6eaf4b9eec446fb6f8fce4e6c02ae7"
+  url "https://github.com/open-policy-agent/opa/archive/v0.30.2.tar.gz"
+  sha256 "d3a9f68c980b56f84a18e1a476d210696c3fc907a3b2c090be9391fe5c7e3eaf"
+  license "Apache-2.0"
+  head "https://github.com/open-policy-agent/opa.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d8f3c750a3e0a598cb98b4e243e9fbbab0af152dfe2c161aeda695dd50482bae" => :mojave
-    sha256 "984600d03971491fa38c132713665a2829149693e75daf53dc60b80e20042005" => :high_sierra
-    sha256 "f3f31c3a2ed1edabf26cb1aa862c9338f99343c7c0f1e412e40ce2b4d4773d2f" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "c30db9772d245f63b2932774b10278960ef25ab0032a6566df305f569853e0f9"
+    sha256 cellar: :any_skip_relocation, big_sur:       "52589290661146910c2f860d2ffb05c0c3f220708f16280409108307914bcfcd"
+    sha256 cellar: :any_skip_relocation, catalina:      "5f2e9400f78aa5a6619844dd8a12ab3f4b9ad1cefd598eb3d4912769ff649f1a"
+    sha256 cellar: :any_skip_relocation, mojave:        "bb8303eb0b07c74437d47afbbb07ca152172b3c2c2caf35cf89b72c1f5cbaeca"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "562c7a3db7a033e0d25236b7ca47241a2671e40c3ee4adc4328c8c23f250d6f4"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/open-policy-agent/opa").install buildpath.children
-
-    cd "src/github.com/open-policy-agent/opa" do
-      system "go", "build", "-o", bin/"opa", "-installsuffix", "static",
-                   "-ldflags",
-                   "-X github.com/open-policy-agent/opa/version.Version=#{version}"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args,
+              "-ldflags", "-X github.com/open-policy-agent/opa/version.Version=#{version}"
+    system "./build/gen-man.sh", "man1"
+    man.install "man1"
   end
 
   test do

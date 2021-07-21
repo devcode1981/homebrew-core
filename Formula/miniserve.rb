@@ -1,30 +1,35 @@
 class Miniserve < Formula
   desc "High performance static file server"
   homepage "https://github.com/svenstaro/miniserve"
-  url "https://github.com/svenstaro/miniserve/archive/v0.2.1.tar.gz"
-  sha256 "9d58319ae1dcf460f85114e49939ffeae8b6161de7e9dfaf6a7a985d52e998d4"
+  url "https://github.com/svenstaro/miniserve/archive/v0.14.0.tar.gz"
+  sha256 "68e21c35a4577251f656f3d1ccac2de23abd68432810b11556bcc8976bb19fc5"
+  license "MIT"
 
   bottle do
-    sha256 "a3af5e213d0af2c5e899215f638b2b9f47ce71d5d04b15bc36160d1ac1385627" => :mojave
-    sha256 "e04be638d9a20ed8481b28a39d12c9232354931313820a612a02b72a28c61cc5" => :high_sierra
-    sha256 "a4d01bb0280ea8850b8f01e809d0e659bb971435ca5809b2b21fa26add4a23b5" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "3e86055d260028670e6a3e84f92aa2ca71b47a306861cac5b7ab4227a5f6f603"
+    sha256 cellar: :any_skip_relocation, big_sur:       "d17632a810e17807e8a1d748258598a04642fa3d204dc4c69b3defdb2b833277"
+    sha256 cellar: :any_skip_relocation, catalina:      "05f5fb030477f8301fdabf12a8a4ef2c4f89018182574d787b66e96c55497404"
+    sha256 cellar: :any_skip_relocation, mojave:        "af886d1517b441638707853464c04d22f273810c2a0902bea56a6b9c8458d38a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "dae31e5673957d37fe7be1f48d9cc7755a65a981e093a2886825c06341c9bec7"
   end
 
   depends_on "rust" => :build
 
   def install
-    system "cargo", "install", "--root", prefix, "--path", "."
+    system "cargo", "install", *std_cargo_args
+
+    bash_output = Utils.safe_popen_read("#{bin}/miniserve", "--print-completions", "bash")
+    (bash_completion/"miniserve").write bash_output
+    zsh_output = Utils.safe_popen_read("#{bin}/miniserve", "--print-completions", "zsh")
+    (zsh_completion/"_miniserve").write zsh_output
+    fish_output = Utils.safe_popen_read("#{bin}/miniserve", "--print-completions", "fish")
+    (fish_completion/"miniserve.fish").write fish_output
   end
 
   test do
-    require "socket"
-
-    server = TCPServer.new(0)
-    port = server.addr[1]
-    server.close
-
+    port = free_port
     pid = fork do
-      exec "#{bin}/miniserve", "#{bin}/miniserve", "--if", "127.0.0.1", "--port", port.to_s
+      exec "#{bin}/miniserve", "#{bin}/miniserve", "-i", "127.0.0.1", "--port", port.to_s
     end
 
     sleep 2

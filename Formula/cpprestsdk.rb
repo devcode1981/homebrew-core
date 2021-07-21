@@ -3,23 +3,28 @@ class Cpprestsdk < Formula
   homepage "https://github.com/Microsoft/cpprestsdk"
   # pull from git tag to get submodules
   url "https://github.com/Microsoft/cpprestsdk.git",
-      :tag      => "v2.10.8",
-      :revision => "204a52610234ac5180e80a6883b62c0ad085f51e"
-  head "https://github.com/Microsoft/cpprestsdk.git", :branch => "development"
+      tag:      "2.10.18",
+      revision: "122d09549201da5383321d870bed45ecb9e168c5"
+  license "MIT"
+  head "https://github.com/Microsoft/cpprestsdk.git", branch: "development"
 
   bottle do
-    cellar :any
-    sha256 "8e324363564023e408419aa863e195dbf53b9d13631e18861e8953016b0e9763" => :mojave
-    sha256 "9948512053df55dbad7d8c19a011e111da9f5068ac482fc6c3abc2d3e78afbc1" => :high_sierra
-    sha256 "778ad062735d15707e11a3a7a0c6628d7d948fead333100be5c6ad9c13ce7456" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "ac66587bc353b3358ff11606ca3952fa57f7dc57a5f59414ed8bfa62e90ff858"
+    sha256 cellar: :any, big_sur:       "c65b7f42fed4091750be219a60774854de46903c74ef99def1b73f905bb0728f"
+    sha256 cellar: :any, catalina:      "f89613fba00d0feaa3e55508f3fb122dc8f4126b679e55c22fd228ed44d0c1c4"
+    sha256 cellar: :any, mojave:        "6805fd31638651ef090d68e07cdea155d70b23365828cd1adbfd60fc132eedc3"
   end
 
   depends_on "cmake" => :build
+  depends_on "pkg-config" => :build
+
   depends_on "boost"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
 
   def install
-    system "cmake", "-DBUILD_SAMPLES=OFF", "-DBUILD_TESTS=OFF", "Release", *std_cmake_args
+    system "cmake", "-DBUILD_SAMPLES=OFF", "-DBUILD_TESTS=OFF",
+                    "-DOPENSSL_ROOT_DIR=#{Formula["openssl@1.1"]}.opt_prefix",
+                    "Release", *std_cmake_args
     system "make", "install"
   end
 
@@ -34,8 +39,8 @@ class Cpprestsdk < Formula
     EOS
     flags = ["-stdlib=libc++", "-std=c++11", "-I#{include}",
              "-I#{Formula["boost"].include}",
-             "-I#{Formula["openssl"].include}", "-L#{lib}",
-             "-L#{Formula["openssl"].lib}", "-L#{Formula["boost"].lib}",
+             "-I#{Formula["openssl@1.1"].include}", "-L#{lib}",
+             "-L#{Formula["openssl@1.1"].lib}", "-L#{Formula["boost"].lib}",
              "-lssl", "-lcrypto", "-lboost_random", "-lboost_chrono",
              "-lboost_thread-mt", "-lboost_system-mt", "-lboost_regex",
              "-lboost_filesystem", "-lcpprest"] + ENV.cflags.to_s.split

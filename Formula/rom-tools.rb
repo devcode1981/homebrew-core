@@ -1,37 +1,58 @@
 class RomTools < Formula
   desc "Tools for Multiple Arcade Machine Emulator"
   homepage "https://mamedev.org/"
-  url "https://github.com/mamedev/mame/archive/mame0204.tar.gz"
-  version "0.204"
-  sha256 "eeb6e304502dc1f1ce5a9c73d59a32865fc6e374c14ecef85d85b6de98a76e42"
+  # NOTE: Please keep these values in sync with mame.rb when updating.
+  url "https://github.com/mamedev/mame/archive/mame0233.tar.gz"
+  version "0.233"
+  sha256 "ea7fc31a4b839bb99c94a59810eb6691ce88dbc2b6d78cf6a48ca776a46a83a9"
+  license "GPL-2.0-or-later"
   head "https://github.com/mamedev/mame.git"
 
+  # MAME tags (and filenames) are formatted like `mame0226`, so livecheck will
+  # report the version like `0226`. We work around this by matching the link
+  # text for the release title, since it contains the properly formatted version
+  # (e.g., 0.226).
+  livecheck do
+    url :stable
+    strategy :github_latest
+    regex(%r{release-header.*?/releases/tag/mame[._-]?\d+(?:\.\d+)*["' >]>MAME v?(\d+(?:\.\d+)+)}im)
+  end
+
   bottle do
-    cellar :any
-    sha256 "86681de0b7cb9d201985e8deeccb56d7e49afdc456db90ee2ff6eb2fdb50c387" => :mojave
-    sha256 "e394e1c3d03f25788bdfa31bae419af36e68ea63b1d03e759c5b2c2cbdf05cab" => :high_sierra
-    sha256 "393b438dfab1a8941de96a7f4d2deb9c12f611c24274f3a05b20823e56617a9a" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "17e5154f2db775fc91426f1ac4c69e69fed79fcb3e6fda092025dfb8160ad488"
+    sha256 cellar: :any, big_sur:       "79ff8d18480a57c8b39905029453b8123df172ec03a4c66ce690029636613562"
+    sha256 cellar: :any, catalina:      "0c3ded04a132f0346daa2a7a9d2bd2f4decd8590a244b196bc34054ece7d474f"
+    sha256 cellar: :any, mojave:        "c017e732687f0c7f4fa3b246dcb7db242ac9b5b250207851b993abbc12069f26"
   end
 
   depends_on "pkg-config" => :build
+  depends_on "python@3.9" => :build
   depends_on "flac"
-  depends_on "portmidi"
+  # Need C++ compiler and standard library support C++17.
+  depends_on macos: :high_sierra
   depends_on "sdl2"
   depends_on "utf8proc"
 
+  uses_from_macos "expat"
+  uses_from_macos "zlib"
+
   def install
+    # Cut sdl2-config's invalid option.
     inreplace "scripts/src/osd/sdl.lua", "--static", ""
-    system "make", "TOOLS=1",
-                   "PTR64=#{MacOS.prefer_64_bit? ? 1 : 0}", # for old Macs
+
+    # Use bundled asio instead of latest version.
+    # See: <https://github.com/mamedev/mame/issues/5721>
+    system "make", "PYTHON_EXECUTABLE=#{Formula["python@3.9"].opt_bin}/python3",
+                   "TOOLS=1",
                    "USE_LIBSDL=1",
                    "USE_SYSTEM_LIB_EXPAT=1",
                    "USE_SYSTEM_LIB_ZLIB=1",
+                   "USE_SYSTEM_LIB_ASIO=",
                    "USE_SYSTEM_LIB_FLAC=1",
-                   "USE_SYSTEM_LIB_PORTMIDI=1",
                    "USE_SYSTEM_LIB_UTF8PROC=1"
     bin.install %w[
-      aueffectutil castool chdman floptool imgtool jedutil ldresample
-      ldverify nltool nlwav pngcmp regrep romcmp src2html srcclean unidasm
+      aueffectutil castool chdman floptool imgtool jedutil ldresample ldverify
+      nltool nlwav pngcmp regrep romcmp srcclean testkeys unidasm
     ]
     bin.install "split" => "rom-split"
     man1.install Dir["docs/man/*.1"]
@@ -53,7 +74,6 @@ class RomTools < Formula
     assert_match "summary", shell_output("#{bin}/regrep 2>&1", 1)
     system "#{bin}/romcmp"
     system "#{bin}/rom-split"
-    assert_match "template", shell_output("#{bin}/src2html 2>&1", 1)
     system "#{bin}/srcclean"
     assert_match "architecture", shell_output("#{bin}/unidasm", 1)
   end

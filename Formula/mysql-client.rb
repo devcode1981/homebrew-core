@@ -1,37 +1,42 @@
 class MysqlClient < Formula
   desc "Open source relational database management system"
-  homepage "https://dev.mysql.com/doc/refman/5.7/en/"
-  # Pinned at `5.7.*`
-  url "https://cdn.mysql.com/Downloads/MySQL-5.7/mysql-boost-5.7.23.tar.gz"
-  sha256 "d05700ec5c1c6dae9311059dc1713206c29597f09dbd237bf0679b3c6438e87a"
+  homepage "https://dev.mysql.com/doc/refman/8.0/en/"
+  url "https://cdn.mysql.com/Downloads/MySQL-8.0/mysql-boost-8.0.25.tar.gz"
+  sha256 "93c5f57cbd69573a8d9798725edec52e92830f70c398a1afaaea2227db331728"
+  license "GPL-2.0-only" => { with: "Universal-FOSS-exception-1.0" }
 
-  bottle do
-    sha256 "39470cf4e34f770eebda0c89249f90c18a84e6ef03d33ee464db90c0049d74aa" => :mojave
-    sha256 "8b73614068a82ed9f82f19e52fdd621adcd4d017fc3767703f216cbf7b00e60e" => :high_sierra
-    sha256 "8e3637ada6ee42d7e224809eab698e814befde0f164e276f7f91f1664f7460b2" => :sierra
-    sha256 "84a90d2d3f24f9270bf4d41eef99741a1ba16c65148672411e9ee9a676551c21" => :el_capitan
+  livecheck do
+    url "https://github.com/mysql/mysql-server.git"
+    regex(/^mysql[._-]v?(\d+(?:\.\d+)+)$/i)
   end
 
-  keg_only "conflicts with mysql"
+  bottle do
+    sha256 arm64_big_sur: "0a0869ca642cde40c30e34546709866dffca6f8572357be1b0eaf6addae98a5b"
+    sha256 big_sur:       "b142f4a32fa04b62d4742a91b0e6b9322e709af367d692769012994e963f35c1"
+    sha256 catalina:      "a2ff68b37407c8d189792925c7bb6dbbcdd2c78021a9121946bbfa9c8f37ec99"
+    sha256 mojave:        "2a0463370835a04d6270113c31d6a4a6f2dd6fc8a845f9fa4c092c0f4c2ac49e"
+    sha256 x86_64_linux:  "babec714db36052706b8fa562a5b16f9ec76e48f54adaf89a92e8c25785adbb2"
+  end
+
+  keg_only "it conflicts with mysql (which contains client libraries)"
 
   depends_on "cmake" => :build
-  # https://github.com/Homebrew/homebrew-core/issues/1475
-  # Needs at least Clang 3.3, which shipped alongside Lion.
-  # Note: MySQL themselves don't support anything below El Capitan.
-  depends_on :macos => :lion
-  depends_on "openssl"
+  depends_on "libevent"
+  # GCC is not supported either, so exclude for El Capitan.
+  depends_on macos: :sierra if DevelopmentTools.clang_build_version < 900
+  depends_on "openssl@1.1"
+  depends_on "zstd"
+
+  uses_from_macos "libedit"
+  uses_from_macos "zlib"
 
   def install
-    # https://bugs.mysql.com/bug.php?id=87348
-    # Fixes: "ADD_SUBDIRECTORY given source
-    # 'storage/ndb' which is not an existing"
-    inreplace "CMakeLists.txt", "ADD_SUBDIRECTORY(storage/ndb)", ""
-
     # -DINSTALL_* are relative to `CMAKE_INSTALL_PREFIX` (`prefix`)
     args = %W[
+      -DFORCE_INSOURCE_BUILD=1
       -DCOMPILATION_COMMENT=Homebrew
-      -DDEFAULT_CHARSET=utf8
-      -DDEFAULT_COLLATION=utf8_general_ci
+      -DDEFAULT_CHARSET=utf8mb4
+      -DDEFAULT_COLLATION=utf8mb4_general_ci
       -DINSTALL_DOCDIR=share/doc/#{name}
       -DINSTALL_INCLUDEDIR=include/mysql
       -DINSTALL_INFODIR=share/info
@@ -39,6 +44,9 @@ class MysqlClient < Formula
       -DINSTALL_MYSQLSHAREDIR=share/mysql
       -DWITH_BOOST=boost
       -DWITH_EDITLINE=system
+      -DWITH_LIBEVENT=system
+      -DWITH_ZLIB=system
+      -DWITH_ZSTD=system
       -DWITH_SSL=yes
       -DWITH_UNIT_TESTS=OFF
       -DWITHOUT_SERVER=ON

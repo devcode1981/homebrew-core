@@ -1,21 +1,27 @@
 class Opentsdb < Formula
   desc "Scalable, distributed Time Series Database"
   homepage "http://opentsdb.net/"
-  url "https://github.com/OpenTSDB/opentsdb/releases/download/v2.3.1/opentsdb-2.3.1.tar.gz"
-  sha256 "4dba914a19cf0a56b1d0cc22b4748ebd0d0136e633eb4514a5518790ad7fc1d1"
+  url "https://github.com/OpenTSDB/opentsdb/releases/download/v2.4.0/opentsdb-2.4.0.tar.gz"
+  sha256 "a2d6a34369612b3f91bf81bfab24ec573ab4118127dc1c0f0ed6fc57318d102c"
+  license "LGPL-2.1"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "f1d531453d09dc0b70dd1f803d117f26a09c4ab6990845aa40bf082d2c3a0eef" => :mojave
-    sha256 "a6b9311bccbf95f6117413ef081f3eb6d52f50fec4f9b1829cf4440e119cafc7" => :high_sierra
-    sha256 "4933e90ddc979787f2e477ecefcd36e5075c33cc91a5a88f5d4ddec49dfc3b8f" => :sierra
-    sha256 "440446c0474ce94a7c4724de2971cef50786285c636d32f1dea9f2164dccbb5d" => :el_capitan
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
+  bottle do
+    sha256 cellar: :any_skip_relocation, catalina:    "31e57ba38c568eb7a41a6129a55aac5a9b443301578475702cdab5fb891faaa2"
+    sha256 cellar: :any_skip_relocation, mojave:      "ec077c13211eac9912661ff0e3e1165162f251c3408fdf36b709e0e98af34aa2"
+    sha256 cellar: :any_skip_relocation, high_sierra: "5bcdc828069e124c16e1e6c8b2eb6732d0ef88533c27f60fcbb0bec369aca375"
+  end
+
+  deprecate! date: "2020-11-13", because: :does_not_build
+
+  depends_on "gnuplot"
   depends_on "hbase"
-  depends_on :java => "1.8"
   depends_on "lzo"
-  depends_on "gnuplot" => :optional
+  depends_on "openjdk@8"
 
   def install
     system "./configure",
@@ -30,8 +36,8 @@ class Opentsdb < Formula
     system "make", "install"
 
     env = {
-      :HBASE_HOME  => Formula["hbase"].opt_libexec,
-      :COMPRESSION => "LZO",
+      HBASE_HOME:  Formula["hbase"].opt_libexec,
+      COMPRESSION: "LZO",
     }
     env = Language::Java.java_home_env("1.8").merge(env)
     create_table = pkgshare/"tools/create_table_with_env.sh"
@@ -71,45 +77,47 @@ class Opentsdb < Formula
     end
   end
 
-  plist_options :manual => "#{HOMEBREW_PREFIX}/opt/opentsdb/bin/start-tsdb.sh"
+  plist_options manual: "#{HOMEBREW_PREFIX}/opt/opentsdb/bin/start-tsdb.sh"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>KeepAlive</key>
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
       <dict>
-        <key>OtherJobEnabled</key>
+        <key>KeepAlive</key>
         <dict>
-          <key>#{Formula["hbase"].plist_name}</key>
-          <true/>
+          <key>OtherJobEnabled</key>
+          <dict>
+            <key>#{Formula["hbase"].plist_name}</key>
+            <true/>
+          </dict>
         </dict>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/start-tsdb.sh</string>
+        </array>
+        <key>WorkingDirectory</key>
+        <string>#{HOMEBREW_PREFIX}</string>
+        <key>StandardOutPath</key>
+        <string>#{var}/opentsdb/opentsdb.log</string>
+        <key>StandardErrorPath</key>
+        <string>#{var}/opentsdb/opentsdb.err</string>
       </dict>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/start-tsdb.sh</string>
-      </array>
-      <key>WorkingDirectory</key>
-      <string>#{HOMEBREW_PREFIX}</string>
-      <key>StandardOutPath</key>
-      <string>#{var}/opentsdb/opentsdb.log</string>
-      <key>StandardErrorPath</key>
-      <string>#{var}/opentsdb/opentsdb.err</string>
-    </dict>
-    </plist>
-  EOS
+      </plist>
+    EOS
   end
 
   test do
     cp_r (Formula["hbase"].opt_libexec/"conf"), testpath
     inreplace (testpath/"conf/hbase-site.xml") do |s|
-      s.gsub! /(hbase.rootdir.*)\n.*/, "\\1\n<value>file://#{testpath}/hbase</value>"
-      s.gsub! /(hbase.zookeeper.property.dataDir.*)\n.*/, "\\1\n<value>#{testpath}/zookeeper</value>"
+      s.gsub!(/(hbase.rootdir.*)\n.*/, "\\1\n<value>file://#{testpath}/hbase</value>")
+      s.gsub!(/(hbase.zookeeper.property.dataDir.*)\n.*/, "\\1\n<value>#{testpath}/zookeeper</value>")
     end
 
+    ENV.prepend "_JAVA_OPTIONS", "-Djava.io.tmpdir=#{testpath}/tmp"
     ENV["HBASE_LOG_DIR"]  = testpath/"logs"
     ENV["HBASE_CONF_DIR"] = testpath/"conf"
     ENV["HBASE_PID_DIR"]  = testpath/"pid"
@@ -122,20 +130,17 @@ class Opentsdb < Formula
 
       tsdb_err = "#{testpath}/tsdb.err"
       tsdb_out = "#{testpath}/tsdb.out"
-      tsdb_daemon_pid = fork do
+      fork do
         $stderr.reopen(tsdb_err, "w")
         $stdout.reopen(tsdb_out, "w")
         exec("#{bin}/start-tsdb.sh")
       end
       sleep 15
 
-      begin
-        pipe_output("nc localhost 4242 2>&1", "put homebrew.install.test 1356998400 42.5 host=webserver01 cpu=0\n")
+      pipe_output("nc localhost 4242 2>&1", "put homebrew.install.test 1356998400 42.5 host=webserver01 cpu=0\n")
 
-        system "#{bin}/tsdb", "query", "1356998000", "1356999000", "sum", "homebrew.install.test", "host=webserver01", "cpu=0"
-      ensure
-        Process.kill(9, tsdb_daemon_pid)
-      end
+      system "#{bin}/tsdb", "query", "1356998000", "1356999000", "sum",
+             "homebrew.install.test", "host=webserver01", "cpu=0"
     ensure
       system "#{Formula["hbase"].opt_bin}/stop-hbase.sh"
     end

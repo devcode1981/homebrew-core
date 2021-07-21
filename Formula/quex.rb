@@ -1,17 +1,22 @@
 class Quex < Formula
   desc "Generate lexical analyzers"
   homepage "https://quex.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/quex/DOWNLOAD/quex-0.68.2.tar.gz"
-  sha256 "b6a9325f92110c52126fec18432d0d6c9bd8a7593bde950db303881aac16a506"
-  head "http://svn.code.sf.net/p/quex/code/trunk"
+  url "https://downloads.sourceforge.net/project/quex/quex-0.71.2.zip"
+  sha256 "0453227304a37497e247e11b41a1a8eb04bcd0af06a3f9d627d706b175a8a965"
+  license "MIT"
+  head "https://svn.code.sf.net/p/quex/code/trunk"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/quex[._-]v?(\d+(?:\.\d+)+)\.[tz]}i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d3dc54f074080d5853374c14ffc866417f4effbe6c547d316f147523ca02c9e9" => :mojave
-    sha256 "e5d0e22c8d988408e52ddabcd0b1ddd7e858c6256b1449b919a83f8da5934354" => :high_sierra
-    sha256 "e5d0e22c8d988408e52ddabcd0b1ddd7e858c6256b1449b919a83f8da5934354" => :sierra
-    sha256 "e5d0e22c8d988408e52ddabcd0b1ddd7e858c6256b1449b919a83f8da5934354" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "8e53508d74a86c0ec8decef4bf4233f197a8612168cee8707295e22a7ed05b8b"
+    sha256 cellar: :any_skip_relocation, all:           "8e53508d74a86c0ec8decef4bf4233f197a8612168cee8707295e22a7ed05b8b"
   end
+
+  depends_on "python@3.9"
 
   def install
     libexec.install "quex", "quex-exe.py"
@@ -20,7 +25,7 @@ class Quex < Formula
     # Use a shim script to set QUEX_PATH on the user's behalf
     (bin/"quex").write <<~EOS
       #!/bin/bash
-      QUEX_PATH="#{libexec}" "#{libexec}/quex-exe.py" "$@"
+      QUEX_PATH="#{libexec}" "#{Formula["python@3.9"].opt_bin}/python3" "#{libexec}/quex-exe.py" "$@"
     EOS
 
     if build.head?
@@ -31,7 +36,7 @@ class Quex < Formula
   end
 
   test do
-    system bin/"quex", "-i", doc/"demo/C/01-Trivial/simple.qx", "-o", "tiny_lexer"
+    system bin/"quex", "-i", doc/"demo/C/01-Trivial/easy.qx", "-o", "tiny_lexer"
     assert_predicate testpath/"tiny_lexer", :exist?
   end
 end

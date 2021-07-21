@@ -1,33 +1,27 @@
 class Assimp < Formula
   desc "Portable library for importing many well-known 3D model formats"
-  homepage "http://www.assimp.org"
-  url "https://github.com/assimp/assimp/archive/v4.1.0.tar.gz"
-  sha256 "3520b1e9793b93a2ca3b797199e16f40d61762617e072f2d525fad70f9678a71"
+  homepage "https://www.assimp.org/"
+  url "https://github.com/assimp/assimp/archive/v5.0.1.tar.gz"
+  sha256 "11310ec1f2ad2cd46b95ba88faca8f7aaa1efe9aa12605c55e3de2b977b3dbfc"
+  license :cannot_represent
   head "https://github.com/assimp/assimp.git"
 
   bottle do
-    cellar :any
-    sha256 "97457d0943085b11a105b95a4799c73f624db843b9de7e0f81515add33539f6e" => :mojave
-    sha256 "2a3c4f77532717d3cd6b8de75a4cdb033b26fc4d64736f17e90d836e11b90fe4" => :high_sierra
-    sha256 "632ab4d0bd3f3aaa002945ace7e90362b396154ef3c4536b884872f82f3dd30d" => :sierra
-    sha256 "5991caf1877f8193889d0929399aa24790e8eeab96736c3c1d28800966d75169" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "0571a9c07e7166cbfbd2c12b17f121c718204491501f268cdd904791df3c3697"
+    sha256 cellar: :any,                 big_sur:       "8cd36113e1e7db18e625e652a522374bf6158306254f31627f2e8f067ae665db"
+    sha256 cellar: :any,                 catalina:      "b2450bc0cc287a25a2e4ca42ff229ee104a6de51ef3a8cc02603850572126f18"
+    sha256 cellar: :any,                 mojave:        "4ee11342b9d284810e88828be1662ee5be09a161f2c1353648e63255bbf4375b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "28a1c666ece91069a06490a3ea899a7f4051950f47b5e703fed96b0f22e04347"
   end
 
-  depends_on "boost" => :build
   depends_on "cmake" => :build
 
-  # Fix "unzip.c:150:11: error: unknown type name 'z_crc_t'"
-  # Upstream PR from 12 Dec 2017 "unzip: fix build with older zlib"
-  if MacOS.version <= :el_capitan
-    patch do
-      url "https://github.com/assimp/assimp/pull/1634.patch?full_index=1"
-      sha256 "79b93f785ee141dc2f56d557b2b8ee290eed0afc7dd373ad84715c6c9aa23460"
-    end
-  end
+  uses_from_macos "zlib"
 
   def install
     args = std_cmake_args
     args << "-DASSIMP_BUILD_TESTS=OFF"
+    args << "-DCMAKE_INSTALL_RPATH=#{rpath}"
     system "cmake", *args
     system "make", "install"
   end
@@ -41,7 +35,7 @@ class Assimp < Formula
         return 0;
       }
     EOS
-    system ENV.cc, "test.cpp", "-L#{lib}", "-lassimp", "-o", "test"
+    system ENV.cc, "-std=c++11", "test.cpp", "-L#{lib}", "-lassimp", "-o", "test"
     system "./test"
 
     # Application test.

@@ -1,29 +1,40 @@
 class Exiftool < Formula
   desc "Perl lib for reading and writing EXIF metadata"
-  homepage "https://www.sno.phy.queensu.ca/~phil/exiftool/index.html"
+  homepage "https://exiftool.org"
   # Ensure release is tagged production before submitting.
-  # https://www.sno.phy.queensu.ca/~phil/exiftool/history.html
-  url "https://www.sno.phy.queensu.ca/~phil/exiftool/Image-ExifTool-11.11.tar.gz"
-  mirror "https://downloads.sourceforge.net/project/exiftool/Image-ExifTool-11.11.tar.gz"
-  sha256 "e64eee75cdbc0944ea598bade44a2c100e7c940ce7d163cbbd087d2bd00cefeb"
+  # https://exiftool.org/history.html
+  url "https://cpan.metacpan.org/authors/id/E/EX/EXIFTOOL/Image-ExifTool-12.26.tar.gz"
+  mirror "https://exiftool.org/Image-ExifTool-12.26.tar.gz"
+  sha256 "ed9f3285e263636c713ab52fcfb55cbcf4becd6c6e04bda410c8f240996ece9e"
+  license any_of: ["Artistic-1.0-Perl", "GPL-1.0-or-later"]
+
+  livecheck do
+    url "https://exiftool.org/history.html"
+    regex(/production release is.*?href=.*?Image[._-]ExifTool[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "ddec4475d058dcd1a6a5ffe5666abf9fa76aeb0bd965aed10f15a80f22a711df" => :mojave
-    sha256 "06fbfc9844eab96cd0589d829798e6b0893e7421d136ee2d8b2c759aeb5bc554" => :high_sierra
-    sha256 "06fbfc9844eab96cd0589d829798e6b0893e7421d136ee2d8b2c759aeb5bc554" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d3a2f7e157086b5b36dd06a56e7d66692a11a8fa605e978ca4dea81809c8f00c"
+    sha256 cellar: :any_skip_relocation, big_sur:       "4d2164b47c21c2bc512a51e356350acd2e3c3eab476625678772ca20c4290a30"
+    sha256 cellar: :any_skip_relocation, catalina:      "dcecf0acae250788ce5a32aec3e45a11a45af51a92109f78a560b6d896cc21a7"
+    sha256 cellar: :any_skip_relocation, mojave:        "dcecf0acae250788ce5a32aec3e45a11a45af51a92109f78a560b6d896cc21a7"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5fe3943d30b3a01a76465d736c9d5f0594889b57bae96ef15e22cdcc7499cd07"
   end
 
   def install
     # replace the hard-coded path to the lib directory
-    inreplace "exiftool", "$exeDir/lib", libexec/"lib"
+    inreplace "exiftool", "$1/lib", libexec/"lib"
 
     system "perl", "Makefile.PL"
     system "make", "all"
     libexec.install "lib"
     bin.install "exiftool"
     doc.install Dir["html/*"]
-    man1.install "blib/man1/exiftool.1"
+    suffix = ""
+    on_linux do
+      suffix = "p"
+    end
+    man1.install "blib/man1/exiftool.1#{suffix}"
     man3.install Dir["blib/man3/*"]
   end
 

@@ -1,17 +1,30 @@
 class Artifactory < Formula
   desc "Manages binaries"
   homepage "https://www.jfrog.com/artifactory/"
-  url "https://dl.bintray.com/jfrog/artifactory/jfrog-artifactory-oss-6.3.2.zip"
-  sha256 "322bd08aa5b68b084c1c8ad1203d05ac6915a48cccb1a8b819693011d6be6782"
+  # v7 is available but does contain a number of pre-builts that need to be avoided.
+  # Note that just using the source archive is not sufficient.
+  url "https://releases.jfrog.io/artifactory/bintray-artifactory/org/artifactory/oss/jfrog-artifactory-oss/6.23.23/jfrog-artifactory-oss-6.23.23.zip"
+  sha256 "6fb90257b705a16ffb99467187e0beeaced4aa4e4c2fd0686a976f9255f1c63f"
+  license "AGPL-3.0-or-later"
 
-  bottle :unneeded
+  livecheck do
+    url "https://releases.jfrog.io/artifactory/bintray-artifactory/org/artifactory/oss/jfrog-artifactory-oss/"
+    regex(/href=.*?v?(\d+(?:\.\d+)+)/i)
+  end
 
-  depends_on :java => "1.8+"
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "65395028c2f944901489c4176d94c2e22eda1c0d13d4d73294d3baa1e166ff4f"
+  end
+
+  depends_on "openjdk"
 
   def install
     # Remove Windows binaries
     rm_f Dir["bin/*.bat"]
     rm_f Dir["bin/*.exe"]
+
+    # Prebuilts
+    rm_rf "bin/metadata"
 
     # Set correct working directory
     inreplace "bin/artifactory.sh",
@@ -21,9 +34,11 @@ class Artifactory < Formula
     libexec.install Dir["*"]
 
     # Launch Script
-    bin.install_symlink libexec/"bin/artifactory.sh"
+    bin.install libexec/"bin/artifactory.sh"
     # Memory Options
-    bin.install_symlink libexec/"bin/artifactory.default"
+    bin.install libexec/"bin/artifactory.default"
+
+    bin.env_script_all_files libexec/"bin", JAVA_HOME: Formula["openjdk"].opt_prefix
   end
 
   def post_install
@@ -36,27 +51,10 @@ class Artifactory < Formula
     libexec.install_symlink data => "data"
   end
 
-  plist_options :manual => "#{HOMEBREW_PREFIX}/opt/artifactory/libexec/bin/artifactory.sh"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>com.jfrog.artifactory</string>
-
-        <key>WorkingDirectory</key>
-        <string>#{libexec}</string>
-
-        <key>Program</key>
-        <string>#{bin}/artifactory.sh</string>
-
-        <key>KeepAlive</key>
-        <true/>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run opt_bin/"artifactory.sh"
+    keep_alive true
+    working_dir libexec
   end
 
   test do

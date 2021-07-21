@@ -3,18 +3,31 @@ class Libswiften < Formula
   homepage "https://swift.im/swiften"
   url "https://swift.im/downloads/releases/swift-4.0/swift-4.0.tar.gz"
   sha256 "50b7b2069005b1474147110956f66fdde0afb2cbcca3d3cf47de56dc61217319"
-  revision 2
+  revision 4
 
   bottle do
-    sha256 "17b63d430ff948e007e772d2ea7703c285862c365dc91e8b4fa6d4deca809c3f" => :mojave
-    sha256 "d6f72af74d50059da4be26ce6132b295e9644504214559b283261a6feb7261a3" => :high_sierra
-    sha256 "6ec48b297dc04f2f4b544a760a3b05964d17e04ff3f5b37ffddc7b8aad5b031a" => :sierra
+    sha256 cellar: :any, catalina:    "919e570b27576a942a2dd08c190f188cf8f0deb00950dc0b5956478da38091ed"
+    sha256 cellar: :any, mojave:      "489821c365b23676ac84c6f9ecc2157edaebd6d0025fa75b5f5e972078dead88"
+    sha256 cellar: :any, high_sierra: "3ec7dc4286e4651d14188794f22d4d89fa1284b999c7134416abcdd02d880744"
+    sha256 cellar: :any, sierra:      "07e2d9467520a4c814e15b5328bec8b989449284161c66e120b036f09eed8d14"
   end
 
   depends_on "scons" => :build
   depends_on "boost"
   depends_on "libidn"
   depends_on "lua@5.1"
+
+  # fix build for boost 1.69
+  patch do
+    url "https://swift.im/git/swift/patch/?id=3666cbbe30e4d4e25401a5902ae359bc2c24248b"
+    sha256 "483ace97ee0d0c17a96f8feb7820611fdb1eca1cbb95777c36ca4fad0fdef7f9"
+  end
+
+  # fix build for boost 1.69
+  patch do
+    url "https://swift.im/git/swift/patch/?id=a2dc74cd0e4891037b97b6a782de80458675e4f0"
+    sha256 "28fa8bfdd5b3ec45c00cab8a968ac1528846bbc5a2e3eeeaaaef83785b42bb7f"
+  end
 
   def install
     boost = Formula["boost"]
@@ -41,7 +54,7 @@ class Libswiften < Formula
       #{prefix}
     ]
 
-    scons *args
+    system "scons", *args
   end
 
   test do
@@ -55,9 +68,9 @@ class Libswiften < Formula
         return 0;
       }
     EOS
-    cflags = `#{bin}/swiften-config --cflags`
-    ldflags = `#{bin}/swiften-config --libs`
-    system "#{ENV.cxx} -std=c++11 test.cpp #{cflags.chomp} #{ldflags.chomp} -o test"
+    cflags = `#{bin}/swiften-config --cflags`.chomp.split
+    ldflags = `#{bin}/swiften-config --libs`.chomp.split
+    system ENV.cxx, "-std=c++11", "test.cpp", *cflags, *ldflags, "-o", "test"
     system "./test"
   end
 end

@@ -1,25 +1,38 @@
 class YubicoPivTool < Formula
   desc "Command-line tool for the YubiKey PIV application"
   homepage "https://developers.yubico.com/yubico-piv-tool/"
-  url "https://developers.yubico.com/yubico-piv-tool/Releases/yubico-piv-tool-1.6.2.tar.gz"
-  sha256 "ea61bcd5c75471ed21903967d0121fb090aa4d325ec279a24633e3235fdf231b"
+  url "https://developers.yubico.com/yubico-piv-tool/Releases/yubico-piv-tool-2.2.0.tar.gz"
+  sha256 "74cb2e03c7137c0dd529f35a230b4a598121cb71b10d7e55b91fd0cdefcac457"
+  license "BSD-2-Clause"
+
+  livecheck do
+    url "https://developers.yubico.com/yubico-piv-tool/Releases/"
+    regex(/href=.*?yubico-piv-tool[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "6acce9035255fc4cc53f517709704c3300a1f0052bba2d96416b9dfc70c5cbc6" => :mojave
-    sha256 "4d8f95198ef3fcd9b8f20ec251f74ebac64c7b1c5306e33c4d09750fe0fe67b1" => :high_sierra
-    sha256 "8a687ec5093815f876df56284c463d32f33d3950f41e81c36c3d1a1d98570e91" => :sierra
+    sha256                               arm64_big_sur: "a4819de1638f828cbd2e9c5e50f9830a91ed578fb42ae2fbb073d5bc66fbb38c"
+    sha256                               big_sur:       "446b3d63b270dd3bdd27adec31503c02553a0e0d4fb2610082e392e85061d528"
+    sha256                               catalina:      "72474492baf278c59ec478cb24f2c8730ff9f59f0e1963a473a6d7ad94df4e12"
+    sha256                               mojave:        "395ffe7d667fab0964b4544bb9cc4476ddcbc77eedce706c3f4c5fa4524d0e14"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "898354a02524f6f5a1480c96f83d6c3c101c9c7908fd9c65c6430841e84c0e21"
   end
 
   depends_on "check" => :build
+  depends_on "cmake" => :build
+  depends_on "gengetopt" => :build
+  depends_on "help2man" => :build
+  depends_on "libtool" => :build
   depends_on "pkg-config" => :build
-  depends_on "openssl"
+  depends_on "check"
+  depends_on "openssl@1.1"
+  depends_on "pcsc-lite"
 
   def install
-    system "./configure", "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--prefix=#{prefix}"
-    system "make", "install"
+    mkdir "build" do
+      system "cmake", "..", *std_cmake_args, "-DCMAKE_C_FLAGS=-I#{Formula["pcsc-lite"].opt_include}/PCSC"
+      system "make", "install"
+    end
   end
 
   test do

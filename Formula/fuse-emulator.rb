@@ -1,18 +1,24 @@
 class FuseEmulator < Formula
   desc "Free Unix Spectrum Emulator"
   homepage "https://fuse-emulator.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/fuse-emulator/fuse/1.5.5/fuse-1.5.5.tar.gz"
-  sha256 "bd0e58bd5a09444d79891da0971f9a84aa5670dd8018ac2b56f69e42ebda584e"
+  url "https://downloads.sourceforge.net/project/fuse-emulator/fuse/1.6.0/fuse-1.6.0.tar.gz"
+  sha256 "3a8fedf2ffe947c571561bac55a59adad4c59338f74e449b7e7a67d9ca047096"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/fuse[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    sha256 "4b31387b1dccb1fbf5e9cb16b6a2005a8d671ad41e21bd4a3619e981e7cb1dd8" => :mojave
-    sha256 "962a47d502bfeea1e2d10f4a4f287a658c3c0e2362b85b992810ee32ee7adb9f" => :high_sierra
-    sha256 "eb4bd91ef6dab28436830cada55c85f7834b722a207f43694d944819a6346c56" => :sierra
-    sha256 "b3092d601e7da78aadc43dcb3e1c1b32fddd478458e44e689d486d2537b505c6" => :el_capitan
+    sha256 arm64_big_sur: "e90d4659088b2fd702f5b9fdd65971f40e91468b539d1f6bba5405f09177cd31"
+    sha256 big_sur:       "36e52532b87822d39bcfc3df322e16cc1bce3d15e3c4898df3fb19e603627979"
+    sha256 catalina:      "569522bf7f64bec6a0c0ebbd50658798830fa4509d1720a01f2a9404d5d44cc9"
+    sha256 mojave:        "4431c55c622edab217e5e896e9718895747ccb8546dd4251c4457c327a0c6ae0"
   end
 
   head do
-    url "http://svn.code.sf.net/p/fuse-emulator/code/trunk/fuse"
+    url "https://svn.code.sf.net/p/fuse-emulator/code/trunk/fuse"
     depends_on "autoconf" => :build
     depends_on "automake" => :build
     depends_on "libtool" => :build

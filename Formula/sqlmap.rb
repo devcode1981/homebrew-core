@@ -1,14 +1,28 @@
 class Sqlmap < Formula
   desc "Penetration testing for SQL injection and database servers"
-  homepage "http://sqlmap.org"
-  url "https://github.com/sqlmapproject/sqlmap/archive/1.2.11.tar.gz"
-  sha256 "a9d7bfaaf92f19c1ed60b95a08605587d7c898a4d417af93dce53aef37b14ae0"
+  homepage "https://sqlmap.org"
+  url "https://github.com/sqlmapproject/sqlmap/archive/1.5.7.tar.gz"
+  sha256 "b5d7bd6bfee2fcce2f84b332a9c337d45c37343c53b5793cc4141db77789db70"
+  license "GPL-2.0-or-later"
   head "https://github.com/sqlmapproject/sqlmap.git"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "7c950aafdc4ef567cfad3bd7c682dd187ecaaef1f6736ebe583304f1e51fa47e"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b871840ee1a99f5c2ea14522302b63fefe0d777703d4ceaad241215939dcc45c"
+    sha256 cellar: :any_skip_relocation, catalina:      "b871840ee1a99f5c2ea14522302b63fefe0d777703d4ceaad241215939dcc45c"
+    sha256 cellar: :any_skip_relocation, mojave:        "b871840ee1a99f5c2ea14522302b63fefe0d777703d4ceaad241215939dcc45c"
+  end
 
   def install
     libexec.install Dir["*"]
+
+    files = [
+      libexec/"lib/core/dicts.py",
+      libexec/"lib/core/settings.py",
+      libexec/"lib/request/basic.py",
+      libexec/"thirdparty/magic/magic.py",
+    ]
+    inreplace files, "/usr/local", HOMEBREW_PREFIX
 
     bin.install_symlink libexec/"sqlmap.py"
     bin.install_symlink bin/"sqlmap.py" => "sqlmap"

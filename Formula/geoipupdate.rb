@@ -1,36 +1,36 @@
 class Geoipupdate < Formula
   desc "Automatic updates of GeoIP2 and GeoIP Legacy databases"
   homepage "https://github.com/maxmind/geoipupdate"
-  url "https://github.com/maxmind/geoipupdate/releases/download/v3.1.1/geoipupdate-3.1.1.tar.gz"
-  sha256 "3de22e3fe3282024288a00807bbea9a1ffa2d1e8fe9c611f4b14a5b4d8ebe08a"
+  url "https://github.com/maxmind/geoipupdate/archive/v4.8.0.tar.gz"
+  sha256 "ca718c3ffcc595ef441363699888d20150f1d3a6583ac2d60bcbd34f052db09f"
+  license "Apache-2.0"
+  head "https://github.com/maxmind/geoipupdate.git"
 
   bottle do
-    sha256 "9cf68c91a00193bed2bd55b3c2d8add1fa937433a429af7c01829b14a58eb7fa" => :mojave
-    sha256 "1e45c489ab5d3022b71e00adca105287de4175ae999552a1f0f62981a16cbf4c" => :high_sierra
-    sha256 "d13fd47dd374265af81e2824335b714bd647359671f82ed6643ae988722647fc" => :sierra
-    sha256 "a8fdd107eca63868f7ae9e216f3ecab4bb1c0ce635d9bda0fdb03d35f37d1380" => :el_capitan
+    sha256 arm64_big_sur: "7f8823d01da79c6839c4621a1ae80c20541fb83f6f1197278f4665b4ab4cb0ad"
+    sha256 big_sur:       "100e9ece8f4563fc6ed597be8cbb39c4fd4299067917234d72354df56f9a34bc"
+    sha256 catalina:      "ebffdddea99838681cdb84804386668ec9f8b2ed74895ad65bae09820a8da2df"
+    sha256 mojave:        "7842336aef38b28f567dd3b9d9379764f5725837eda91242aa26cfab8b2521c9"
+    sha256 x86_64_linux:  "87b67e239bfa889f4a35890b50003241d4e68ad639bdd9e61274c871dea4ad6c"
   end
 
-  head do
-    url "https://github.com/maxmind/geoipupdate.git"
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "libtool" => :build
-  end
+  depends_on "go" => :build
+  depends_on "pandoc" => :build
+
+  uses_from_macos "curl"
+  uses_from_macos "zlib"
 
   def install
-    system "./bootstrap" if build.head?
-    system "./configure", "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--datadir=#{var}",
-                          "--prefix=#{prefix}",
-                          "--sysconfdir=#{etc}"
-    system "make", "install"
+    system "make", "CONFFILE=#{etc}/GeoIP.conf", "DATADIR=#{var}/GeoIP", "VERSION=#{version} (homebrew)"
+
+    bin.install  "build/geoipupdate"
+    etc.install  "build/GeoIP.conf"
+    man1.install "build/geoipupdate.1"
+    man5.install "build/GeoIP.conf.5"
   end
 
   def post_install
     (var/"GeoIP").mkpath
-    system bin/"geoipupdate", "-v"
   end
 
   test do

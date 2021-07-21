@@ -1,29 +1,28 @@
 class Atk < Formula
   desc "GNOME accessibility toolkit"
   homepage "https://library.gnome.org/devel/atk/"
-  url "https://download.gnome.org/sources/atk/2.30/atk-2.30.0.tar.xz"
-  sha256 "dd4d90d4217f2a0c1fee708a555596c2c19d26fef0952e1ead1938ab632c027b"
+  url "https://download.gnome.org/sources/atk/2.36/atk-2.36.0.tar.xz"
+  sha256 "fb76247e369402be23f1f5c65d38a9639c1164d934e40f6a9cf3c9e96b652788"
+  license "GPL-2.0-or-later"
 
   bottle do
-    sha256 "ef98c860ad49b7c335854dc8a558e193353a8afad8d22d0bc1be1d82ccc716c7" => :mojave
-    sha256 "13a414fd51dc409c7fb66ff5a91920f11cda4a18e311b16249df7a1395e8f2b5" => :high_sierra
-    sha256 "945bbdb2a8e1ed4802a9b437fcdfccd59d0de099bcbee66e32a42f7cf9c86896" => :sierra
-    sha256 "786efff084a599afbdc9ab706da2e64ae1c4fc29110ab8f7379649a9651599e2" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "e7d40dbacc2c965c8b23224a5e1cd2a90d6c54758b957dcf3d66c2238feec518"
+    sha256 cellar: :any, big_sur:       "8321e0ee7364e1de1a3667c50954b4b4f629cba7c2d8077114c4a5bc38a24655"
+    sha256 cellar: :any, catalina:      "1065293046ab2984940dfa0b9c9e724439838e63f685c932d508ccd74bcf921b"
+    sha256 cellar: :any, mojave:        "68c7b621339c03964036877987db69806f663612ba275e68554a97d218a2b5b4"
+    sha256 cellar: :any, high_sierra:   "fa8f525bfeacab676f795bac37f622fc100e63c9e9661fbd6ddd3e1725ebd097"
+    sha256               x86_64_linux:  "22fce3b8041576c4ab184bef170f8902c73ad9b79809b2aa0ef79049f5c5ac43"
   end
 
   depends_on "gobject-introspection" => :build
-  depends_on "meson-internal" => :build
+  depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "glib"
 
-  patch :DATA
-
   def install
-    ENV.refurbish_args
-
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", ".."
+      system "meson", *std_meson_args, ".."
       system "ninja"
       system "ninja", "install"
     end
@@ -51,27 +50,11 @@ class Atk < Formula
       -latk-1.0
       -lglib-2.0
       -lgobject-2.0
-      -lintl
     ]
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end
 end
-
-__END__
-diff --git a/meson.build b/meson.build
-index 59abf5e..7af4f12 100644
---- a/meson.build
-+++ b/meson.build
-@@ -73,11 +73,6 @@ if host_machine.system() == 'linux'
-   common_ldflags += cc.get_supported_link_arguments(test_ldflags)
- endif
-
--# Maintain compatibility with autotools on macOS
--if host_machine.system() == 'darwin'
--  common_ldflags += [ '-compatibility_version 1', '-current_version 1.0', ]
--endif
--
- # Functions
- checked_funcs = [
-   'bind_textdomain_codeset',

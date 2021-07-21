@@ -1,17 +1,20 @@
 class Gitbucket < Formula
   desc "Git platform powered by Scala offering"
   homepage "https://github.com/gitbucket/gitbucket"
-  url "https://github.com/gitbucket/gitbucket/releases/download/4.29.0/gitbucket.war"
-  sha256 "e9e5c896134874ac1c64581e8d21bba72ae2f41c0f9c6a24aa4f478f58881acc"
+  url "https://github.com/gitbucket/gitbucket/releases/download/4.35.3/gitbucket.war"
+  sha256 "19cf2233f76171beda543fa11812365f409f807c07210ab83d57cb8252d66ebe"
+  license "Apache-2.0"
+
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "d993565ae3717b98cb81878650164ba91c8af24d2238d78d1999640b49c54b3a"
+  end
 
   head do
     url "https://github.com/gitbucket/gitbucket.git"
     depends_on "ant" => :build
   end
 
-  bottle :unneeded
-
-  depends_on :java => "1.8+"
+  depends_on "openjdk"
 
   def install
     if build.head?
@@ -22,41 +25,24 @@ class Gitbucket < Formula
     end
   end
 
-  def caveats; <<~EOS
-    Note: When using launchctl the port will be 8080.
-  EOS
+  def caveats
+    <<~EOS
+      Note: When using `brew services` the port will be 8080.
+    EOS
   end
 
-  plist_options :manual => "java -jar #{HOMEBREW_PREFIX}/opt/gitbucket/libexec/gitbucket.war"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>gitbucket</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>/usr/bin/java</string>
-          <string>-Dmail.smtp.starttls.enable=true</string>
-          <string>-jar</string>
-          <string>#{opt_libexec}/gitbucket.war</string>
-          <string>--host=127.0.0.1</string>
-          <string>--port=8080</string>
-        </array>
-        <key>RunAtLoad</key>
-       <true/>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run [Formula["openjdk"].opt_bin/"java", "-Dmail.smtp.starttls.enable=true", "-jar", opt_libexec/"gitbucket.war",
+         "--host=127.0.0.1", "--port=8080"]
   end
 
   test do
-    io = IO.popen("java -jar #{libexec}/gitbucket.war")
+    java = Formula["openjdk"].opt_bin/"java"
+    fork do
+      $stdout.reopen(testpath/"output")
+      exec "#{java} -jar #{libexec}/gitbucket.war --port=#{free_port}"
+    end
     sleep 12
-    Process.kill("SIGINT", io.pid)
-    Process.wait(io.pid)
-    io.read !~ /Exception/
+    File.read("output") !~ /Exception/
   end
 end

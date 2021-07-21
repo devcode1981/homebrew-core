@@ -1,27 +1,23 @@
 class Gollum < Formula
-  desc "n:m message multiplexer written in Go"
-  homepage "https://github.com/trivago/gollum"
-  url "https://github.com/trivago/gollum/archive/v0.5.3.tar.gz"
-  sha256 "952f9b74e34b6826242d85a3625d2f181bca1b5776929b50590988c01b849afb"
+  desc "Go n:m message multiplexer"
+  homepage "https://gollum.readthedocs.io/en/latest/"
+  url "https://github.com/trivago/gollum/archive/0.6.0.tar.gz"
+  sha256 "2d9e7539342ccf5dabb272bbba8223d279a256c0901e4a27d858488dd4343c49"
+  license "Apache-2.0"
   head "https://github.com/trivago/gollum.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b8203d7bfc9f95ad6ea7633216a5f31c037dbd0d310ff715d31671b31dee9567" => :mojave
-    sha256 "86e8ea259f024cb5c429594a4ecbafe983b06b08dc4fcad3dc35e269d89fb283" => :high_sierra
-    sha256 "75fa194b9bb429eccbfeea26cde0acfb68622e0f8c544fd788fa527aad8ac322" => :sierra
-    sha256 "f3b98eb14ff5762a30f55ff8da3bae13bd29cf7c684f704a3dc7ff1b334baaad" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1ee4392902517d8c01ccefd711b89658420b8ab2727473538db2c8781e3ece6f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "93b409a0df8ba538dc75783b349b6e3d9d3390aa9d2e89813513a0452e3eab3e"
+    sha256 cellar: :any_skip_relocation, catalina:      "a8f048a8431da205f8c35224d43b6818c73adcb1abf973e7d1274231df6cb562"
+    sha256 cellar: :any_skip_relocation, mojave:        "6e8d55c8f2e91d5c645dd1877f993765aa26e71b637754514c6aa285ffb617dd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "9069887fd837e33a18020e839a78fa28a76f3d4088e59596e0e75941031f7760"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/trivago/gollum").install buildpath.children
-    cd "src/github.com/trivago/gollum" do
-      system "go", "build", "-o", bin/"gollum"
-      prefix.install_metafiles
-    end
+    system "go", "build", "-mod=readonly", *std_go_args(ldflags: "-s -w -X gollum/core.versionString=#{version}")
   end
 
   test do

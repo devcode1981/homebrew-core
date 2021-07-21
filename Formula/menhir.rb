@@ -1,22 +1,25 @@
 class Menhir < Formula
   desc "LR(1) parser generator for the OCaml programming language"
   homepage "http://cristal.inria.fr/~fpottier/menhir"
-  url "http://cristal.inria.fr/~fpottier/menhir/menhir-20180905.tar.gz"
-  sha256 "82f3767290e39bf1ce3e260cd3cf486295891d57351cdccaedc6919000746750"
+  url "https://gitlab.inria.fr/fpottier/menhir/-/archive/20210419/menhir-20210419.tar.bz2"
+  sha256 "6024d195994e86d24795d3bc2aeec5e8884bc13af1dc107fdebc047129d106e9"
+  license "GPL-3.0-or-later"
 
   bottle do
-    sha256 "5ce9eda23c034dc818034a29784cb110b013bf7d34fcb03646c2fbc2a4e2fdc0" => :mojave
-    sha256 "8465bd1f845ed9e5cd17d493409bb5f231274acf07f3e2dacd949f5b9ef4e14c" => :high_sierra
-    sha256 "b334910852aff3c273f57cfc9361e99595bd6ff3ce38a2bc61b8675ec4e9395b" => :sierra
-    sha256 "0c261facd1c50797c1b2ae1cd0db1fb921a7de568c84db9d60ea4b7aa5229dd4" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "b37a344321702300cbbf18c407b3e1fce365a19ce412e3cec8b016293c654114"
+    sha256 cellar: :any,                 big_sur:       "f42d182ab5cc9e8d14464cfa1d7c1c7fb8e1a563b17006793d420424d7070f0e"
+    sha256 cellar: :any,                 catalina:      "ddbd691df178056fa2aaa1980aaec960d5259dbfe28037a4417b4f35310e03e6"
+    sha256 cellar: :any,                 mojave:        "a016bd58f69c0b05e9a0141a86086193726773719e03a7378a0afbca70cf3ec5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c77f2d2108fa7a07fb9f3e15755874db7b3586c0fc5114040373bfe2add4803d"
   end
 
+  depends_on "dune" => :build
   depends_on "ocamlbuild" => :build
   depends_on "ocaml"
 
   def install
-    system "make", "PREFIX=#{prefix}", "all"
-    system "make", "PREFIX=#{prefix}", "install"
+    system "dune", "build", "@install"
+    system "dune", "install", "--prefix=#{prefix}", "--mandir=#{man}"
   end
 
   test do

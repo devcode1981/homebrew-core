@@ -1,16 +1,16 @@
 class Loudmouth < Formula
   desc "Lightweight C library for the Jabber protocol"
   homepage "https://mcabber.com"
-  url "https://mcabber.com/files/loudmouth/loudmouth-1.5.3.tar.bz2"
-  sha256 "54329415cb1bacb783c20f5f1f975de4fc460165d0d8a1e3b789367b5f69d32c"
-  revision 1
+  url "https://mcabber.com/files/loudmouth/loudmouth-1.5.4.tar.bz2"
+  sha256 "31cbc91c1fddcc5346b3373b8fb45594e9ea9cc7fe36d0595e8912c47ad94d0d"
+  license "LGPL-2.1"
 
   bottle do
-    cellar :any
-    sha256 "b361c56b41bf7248fa3b12893856ef54bb3b06f895c2667ffc51c83a5ce44bff" => :mojave
-    sha256 "0ae2fce2fd5edcea19ecf80cbcc4f12ab203e92f85c8c28f9444f11fc34df37c" => :high_sierra
-    sha256 "778b6156e5d99748a1e4a2e45683cdea3c08295ad6dbaccf64cd23eea0f952ed" => :sierra
-    sha256 "92264a248d2b8b7c02e4ab60cd64430869fac7ce5a09a49154c6b2ed3659223a" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "0b60046b8a592ab656ed824b75774f2e9e8f9749b0a5edb024190019c36da766"
+    sha256 cellar: :any,                 big_sur:       "d770f0cd1a81375c306d0bc6fdd81610d27bc844fd5086518aaa7f8fa6252a14"
+    sha256 cellar: :any,                 catalina:      "b83be4ad6fce30f484015b344d21e3e425860b3c8a2cb6a609e059611d03caf9"
+    sha256 cellar: :any,                 mojave:        "681944a95c5642a4651110e5d91d88acf335176b34d85f0f159aef291f07b38d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6052693231034f7a87a85eb4e56755786089171b9ce5ad1e0babe0a891af55d9"
   end
 
   head do

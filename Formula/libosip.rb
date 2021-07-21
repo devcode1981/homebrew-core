@@ -1,22 +1,44 @@
 class Libosip < Formula
   desc "Implementation of the eXosip2 stack"
   homepage "https://www.gnu.org/software/osip/"
-  url "https://ftp.gnu.org/gnu/osip/libosip2-5.0.0.tar.gz"
-  mirror "https://ftpmirror.gnu.org/osip/libosip2-5.0.0.tar.gz"
-  sha256 "18a13c954f7297978e7bf1a0cdadde7c531e519d61a045dae304e054f3b2df03"
+  url "https://ftp.gnu.org/gnu/osip/libosip2-5.2.1.tar.gz"
+  mirror "https://ftpmirror.gnu.org/osip/libosip2-5.2.1.tar.gz"
+  sha256 "ee3784bc8e7774f56ecd0e2ca6e3e11d38b373435115baf1f1aa0ca0bfd02bf2"
+  license "LGPL-2.1-or-later"
+
+  livecheck do
+    url :stable
+    regex(/href=.*?libosip2[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "5b8ab7e59d4c2e7daa9bfedecb74fabdb9a997c677d7f19fa55b48604cfe5d49" => :mojave
-    sha256 "6a92bcb59772b46d9eba4e340f01cd798f54fcf521a6f6e09011c4f89c44d863" => :high_sierra
-    sha256 "a6f031a29e43ee5af71d20f9c9b86bc138ad55a1c41faef1f2f852b5595912a8" => :sierra
-    sha256 "b0a4712e735be9c798ba7f9233db9339a09dc70b69c88c318fc14662972f5511" => :el_capitan
-    sha256 "01816d798919670ccce2726b59aa1752d4f6ef2a3e74df5e9141882c778e1f37" => :yosemite
+    sha256 cellar: :any,                 arm64_big_sur: "223cf167c2b2be056352ca25c6c78045f2f319fdee374310286e3e0383aad67e"
+    sha256 cellar: :any,                 big_sur:       "c3855ed4bae9affb5007127469eda97fb91b395ca17f23639b4f3b08faed24cb"
+    sha256 cellar: :any,                 catalina:      "51a594ab9b9237fadbf236b6b91e7dff12b1d762a9084a9ceefa38e368236175"
+    sha256 cellar: :any,                 mojave:        "398471b49b724ac90cba0c87a44220adc0efbeb64b902429856531c263fa4404"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "56d76f7c03d4eedb0bb87a94fb46380f3c8dc2213863c66ea55ae1d67b9c9464"
   end
 
   def install
     system "./configure", "--disable-debug", "--disable-dependency-tracking",
                           "--prefix=#{prefix}"
     system "make", "install"
+  end
+
+  test do
+    (testpath/"test.c").write <<~EOS
+      #include <sys/time.h>
+      #include <osip2/osip.h>
+
+      int main() {
+          osip_t *osip;
+          int i = osip_init(&osip);
+          if (i != 0)
+            return -1;
+          return 0;
+      }
+    EOS
+    system ENV.cc, "test.c", "-I#{include}", "-L#{lib}", "-losip2", "-o", "test"
+    system "./test"
   end
 end

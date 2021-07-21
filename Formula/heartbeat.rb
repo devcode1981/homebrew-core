@@ -1,52 +1,37 @@
 class Heartbeat < Formula
   desc "Lightweight Shipper for Uptime Monitoring"
-  homepage "https://www.elastic.co/products/beats/heartbeat"
-  # Pinned at 6.2.x because of a licencing issue
-  # See: https://github.com/Homebrew/homebrew-core/pull/28995
-  url "https://github.com/elastic/beats/archive/v6.2.4.tar.gz"
-  sha256 "87d863cf55863329ca80e76c3d813af2960492f4834d4fea919f1d4b49aaf699"
+  homepage "https://www.elastic.co/beats/heartbeat"
+  url "https://github.com/elastic/beats.git",
+      tag:      "v7.13.3",
+      revision: "3ddad4cee7394d1643023604f246cd5ab6d8cfbb"
+  license "Apache-2.0"
   head "https://github.com/elastic/beats.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "3735c7b0a2cdd5e8ef32cff0da0417ff1d203169742a9dbf8d3e24d9ba879b42" => :mojave
-    sha256 "e4b90c3ab163e7ed9373b93745d06fa4833acebd084c97424b237a5ad062c074" => :high_sierra
-    sha256 "0e91314114812dab5c6779a4c7b24c613f6b7ac8b7bbfc4624e0aedd826c73c5" => :sierra
-    sha256 "d244b789c7163290579b3a526d3f07d6495c2de9dadacf4e77147464d93f5ff0" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "b6c11f41855cdf6517af8d5db5abf97722b36ae3bc93c45b537bfe4743425191"
+    sha256 cellar: :any_skip_relocation, big_sur:       "1020d930bda095acb4c3c4bdb3f2161ea873ccd47a56581cb899fa7be14c0c3f"
+    sha256 cellar: :any_skip_relocation, catalina:      "9e1089e10d76b36a797579ea528453c081c44b0135739acdcde621476693c2eb"
+    sha256 cellar: :any_skip_relocation, mojave:        "772568ee5d28e9309a75e061ce94dcd95ec2ce9441f51d1aeea6e9a890b6f723"
   end
 
   depends_on "go" => :build
-  depends_on "python@2" => :build
-
-  resource "virtualenv" do
-    url "https://files.pythonhosted.org/packages/b1/72/2d70c5a1de409ceb3a27ff2ec007ecdd5cc52239e7c74990e32af57affe9/virtualenv-15.2.0.tar.gz"
-    sha256 "1d7e241b431e7afce47e77f8843a276f652699d1fa4f93b9d8ce0076fd7b0b54"
-  end
+  depends_on "mage" => :build
+  depends_on "python@3.9" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/elastic/beats").install buildpath.children
+    # remove non open source files
+    rm_rf "x-pack"
 
-    ENV.prepend_create_path "PYTHONPATH", buildpath/"vendor/lib/python2.7/site-packages"
-
-    resource("virtualenv").stage do
-      system "python", *Language::Python.setup_install_args(buildpath/"vendor")
-    end
-
-    ENV.prepend_path "PATH", buildpath/"vendor/bin"
-
-    cd "src/github.com/elastic/beats/heartbeat" do
-      system "make"
+    cd "heartbeat" do
       # prevent downloading binary wheels during python setup
-      system "make", "PIP_INSTALL_COMMANDS=--no-binary :all", "python-env"
-      system "make", "DEV_OS=darwin", "update"
+      system "make", "PIP_INSTALL_PARAMS=--no-binary :all", "python-env"
+      system "mage", "-v", "build"
+      ENV.deparallelize
+      system "mage", "-v", "update"
 
       (etc/"heartbeat").install Dir["heartbeat.*", "fields.yml"]
       (libexec/"bin").install "heartbeat"
-      prefix.install "_meta/kibana"
     end
-
-    prefix.install_metafiles buildpath/"src/github.com/elastic/beats"
 
     (bin/"heartbeat").write <<~EOS
       #!/bin/sh
@@ -64,31 +49,28 @@ class Heartbeat < Formula
     (var/"log/heartbeat").mkpath
   end
 
-  plist_options :manual => "heartbeat"
+  plist_options manual: "heartbeat"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN"
-    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>Program</key>
-        <string>#{opt_bin}/heartbeat</string>
-        <key>RunAtLoad</key>
-        <true/>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN"
+      "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>Program</key>
+          <string>#{opt_bin}/heartbeat</string>
+          <key>RunAtLoad</key>
+          <true/>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do
-    require "socket"
-
-    server = TCPServer.new(0)
-    port = server.addr[1]
-    server.close
+    port = free_port
 
     (testpath/"config/heartbeat.yml").write <<~EOS
       heartbeat.monitors:
@@ -103,19 +85,13 @@ class Heartbeat < Formula
         codec.format:
           string: '%{[monitor]}'
     EOS
-    pid = fork do
+    fork do
       exec bin/"heartbeat", "-path.config", testpath/"config", "-path.data",
                             testpath/"data"
     end
     sleep 5
-
-    begin
-      assert_match "hello", pipe_output("nc -c -l #{port}", "goodbye\n", 0)
-      sleep 5
-      assert_match "\"status\":\"up\"", (testpath/"heartbeat/heartbeat").read
-    ensure
-      Process.kill "SIGINT", pid
-      Process.wait pid
-    end
+    assert_match "hello", pipe_output("nc -l #{port}", "goodbye\n", 0)
+    sleep 5
+    assert_match "\"status\":\"up\"", (testpath/"heartbeat/heartbeat").read
   end
 end

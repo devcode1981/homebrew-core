@@ -1,55 +1,63 @@
 class EyeD3 < Formula
-  desc "Work with ID3 metadata in .mp3 files"
-  homepage "http://eyed3.nicfit.net/"
-  url "http://eyed3.nicfit.net/releases/eyeD3-0.8.7.tar.gz"
-  sha256 "ef924eb2e8fffd7c7e3bd4c94dafad4a3b9047fe2dcb76d5dd7d9c37a1f1f8bb"
-  revision 1
+  include Language::Python::Virtualenv
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "da1e736195f54ffe70e4eb391b719f74ceeaa746b6474764b1bf52f5efc3c9f0" => :mojave
-    sha256 "bad8fee12d6f6a06e4f44db27deb6a044004680e55f1f996a97801eba417959a" => :high_sierra
-    sha256 "bad8fee12d6f6a06e4f44db27deb6a044004680e55f1f996a97801eba417959a" => :sierra
+  desc "Work with ID3 metadata in .mp3 files"
+  homepage "https://eyed3.nicfit.net/"
+  url "https://eyed3.nicfit.net/releases/eyeD3-0.9.6.tar.gz"
+  mirror "https://files.pythonhosted.org/packages/3a/7a/07fc7a0e4f7913f599dae950ea5024f006ccef2bc1bbffba288ed8fdfcab/eyeD3-0.9.6.tar.gz"
+  sha256 "4b5064ec0fb3999294cca0020d4a27ffe4f29149e8292fdf7b2de9b9cabb7518"
+  license "GPL-3.0-or-later"
+
+  livecheck do
+    url "https://github.com/nicfit/eyeD3.git"
+    strategy :github_latest
   end
 
-  depends_on "libmagic"
-  depends_on "python"
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a4613276d6a11d859910c4fc261acd46ed8c79f6fb39e1174fc9a0e3aa9a425f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "fabd715d3a65c1227ba6f6f0f5f5ef6e4f30311fdb6a81c6ee64f29ab06b6315"
+    sha256 cellar: :any_skip_relocation, catalina:      "fac417d9f81abb4a7f9a7c422e166eecafc1d7eedfeb0db93e47d59d9e1894b7"
+    sha256 cellar: :any_skip_relocation, mojave:        "9a2595374e19a747a5c5e04bd25cd95d80cf99e3a78c9259fe9b4cd9414f9afc"
+  end
+
+  depends_on "python@3.9"
 
   # Looking for documentation? Please submit a PR to build some!
   # See https://github.com/Homebrew/homebrew/issues/32770 for previous attempt.
 
-  resource "pathlib" do
-    url "https://files.pythonhosted.org/packages/ac/aa/9b065a76b9af472437a0059f77e8f962fe350438b927cb80184c32f075eb/pathlib-1.0.1.tar.gz"
-    sha256 "6940718dfc3eff4258203ad5021090933e5c04707d5ca8cc9e73c94a7894ea9f"
+  resource "coverage" do
+    url "https://files.pythonhosted.org/packages/40/05/2c1d1405edeec38114abcd404f15a35a41029b89d0514aa8ad11ffcbde81/coverage-5.3.1.tar.gz"
+    sha256 "38f16b1317b8dd82df67ed5daa5f5e7c959e46579840d77a67a4ceb9cef0a50b"
   end
 
-  resource "python-magic" do
-    url "https://files.pythonhosted.org/packages/84/30/80932401906eaf787f2e9bd86dc458f1d2e75b064b4c187341f29516945c/python-magic-0.4.15.tar.gz"
-    sha256 "f3765c0f582d2dfc72c15f3b5a82aecfae9498bd29ca840d72f37d7bd38bfcd5"
+  resource "deprecation" do
+    url "https://files.pythonhosted.org/packages/5a/d3/8ae2869247df154b64c1884d7346d412fed0c49df84db635aab2d1c40e62/deprecation-2.1.0.tar.gz"
+    sha256 "72b3bde64e5d778694b0cf68178aed03d15e15477116add3fb773e581f9518ff"
   end
 
-  resource "six" do
-    url "https://files.pythonhosted.org/packages/16/d8/bc6316cf98419719bd59c91742194c111b6f2e85abac88e496adefaf7afe/six-1.11.0.tar.gz"
-    sha256 "70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9"
+  resource "filetype" do
+    url "https://files.pythonhosted.org/packages/56/86/1a6b76adf5be0e88ebc084beacb80fa3fb0eab68890ed1030ad50ac83c3a/filetype-1.0.7.tar.gz"
+    sha256 "da393ece8d98b47edf2dd5a85a2c8733e44b769e32c71af4cd96ed8d38d96aa7"
+  end
+
+  resource "packaging" do
+    url "https://files.pythonhosted.org/packages/d7/c5/e81b9fb8033fe78a2355ea7b1774338e1dca2c9cbd2ee140211a9e6291ab/packaging-20.8.tar.gz"
+    sha256 "78598185a7008a470d64526a8059de9aaa449238f280fc9eb6b13ba6c4109093"
+  end
+
+  resource "pyparsing" do
+    url "https://files.pythonhosted.org/packages/c1/47/dfc9c342c9842bbe0036c7f763d2d6686bcf5eb1808ba3e170afdb282210/pyparsing-2.4.7.tar.gz"
+    sha256 "c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"
+  end
+
+  resource "toml" do
+    url "https://files.pythonhosted.org/packages/be/ba/1f744cdc819428fc6b5084ec34d9b30660f6f9daaf70eead706e3203ec3c/toml-0.10.2.tar.gz"
+    sha256 "b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"
   end
 
   def install
-    xy = Language::Python.major_minor_version "python3"
-    ENV.prepend_create_path "PYTHONPATH", libexec/"vendor/lib/python#{xy}/site-packages"
-    resources.each do |r|
-      r.stage do
-        system "python3", *Language::Python.setup_install_args(libexec/"vendor")
-      end
-    end
-
-    # Install in our prefix, not the first-in-the-path python site-packages dir.
-    ENV.prepend_create_path "PYTHONPATH", libexec/"lib/python#{xy}/site-packages"
-
-    system "python3", "setup.py", "install", "--prefix=#{libexec}"
-    share.install "docs/plugins", "docs/cli.rst"
-
-    bin.install Dir[libexec/"bin/*"]
-    bin.env_script_all_files(libexec/"bin", :PYTHONPATH => ENV["PYTHONPATH"])
+    virtualenv_install_with_resources
+    share.install Dir["docs/*"]
   end
 
   test do

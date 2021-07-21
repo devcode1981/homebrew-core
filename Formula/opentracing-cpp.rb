@@ -1,14 +1,16 @@
 class OpentracingCpp < Formula
   desc "OpenTracing API for C++"
   homepage "https://opentracing.io/"
-  url "https://github.com/opentracing/opentracing-cpp/archive/v1.5.0.tar.gz"
-  sha256 "4455ca507936bc4b658ded10a90d8ebbbd61c58f06207be565a4ffdc885687b5"
+  url "https://github.com/opentracing/opentracing-cpp/archive/v1.6.0.tar.gz"
+  sha256 "5b170042da4d1c4c231df6594da120875429d5231e9baa5179822ee8d1054ac3"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any
-    sha256 "77e90986d743b410c54ba63a30cf0741eb8f2faa68392a5c726c613c6113695c" => :mojave
-    sha256 "e88447ef67b65da415b9c6b747eb38e18a6ef7abc268334bd5b561d825b7eedb" => :high_sierra
-    sha256 "5466485c5f18de7452c2d4b043e0dcf0c23f3e0fa9fc93d8d84177b38eae8c34" => :sierra
+    sha256 cellar: :any,                 big_sur:      "1a904785b31fe03fc39333e81dc06e815b649c92062e23a99cf24137a013227b"
+    sha256 cellar: :any,                 catalina:     "151a5af54448492f668979eb3a0e9fb92e2e1a99cb6766ba3985a9a88f26526a"
+    sha256 cellar: :any,                 mojave:       "5a10c35e98785ee6567c241e845e3fd24a2fa52f15ade1d4e6a91f939752bd8c"
+    sha256 cellar: :any,                 high_sierra:  "7747ffc077d879fbbbf4509e65fcfc154f238c9c92482bf94d1fb176156be563"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "77f61d48bdd3ed6cc866a9a1da22fa9ca861a67b3aa253e7bd38416eec8b9f42"
   end
 
   depends_on "cmake" => :build
@@ -21,7 +23,8 @@ class OpentracingCpp < Formula
   end
 
   test do
-    system ENV.cxx, "#{pkgshare}/tutorial-example.cpp", "-std=c++11", "-L#{lib}", "-I#{include}", "-lopentracing", "-lopentracing_mocktracer", "-o", "tutorial-example"
+    system ENV.cxx, "#{pkgshare}/tutorial-example.cpp", "-std=c++11", "-L#{lib}", "-I#{include}",
+                    "-lopentracing", "-lopentracing_mocktracer", "-o", "tutorial-example"
     system "./tutorial-example"
   end
 end

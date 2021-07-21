@@ -3,35 +3,33 @@ class GnomeRecipes < Formula
   homepage "https://wiki.gnome.org/Apps/Recipes"
   url "https://download.gnome.org/sources/gnome-recipes/2.0/gnome-recipes-2.0.2.tar.xz"
   sha256 "1be9d2fcb7404a97aa029d2409880643f15071c37039247a6a4320e7478cd5fb"
-  revision 6
+  revision 15
 
   bottle do
-    rebuild 1
-    sha256 "ec344aea10673e323e449140a75ec6b0d1f0e7d2df311a7d1b74ba5d38060e59" => :mojave
-    sha256 "4e26ec4a2a2ed06ef948fca74364265d2d02416575e67117000531abe7fef756" => :high_sierra
-    sha256 "6c2bdccb10c2fd094cf6a618b57b7361b1a4ff60377aaebe69b9891c60d7e05d" => :sierra
-    sha256 "5fba96e2200b9a7763cae02c8998a43422c8a69543f362b058fb92adad950ee8" => :el_capitan
+    sha256 arm64_big_sur: "a383ac85885a09d8c959af00fda8ab9fd6599b4347ce26929b6ed67bf9735e05"
+    sha256 big_sur:       "c0ad5482453faf871b12613b8d6a6e9c2ae5762ed14513ff96e941645822feb6"
+    sha256 catalina:      "57c8af5693a567947ea106732c61bcb30e867118dddc79c17856a0b226ee93da"
+    sha256 mojave:        "4c3c1df208cdb1114858b1760fa0db2f606c9c5d999d2cfee9a483a519681cde"
   end
 
   depends_on "itstool" => :build
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
   depends_on "adwaita-icon-theme"
   depends_on "gnome-autoar"
-  depends_on "gnu-tar"
   depends_on "gspell"
   depends_on "gtk+3"
   depends_on "json-glib" # for goa
+  depends_on "libarchive"
   depends_on "libcanberra"
   depends_on "librest" # for goa
   depends_on "libsoup"
   depends_on "libxml2"
 
   resource "goa" do
-    url "https://download.gnome.org/sources/gnome-online-accounts/3.30/gnome-online-accounts-3.30.0.tar.xz"
-    sha256 "27d9d88942aa02a1f8d003dfe515483d8483f216ba1e297a8ef67a42cf4bcfc3"
+    url "https://download.gnome.org/sources/gnome-online-accounts/3.30/gnome-online-accounts-3.30.2.tar.xz"
+    sha256 "05c7e588c884a4145db376880303588f74b76d1fa11afbeccb74c6eff36b2fdc"
   end
 
   def install
@@ -52,7 +50,7 @@ class GnomeRecipes < Formula
     ENV["DESTDIR"] = ""
     ENV.delete "PYTHONPATH"
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", ".."
+      system "meson", *std_meson_args, ".."
       system "ninja"
       system "ninja", "install"
     end

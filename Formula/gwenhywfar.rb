@@ -1,28 +1,45 @@
 class Gwenhywfar < Formula
   desc "Utility library required by aqbanking and related software"
   homepage "https://www.aquamaniac.de/"
-  url "https://www.aquamaniac.de/sites/download/download.php?package=01&release=208&file=02&dummy=gwenhywfar-4.20.0.tar.gz"
-  sha256 "5a88daabba1388f9528590aab5de527a12dd44a7da4572ce48469a29911b0fb0"
+  url "https://www.aquamaniac.de/rdm/attachments/download/364/gwenhywfar-5.6.0.tar.gz"
+  sha256 "57af46920991290372752164f9a7518b222f99bca2ef39c77deab57d14914bc7"
+  license "LGPL-2.1-or-later"
+  revision 1
 
-  bottle do
-    sha256 "6e6850e6a2e0edcd03665b11f66d51a2a0cb351037fdbd8b8677f4ae53595640" => :mojave
-    sha256 "229eac2112343d4616576f947213706ebe5f28e0030dd5bef89ee4efa3043ac9" => :high_sierra
-    sha256 "97aaff3937e4551227a66a55963d3dda7e24e53b9e9aa1ffca78ae455be00ab1" => :sierra
-    sha256 "1760007de92dd5e7282a82f2534feb65380338fd8cb11632eef8914c2ddb56a4" => :el_capitan
+  livecheck do
+    url "https://www.aquamaniac.de/rdm/projects/gwenhywfar/files"
+    regex(/href=.*?gwenhywfar[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  depends_on "pkg-config" => :build
+  bottle do
+    sha256 arm64_big_sur: "cf4318174789a6da02beeb0ae8b2182bc17b14fea0de4ba4ec1d4e2574fefb7d"
+    sha256 big_sur:       "f172c3d2c81e2f75f851a34629baa9c90c389a42e22458dc3352a8368245ef9b"
+    sha256 catalina:      "a04f53d938325ee504611552f46fc606118b54ffcd3b1e8edb67f5f61d3b75fe"
+    sha256 mojave:        "4f83d9bc727e95b68c89a736cb95a7b5f5b0c4c75822cf6043b575d63420002c"
+  end
+
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "cmake" => :test
   depends_on "gettext"
   depends_on "gnutls"
   depends_on "libgcrypt"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
+  depends_on "pkg-config" # gwenhywfar-config needs pkg-config for execution
+  depends_on "qt@5"
+
+  patch do # fixes out-of-tree builds, can be removed with 5.6.1+ release. https://www.aquamaniac.de/rdm/issues/232
+    url "https://www.aquamaniac.de/rdm/projects/gwenhywfar/repository/revisions/b953672c5f668c2ed3960607e6e25651a2cc98db/diff/m4/ax_have_qt.m4?format=diff"
+    sha256 "da7c1ddce2b8d1f19293d43b0db8449a4e45b79801101e866aa42f212f750ecd"
+  end
 
   def install
-    system "autoreconf", "-fiv" if build.head?
+    inreplace "gwenhywfar-config.in.in", "@PKG_CONFIG@", "pkg-config"
+    system "autoreconf", "-fiv" # needed because of the patch. Otherwise only needed for head build (if build.head?)
     system "./configure", "--disable-debug",
                           "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
-                          "--with-guis=cocoa"
+                          "--with-guis=cocoa cpp qt5"
     system "make", "install"
   end
 
@@ -36,7 +53,33 @@ class Gwenhywfar < Formula
         return 0;
       }
     EOS
-    system ENV.cc, "test.c", "-I#{include}/gwenhywfar4", "-L#{lib}", "-lgwenhywfar", "-o", "test"
-    system "./test"
+    system ENV.cc, "test.c", "-I#{include}/gwenhywfar5", "-L#{lib}", "-lgwenhywfar", "-o", "test_c"
+    system "./test_c"
+
+    system ENV.cxx, "test.c", "-I#{include}/gwenhywfar5", "-L#{lib}", "-lgwenhywfar", "-o", "test_cpp"
+    system "./test_cpp"
+
+    (testpath/"CMakeLists.txt").write <<~EOS
+      project(test_gwen)
+
+      find_package(Qt5 REQUIRED Core Widgets)
+      find_package(gwenhywfar REQUIRED)
+      find_package(gwengui-cpp REQUIRED)
+      find_package(gwengui-qt5 REQUIRED)
+
+      add_executable(${PROJECT_NAME} test.c)
+
+      target_link_libraries(${PROJECT_NAME} PUBLIC
+                      gwenhywfar::core
+                      gwenhywfar::gui-cpp
+                      gwenhywfar::gui-qt5
+      )
+    EOS
+
+    args = std_cmake_args
+    args << "-DQt5_DIR=#{Formula["qt@5"].opt_prefix/"lib/cmake/Qt5"}"
+
+    system "cmake", testpath.to_s, *args
+    system "make"
   end
 end

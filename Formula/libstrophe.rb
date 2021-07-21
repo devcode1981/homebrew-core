@@ -1,16 +1,18 @@
 class Libstrophe < Formula
   desc "XMPP library for C"
-  homepage "http://strophe.im/libstrophe/"
-  url "https://github.com/strophe/libstrophe/archive/0.9.2.tar.gz"
-  sha256 "158145bc1565a5fd0bbd7f57e3e15d768e58b8a460897ab5918a5a689d67ae6f"
+  homepage "https://strophe.im/libstrophe/"
+  url "https://github.com/strophe/libstrophe/archive/0.10.1.tar.gz"
+  sha256 "5bf0bbc555cb6059008f1b748370d4d2ee1e1fabd3eeab68475263556405ba39"
+  license any_of: ["GPL-3.0", "MIT"]
   head "https://github.com/strophe/libstrophe.git"
 
   bottle do
-    cellar :any
-    sha256 "2a3b013266d4e92e3587ce22d16ba46ad830e3f0dedade73f2c6b850203677d8" => :mojave
-    sha256 "1e6c0b7461aeed6bf925a338248a577435d3b7f60561e09a7da9c530a05baaee" => :high_sierra
-    sha256 "4ddabe86834d65dafb68a82b2f82c66b1052df5c0bd5cdd81318ae421c6ec0de" => :sierra
-    sha256 "65162c4c6215dae7441c79aa50b31ef99c0ddfee55eea5f5d8974fb330a2dd96" => :el_capitan
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "fe773ec4022f94be98b7bb05ba534bf87411b901a713416d8581ddc4968dd868"
+    sha256 cellar: :any,                 big_sur:       "a215207d02f646e2299504f7166cf293fd9f9714181106e0f7707a4feef9303a"
+    sha256 cellar: :any,                 catalina:      "cd0ced2cb8517143a02f68c2414de0c8f8da75829da7b46402cf645d6be960be"
+    sha256 cellar: :any,                 mojave:        "17f49cd12a1fc672fe95155ac910265343cc877214af995e1728aa1ef75bc2f1"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "33f8fece1588473b41591012bb0838faff237fa62ff8f19b26c25190c9959f96"
   end
 
   depends_on "autoconf" => :build
@@ -18,7 +20,10 @@ class Libstrophe < Formula
   depends_on "libtool" => :build
   depends_on "pkg-config" => :build
   depends_on "check"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
+
+  uses_from_macos "expat"
+  uses_from_macos "libxml2"
 
   def install
     system "./bootstrap.sh"

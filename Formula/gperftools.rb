@@ -1,15 +1,22 @@
 class Gperftools < Formula
   desc "Multi-threaded malloc() and performance analysis tools"
   homepage "https://github.com/gperftools/gperftools"
-  url "https://github.com/gperftools/gperftools/releases/download/gperftools-2.7/gperftools-2.7.tar.gz"
-  sha256 "1ee8c8699a0eff6b6a203e59b43330536b22bbcbe6448f54c7091e5efb0763c9"
+  url "https://github.com/gperftools/gperftools/releases/download/gperftools-2.9.1/gperftools-2.9.1.tar.gz"
+  sha256 "ea566e528605befb830671e359118c2da718f721c27225cbbc93858c7520fee3"
+  license "BSD-3-Clause"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+    regex(%r{href=.*?/tag/gperftools[._-]v?(\d+(?:\.\d+)+)["' >]}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "ebc68c4f401b6a77f8256a5ae84054803248b0e1ef1403f879893653ffd74cee" => :mojave
-    sha256 "cd47308eb2e44e527b749b392bebfa17613afacd202285e95954fa00590f44d7" => :high_sierra
-    sha256 "214a23363df0fe8d64260af6e86a891d3fb01452dbd2522f6c9451b21ab6e451" => :sierra
-    sha256 "a1f10be5627404a571fa448e7f3f15f522348f89f642e097ba04cd0c584d2b3b" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "a8711aa1a9496a1c801b10bcfc3572fc204be3af52f2455a0a3d9e1b2d924aae"
+    sha256 cellar: :any,                 big_sur:       "db13bfa856a699c5e74e95ee81722cc76b38bb9dcca1d10cebe2eed17888ff68"
+    sha256 cellar: :any,                 catalina:      "df9901c12be430101b403c8024a4dc5b5f5d0f718e4ace970f52bc68b17a3659"
+    sha256 cellar: :any,                 mojave:        "9976b82f86958d3ad6924d138d138d5bddbc2bcc6eb16ea44c4255ed9cb889b5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "35bdc71ea25b996acec0752c3dbb6a68b1f56529f577f08f1a32556893ce70ca"
   end
 
   head do
@@ -20,15 +27,33 @@ class Gperftools < Formula
     depends_on "libtool" => :build
   end
 
+  uses_from_macos "xz"
+
+  on_linux do
+    # libunwind is strongly recommended for Linux x86_64
+    # https://github.com/gperftools/gperftools/blob/master/INSTALL
+    depends_on "libunwind"
+  end
+
   def install
     # Fix "error: unknown type name 'mach_port_t'"
     ENV["SDKROOT"] = MacOS.sdk_path if MacOS.version == :sierra
 
-    ENV.append_to_cflags "-D_XOPEN_SOURCE"
+    on_macos do
+      ENV.append_to_cflags "-D_XOPEN_SOURCE"
+    end
 
     system "autoreconf", "-fiv" if build.head?
-    system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}"
+
+    args = [
+      "--disable-dependency-tracking",
+      "--prefix=#{prefix}",
+    ]
+    on_linux do
+      args << "--enable-libunwind"
+    end
+
+    system "./configure", *args
     system "make"
     system "make", "install"
   end

@@ -1,29 +1,35 @@
 class Minetest < Formula
   desc "Free, open source voxel game engine and game"
   homepage "https://www.minetest.net/"
+  license "LGPL-2.1-or-later"
+  revision 1
 
   stable do
-    url "https://github.com/minetest/minetest/archive/0.4.17.1.tar.gz"
-    sha256 "cd25d40c53f492325edabd2f6397250f40a61cb9fe4a1d4dd6eb030e0d1ceb59"
+    url "https://github.com/minetest/minetest/archive/5.4.0.tar.gz"
+    sha256 "6e9b299e156651be9bcf973a9232cff32215de31dfae5ea770a71d1757cab014"
 
     resource "minetest_game" do
-      url "https://github.com/minetest/minetest_game/archive/0.4.17.tar.gz"
-      sha256 "f0ab07cb47c1540b2016bf76a36e2eec28b0ea7827bf66fc5447e0c5e5d4495d"
+      url "https://github.com/minetest/minetest_game/archive/5.4.0.tar.gz"
+      sha256 "520d2056085ec11e8806cf5a8f928537797d27a86704770bf408c113ea9881cb"
     end
   end
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    sha256 "4da5f8bebc6588cdf99b23cd2646e91425e15e2c625b8516728bd6970ed2e25b" => :mojave
-    sha256 "7aa7a7e5a509efeb89b1ab0a897c250950ba117cc658c70c0892a3a4d4b882d5" => :high_sierra
-    sha256 "7c76e9b683a0205f116403f6571c7e7c7cbd40f7bc16951ef0c350512cfc017e" => :sierra
-    sha256 "ed87de74a782d339eee51f30e2d183eefd25a37e595df5f42157883afbeec133" => :el_capitan
+    sha256 cellar: :any, big_sur:  "fa39d78bcd7d5df96fabfba84e16564d0ae2950810cc30c3bf657ec7fc27ad37"
+    sha256               catalina: "f5c72cf858dfb63f981676ca03eab7c5b875107226adb179612d59b0e177992c"
+    sha256               mojave:   "5fc0d12bfbb4b9c6e9986a5ca403b0d3f0913ba0d17fb45c1ef1138c44247c42"
   end
 
   head do
     url "https://github.com/minetest/minetest.git"
 
     resource "minetest_game" do
-      url "https://github.com/minetest/minetest_game.git", :branch => "master"
+      url "https://github.com/minetest/minetest_game.git", branch: "master"
     end
   end
 
@@ -35,19 +41,14 @@ class Minetest < Formula
   depends_on "libogg"
   depends_on "libvorbis"
   depends_on "luajit"
-  depends_on :x11
 
   def install
     (buildpath/"games/minetest_game").install resource("minetest_game")
 
-    args = std_cmake_args - %w[-DCMAKE_BUILD_TYPE=None]
-    args << "-DCMAKE_BUILD_TYPE=Release" << "-DBUILD_CLIENT=1" << "-DBUILD_SERVER=0"
+    args = std_cmake_args
+    args << "-DBUILD_CLIENT=1" << "-DBUILD_SERVER=0"
     args << "-DENABLE_FREETYPE=1" << "-DCMAKE_EXE_LINKER_FLAGS='-L#{Formula["freetype"].opt_lib}'"
     args << "-DENABLE_GETTEXT=1" << "-DCUSTOM_GETTEXT_PATH=#{Formula["gettext"].opt_prefix}"
-
-    # -ffast-math compiler flag is an issue on Mac
-    # https://github.com/minetest/minetest/issues/4274
-    inreplace "src/CMakeLists.txt", "-ffast-math", ""
 
     system "cmake", ".", *args
     system "make", "package"
@@ -62,7 +63,11 @@ class Minetest < Formula
       to create those folders first).
 
       If you would like to start the Minetest server from a terminal, run
-      "/Applications/minetest.app/Contents/MacOS/minetest --server".
+      "#{prefix}/minetest.app/Contents/MacOS/minetest --server".
     EOS
+  end
+
+  test do
+    system "#{prefix}/minetest.app/Contents/MacOS/minetest", "--version"
   end
 end

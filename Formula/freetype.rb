@@ -1,19 +1,29 @@
 class Freetype < Formula
   desc "Software library to render fonts"
   homepage "https://www.freetype.org/"
-  url "https://downloads.sourceforge.net/project/freetype/freetype2/2.9.1/freetype-2.9.1.tar.bz2"
-  mirror "https://download.savannah.gnu.org/releases/freetype/freetype-2.9.1.tar.bz2"
-  sha256 "db8d87ea720ea9d5edc5388fc7a0497bb11ba9fe972245e0f7f4c7e8b1e1e84d"
+  url "https://downloads.sourceforge.net/project/freetype/freetype2/2.10.4/freetype-2.10.4.tar.xz"
+  mirror "https://download.savannah.gnu.org/releases/freetype/freetype-2.10.4.tar.xz"
+  sha256 "86a854d8905b19698bbc8f23b860bc104246ce4854dcea8e3b0fb21284f75784"
+  license "FTL"
+
+  livecheck do
+    url :stable
+    regex(/url=.*?freetype[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "64d650278af1f74d43165f3943287b42109710e672d2756abaa492f0cc4d52b7" => :mojave
-    sha256 "444ef60a543aca6ca26223f46182c914e26d2908f33fca41cb54bcf9a81084a3" => :high_sierra
-    sha256 "4afc7a144563abc6f4e58ef45aa57da598051290e7568afbff028585717b30fa" => :sierra
-    sha256 "8f8fbbe028986cebd4a49c399e4861fb85cb6173298ba957172cb1ed915682ab" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "0d3385d0d11a5d0198c09bfb77ba854766a3345067023d2fdc9b486ead52c392"
+    sha256 cellar: :any,                 big_sur:       "01b464b98584ba5777d8fc4605121c7a46e713a2f58d729197b82afef1b5f2b9"
+    sha256 cellar: :any,                 catalina:      "b4e7683ae202c49280024faac4ac7437e690cb5dd83edb806fac368bc2b7de35"
+    sha256 cellar: :any,                 mojave:        "81c65539bcc98d171fdff7a6e80cdddd7dc4bc9ed34e739c4361ab66f3391991"
+    sha256 cellar: :any,                 high_sierra:   "666892404720bcd855d866976e1cb9beecc3151ca595c3dd115a0daa6bb6c7e1"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f34a59b344d9f0334e05b6ddb5b8e7420c3922a6f42daf770614622bba93dc4a"
   end
 
   depends_on "libpng"
+
+  uses_from_macos "bzip2"
+  uses_from_macos "zlib"
 
   def install
     system "./configure", "--prefix=#{prefix}",

@@ -1,10 +1,20 @@
 class Moco < Formula
   desc "Stub server with Maven, Gradle, Scala, and shell integration"
   homepage "https://github.com/dreamhead/moco"
-  url "https://search.maven.org/remotecontent?filepath=com/github/dreamhead/moco-runner/0.12.0/moco-runner-0.12.0-standalone.jar"
-  sha256 "436ccc154d0386bbb8924383cae2cf541b3eebdf23ad1709eae887632f39b8f5"
+  url "https://search.maven.org/remotecontent?filepath=com/github/dreamhead/moco-runner/1.2.0/moco-runner-1.2.0-standalone.jar"
+  sha256 "7d5bcbed4cf39a960fb523d8b4c073579c3cdca1b3971901be751b7afc9f37fe"
+  license "MIT"
 
-  bottle :unneeded
+  livecheck do
+    url "https://search.maven.org/remotecontent?filepath=com/github/dreamhead/moco-runner/"
+    regex(%r{href=.*?v?(\d+(?:\.\d+)+)/?["' >]}i)
+  end
+
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "acd799b20fe83f3183af8c10c39cb7b78e43f0366c1137006f869649577f1765"
+  end
+
+  depends_on "openjdk"
 
   def install
     libexec.install "moco-runner-#{version}-standalone.jar"
@@ -12,8 +22,6 @@ class Moco < Formula
   end
 
   test do
-    require "net/http"
-
     (testpath/"config.json").write <<~EOS
       [
         {
@@ -25,16 +33,17 @@ class Moco < Formula
       ]
     EOS
 
-    port = 12306
-    thread = Thread.new do
-      system bin/"moco", "http", "-p", port, "-c", testpath/"config.json"
+    port = free_port
+    begin
+      pid = fork do
+        exec "#{bin}/moco http -p #{port} -c #{testpath}/config.json"
+      end
+      sleep 10
+
+      assert_match "Hello, Moco", shell_output("curl -s http://127.0.0.1:#{port}")
+    ensure
+      Process.kill "SIGTERM", pid
+      Process.wait pid
     end
-
-    # Wait for Moco to start.
-    sleep 5
-
-    response = Net::HTTP.get URI "http://localhost:#{port}"
-    assert_equal "Hello, Moco", response
-    thread.exit
   end
 end

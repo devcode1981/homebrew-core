@@ -1,78 +1,51 @@
 class FfmpegAT28 < Formula
   desc "Play, record, convert, and stream audio and video"
   homepage "https://ffmpeg.org/"
-  url "https://ffmpeg.org/releases/ffmpeg-2.8.15.tar.bz2"
-  sha256 "35647f6c1f6d4a1719bc20b76bf4c26e4ccd665f46b5676c0e91c5a04622ee21"
-  revision 1
+  url "https://ffmpeg.org/releases/ffmpeg-2.8.17.tar.xz"
+  sha256 "d0734fec613fe12bee0b5a84f917779b854c1ede7882793f618490e6bbf0c148"
+  # None of these parts are used by default, you have to explicitly pass `--enable-gpl`
+  # to configure to activate them. In this case, FFmpeg's license changes to GPL v2+.
+  license "GPL-2.0-or-later"
+  revision 6
+
+  livecheck do
+    url "https://ffmpeg.org/download.html"
+    regex(/href=.*?ffmpeg[._-]v?(2\.8(?:\.\d+)*)\.t/i)
+  end
 
   bottle do
-    sha256 "cb15250afcb6770003f52fe503513bc54ad513cc96aaa1d5a4591ea2875c3652" => :mojave
-    sha256 "18a2e5804df50bb5a359be87a6e9144b1e449de9a95e580a7d4ac1a654ae8f30" => :high_sierra
-    sha256 "0b7853a335b8f0a91e5b51cb19c8acc76838c5c796b44d181ba93aca97606482" => :sierra
+    sha256 arm64_big_sur: "be1cf249c7f61941ef9b6c7c904d297df097f87d1abbd83e230204f2bf3285b3"
+    sha256 big_sur:       "0a534f1dfa9883773089558f654f2c90a7f128d5f5787c12df27bb1199faa0d7"
+    sha256 catalina:      "15d64cda816e5112320e847ed0d5379fd241d7a15cb69e3ed5fc8e0f7303f5c4"
+    sha256 mojave:        "55c1fffb7b5dff17aecbd10eec6d509290edae37dd5898ef46bd3bf3abcaa782"
   end
 
   keg_only :versioned_formula
-
-  option "with-rtmpdump", "Enable RTMP protocol"
-  option "with-libass", "Enable ASS/SSA subtitle format"
-  option "with-opencore-amr", "Enable Opencore AMR NR/WB audio format"
-  option "with-openjpeg", "Enable JPEG 2000 image format"
-  option "with-openssl", "Enable SSL support"
-  option "with-libssh", "Enable SFTP protocol via libssh"
-  option "with-schroedinger", "Enable Dirac video format"
-  option "with-fdk-aac", "Enable the Fraunhofer FDK AAC library"
-  option "with-libvidstab", "Enable vid.stab support for video stabilization"
-  option "with-libsoxr", "Enable the soxr resample library"
-  option "with-webp", "Enable using libwebp to encode WEBP images"
-  option "with-zeromq", "Enable using libzeromq to receive commands sent through a libzeromq client"
-  option "with-dcadec", "Enable dcadec library"
 
   depends_on "pkg-config" => :build
   depends_on "texi2html" => :build
   depends_on "yasm" => :build
 
+  depends_on "fontconfig"
+  depends_on "freetype"
+  depends_on "frei0r"
   depends_on "lame"
+  depends_on "libass"
   depends_on "libvo-aacenc"
   depends_on "libvorbis"
   depends_on "libvpx"
+  depends_on "opencore-amr"
   depends_on "opus"
+  depends_on "rtmpdump"
   depends_on "sdl"
   depends_on "snappy"
+  depends_on "speex"
   depends_on "theora"
   depends_on "x264"
   depends_on "x265"
   depends_on "xvid"
 
-  depends_on "dcadec" => :optional
-  depends_on "faac" => :optional
-  depends_on "fdk-aac" => :optional
-  depends_on "fontconfig" => :optional
-  depends_on "freetype" => :optional
-  depends_on "frei0r" => :optional
-  depends_on "libass" => :optional
-  depends_on "libbluray" => :optional
-  depends_on "libbs2b" => :optional
-  depends_on "libcaca" => :optional
-  depends_on "libquvi" => :optional
-  depends_on "libsoxr" => :optional
-  depends_on "libssh" => :optional
-  depends_on "libvidstab" => :optional
-  depends_on "opencore-amr" => :optional
-  depends_on "openjpeg" => :optional
-  depends_on "openssl" => :optional
-  depends_on "rtmpdump" => :optional
-  depends_on "schroedinger" => :optional
-  depends_on "speex" => :optional
-  depends_on "webp" => :optional
-  depends_on "zeromq" => :optional
-
   def install
-    # Fixes "dyld: lazy symbol binding failed: Symbol not found: _clock_gettime"
-    if MacOS.version == "10.11" && MacOS::Xcode.installed? && MacOS::Xcode.version >= "8.0"
-      inreplace %w[libavdevice/v4l2.c libavutil/time.c], "HAVE_CLOCK_GETTIME",
-                                                         "UNDEFINED_GIBBERISH"
-    end
-
     args = %W[
       --prefix=#{prefix}
       --enable-shared
@@ -95,65 +68,35 @@ class FfmpegAT28 < Formula
       --enable-libx264
       --enable-libx265
       --enable-libxvid
+      --enable-libfontconfig
+      --enable-libfreetype
+      --enable-frei0r
+      --enable-libass
+      --enable-libopencore-amrnb
+      --enable-libopencore-amrwb
+      --enable-librtmp
+      --enable-libspeex
+      --enable-opencl
+      --disable-indev=jack
+      --disable-libxcb
+      --disable-xlib
     ]
-
-    args << "--enable-opencl" if MacOS.version > :lion
-    args << "--enable-libfontconfig" if build.with? "fontconfig"
-    args << "--enable-libfreetype" if build.with? "freetype"
-    args << "--enable-librtmp" if build.with? "rtmpdump"
-    args << "--enable-libopencore-amrnb" << "--enable-libopencore-amrwb" if build.with? "opencore-amr"
-    args << "--enable-libfaac" if build.with? "faac"
-    args << "--enable-libass" if build.with? "libass"
-    args << "--enable-libssh" if build.with? "libssh"
-    args << "--enable-libspeex" if build.with? "speex"
-    args << "--enable-libschroedinger" if build.with? "schroedinger"
-    args << "--enable-libfdk-aac" if build.with? "fdk-aac"
-    args << "--enable-openssl" if build.with? "openssl"
-    args << "--enable-frei0r" if build.with? "frei0r"
-    args << "--enable-libcaca" if build.with? "libcaca"
-    args << "--enable-libsoxr" if build.with? "libsoxr"
-    args << "--enable-libquvi" if build.with? "libquvi"
-    args << "--enable-libvidstab" if build.with? "libvidstab"
-    args << "--enable-libwebp" if build.with? "webp"
-    args << "--enable-libzmq" if build.with? "zeromq"
-    args << "--enable-libbs2b" if build.with? "libbs2b"
-    args << "--enable-libdcadec" if build.with? "dcadec"
-
-    if build.with? "openjpeg"
-      args << "--enable-libopenjpeg"
-      args << "--disable-decoder=jpeg2000"
-      args << "--extra-cflags=" + `pkg-config --cflags libopenjpeg`.chomp
-    end
-
-    # These librares are GPL-incompatible, and require ffmpeg be built with
-    # the "--enable-nonfree" flag, which produces unredistributable libraries
-    if %w[faac fdk-aac openssl].any? { |f| build.with? f }
-      args << "--enable-nonfree"
-    end
 
     # A bug in a dispatch header on 10.10, included via CoreFoundation,
     # prevents GCC from building VDA support. GCC has no problems on
     # 10.9 and earlier.
     # See: https://github.com/Homebrew/homebrew/issues/33741
-    if MacOS.version < :yosemite || ENV.compiler == :clang
-      args << "--enable-vda"
+    args << if ENV.compiler == :clang
+      "--enable-vda"
     else
-      args << "--disable-vda"
+      "--disable-vda"
     end
-
-    # For 32-bit compilation under gcc 4.2, see:
-    # https://trac.macports.org/ticket/20938#comment:22
-    ENV.append_to_cflags "-mdynamic-no-pic" if Hardware::CPU.is_32_bit? && Hardware::CPU.intel? && ENV.compiler == :clang
 
     system "./configure", *args
 
-    if MacOS.prefer_64_bit?
-      inreplace "config.mak" do |s|
-        shflags = s.get_make_var "SHFLAGS"
-        if shflags.gsub!(" -Wl,-read_only_relocs,suppress", "")
-          s.change_make_var! "SHFLAGS", shflags
-        end
-      end
+    inreplace "config.mak" do |s|
+      shflags = s.get_make_var "SHFLAGS"
+      s.change_make_var! "SHFLAGS", shflags if shflags.gsub!(" -Wl,-read_only_relocs,suppress", "")
     end
 
     system "make", "install"
@@ -165,8 +108,8 @@ class FfmpegAT28 < Formula
 
   test do
     # Create an example mp4 file
-    system "#{bin}/ffmpeg", "-y", "-filter_complex",
-        "testsrc=rate=1:duration=1", "#{testpath}/video.mp4"
-    assert_predicate testpath/"video.mp4", :exist?
+    mp4out = testpath/"video.mp4"
+    system bin/"ffmpeg", "-y", "-filter_complex", "testsrc=rate=1:duration=1", mp4out
+    assert_predicate mp4out, :exist?
   end
 end

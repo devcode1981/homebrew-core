@@ -1,52 +1,38 @@
 class Derby < Formula
   desc "Apache Derby is an embedded relational database running on JVM"
   homepage "https://db.apache.org/derby/"
-  url "https://www.apache.org/dyn/closer.cgi?path=db/derby/db-derby-10.14.2.0/db-derby-10.14.2.0-bin.tar.gz"
-  sha256 "980fb0534c38edf4a529a13fb4a12b53d32054827b57b6c5f0307d10f17d25a8"
+  url "https://www.apache.org/dyn/closer.lua?path=db/derby/db-derby-10.15.2.0/db-derby-10.15.2.0-bin.tar.gz"
+  mirror "https://archive.apache.org/dist/db/derby/db-derby-10.15.2.0/db-derby-10.15.2.0-bin.tar.gz"
+  sha256 "ac51246a2d9eef70cecd6562075b30aa9953f622cbd2cd3551bc3d239dc6f02a"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "8d519c0911344bd9a2fe8848778602f606a6e108cecdb41c53b5193b02ca1d8f"
+  end
 
-  depends_on :java => "1.8+"
+  depends_on "openjdk"
 
   def install
     rm_rf Dir["bin/*.bat"]
     libexec.install %w[lib test index.html LICENSE NOTICE RELEASE-NOTES.html
                        KEYS docs javadoc demo]
     bin.install Dir["bin/*"]
-    bin.env_script_all_files(libexec/"bin",
-      Language::Java.overridable_java_home_env.merge(:DERBY_INSTALL => libexec.to_s,
-                                                     :DERBY_HOME    => libexec.to_s))
+    bin.env_script_all_files libexec/"bin",
+                             JAVA_HOME:     Formula["openjdk"].opt_prefix,
+                             DERBY_INSTALL: libexec,
+                             DERBY_HOME:    libexec
   end
 
   def post_install
     (var/"derby").mkpath
   end
 
-  plist_options :manual => "DERBY_OPTS=-Dsystem.derby.home=#{HOMEBREW_PREFIX}/var/derby #{HOMEBREW_PREFIX}/bin/startNetworkServer"
+  plist_options manual: "DERBY_OPTS=-Dsystem.derby.home=#{HOMEBREW_PREFIX}/var/derby #{HOMEBREW_PREFIX}/bin/startNetworkServer"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>KeepAlive</key>
-      <true/>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/NetworkServerControl</string>
-        <string>-h</string>
-        <string>127.0.0.1</string>
-        <string>start</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>WorkingDirectory</key>
-      <string>#{var}/derby</string>
-    </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_bin/"NetworkServerControl", "-h", "127.0.0.1", "start"]
+    keep_alive true
+    working_dir var/"derby"
   end
 
   test do

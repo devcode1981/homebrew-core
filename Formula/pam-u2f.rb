@@ -1,16 +1,32 @@
 class PamU2f < Formula
   desc "Provides an easy way to use U2F-compliant authenticators with PAM"
   homepage "https://developers.yubico.com/pam-u2f/"
-  url "https://developers.yubico.com/pam-u2f/Releases/pam_u2f-1.0.7.tar.gz"
-  sha256 "034aad8e29b159443dd6c1b7740006addc83d0659304fc4b0b4fb592f768e7cf"
+  license "BSD-2-Clause"
   head "https://github.com/Yubico/pam-u2f.git"
 
+  # remove stable block on next release with merged patch
+  stable do
+    url "https://developers.yubico.com/pam-u2f/Releases/pam_u2f-1.1.1.tar.gz"
+    sha256 "b7d62340c4f49e19cca93a0d0f398e48befd3eea8f1d70cebb7f8b71f3bce38a"
+
+    # fix clang failure: `ld: unknown option: --wrap=strdup`
+    # remove in the next release
+    patch do
+      url "https://github.com/Yubico/pam-u2f/commit/5e5d600e557decbfc8c7b59b2dc165591bf7f1e5.patch?full_index=1"
+      sha256 "50a72cc10981713ea57fe2bacb547444d5c027cb79e9d58bb41e3616dd661737"
+    end
+  end
+
+  livecheck do
+    url "https://developers.yubico.com/pam-u2f/Releases/"
+    regex(/href=.*?pam_u2f[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "ed80bbd945c357cf4cd184fb97a742f975cbd49f10eee7ab78bea19a13dd0d63" => :mojave
-    sha256 "aeea6df4ee9fd8a1625a15aa5a1d1a09429cf4b48c697e0a423dd9874c4b868e" => :high_sierra
-    sha256 "873567775f9cf3a1d87c8dcc93d7a5cf1d41e536595b8b2e2b3bca12eed1e595" => :sierra
-    sha256 "10730971bc1100e4288204cec75f3115235e0cbbaef19f8acad1ddf9a4aeb0d2" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "afbea7ee93de559b1016b5a128d84b86c9d65cd8455a8238426959072839ae17"
+    sha256 cellar: :any, big_sur:       "6ac33b7d279a3362d62f9cb4573f3e32ba1d35569af5b555076bc273d077b0fa"
+    sha256 cellar: :any, catalina:      "13c6da51067328a93496e0c652f545f7f5a3e5aabf20129eff6c19ae66a841df"
+    sha256 cellar: :any, mojave:        "cbe60bcdf75fae3dc7c55f05cfcf19096b3099fe881e36d564b07526edfcea3b"
   end
 
   depends_on "asciidoc" => :build
@@ -18,8 +34,7 @@ class PamU2f < Formula
   depends_on "automake" => :build
   depends_on "libtool" => :build
   depends_on "pkg-config" => :build
-  depends_on "libu2f-host"
-  depends_on "libu2f-server"
+  depends_on "libfido2"
 
   def install
     system "autoreconf", "--install"
@@ -29,14 +44,15 @@ class PamU2f < Formula
     system "make", "install"
   end
 
-  def caveats; <<~EOS
-    To use a U2F key for PAM authentication, specify the full path to the
-    module (#{opt_lib}/pam/pam_u2f.so) in a PAM
-    configuration. You can find all PAM configurations in /etc/pam.d.
+  def caveats
+    <<~EOS
+      To use a U2F key for PAM authentication, specify the full path to the
+      module (#{opt_lib}/pam/pam_u2f.so) in a PAM
+      configuration. You can find all PAM configurations in /etc/pam.d.
 
-    For further installation instructions, please visit
-    https://developers.yubico.com/pam-u2f/#installation.
-  EOS
+      For further installation instructions, please visit
+      https://developers.yubico.com/pam-u2f/#installation.
+    EOS
   end
 
   test do

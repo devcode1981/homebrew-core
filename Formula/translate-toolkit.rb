@@ -3,32 +3,27 @@ class TranslateToolkit < Formula
 
   desc "Toolkit for localization engineers"
   homepage "https://toolkit.translatehouse.org/"
-  url "https://github.com/translate/translate/archive/2.3.1.tar.gz"
-  sha256 "0b2d79f0023ce545c6240829624ce1e1ce54ea7bc7913428880345ff423fd999"
+  url "https://files.pythonhosted.org/packages/22/e2/06907247a5af63c8f803b688daedf7fd488067eead833db66660ac8dfd16/translate-toolkit-3.3.6.tar.gz"
+  sha256 "abc6815ac563a013ba5dcbc245bddb6b2000f8de112999a85ed087a989de1860"
+  license "GPL-2.0-or-later"
   head "https://github.com/translate/translate.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "655232d6bfccf14a3be633b36f89f3cc29bc804c788436124c8c9e11214d5b75" => :mojave
-    sha256 "c54103dd3a9194ddaa950425a5788fee88980eb108802f4bf84c8f8ef17b6d20" => :high_sierra
-    sha256 "f03d495e61d79fae702eaa31e1043b23ba00ed9845438de6705b2cc3a2336c92" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a439b83d140d4be311b56ee1cbd85a3371d1da9b500b4fc8e18bf00416828537"
+    sha256 cellar: :any_skip_relocation, big_sur:       "e32e7e1132860ff63ce9ff7f8a5c440292abf81bcf0a64053a550da975ad90ee"
+    sha256 cellar: :any_skip_relocation, catalina:      "ff423a7b0fa3804ff469a8313dc01ace1d7677169135ab03c7aa8dcdba66d184"
+    sha256 cellar: :any_skip_relocation, mojave:        "2fa93ac32fca77071ba94be9700af857fce115df8743611c41605a5ea8e27e74"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "9f2b1c8e2e06d2891945ac24d657f05093ffae4dfe9049234d35b9951decbd71"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
-  resource "argparse" do
-    url "https://files.pythonhosted.org/packages/18/dd/e617cfc3f6210ae183374cd9f6a26b20514bbb5a792af97949c5aacddf0f/argparse-1.4.0.tar.gz"
-    sha256 "62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4"
-  end
+  uses_from_macos "libxml2"
+  uses_from_macos "libxslt"
 
-  resource "diff-match-patch" do
-    url "https://files.pythonhosted.org/packages/22/82/46eaeab04805b4fac17630b59f30c4f2c8860988bcefd730ff4f1992908b/diff-match-patch-20121119.tar.gz"
-    sha256 "9dba5611fbf27893347349fd51cc1911cb403682a7163373adacc565d11e2e4c"
-  end
-
-  resource "six" do
-    url "https://files.pythonhosted.org/packages/16/d8/bc6316cf98419719bd59c91742194c111b6f2e85abac88e496adefaf7afe/six-1.11.0.tar.gz"
-    sha256 "70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9"
+  resource "lxml" do
+    url "https://files.pythonhosted.org/packages/e5/21/a2e4517e3d216f0051687eea3d3317557bde68736f038a3b105ac3809247/lxml-4.6.3.tar.gz"
+    sha256 "39b78571b3b30645ac77b95f7c69d1bffc4cf8c3b157c435a34da72e78c82468"
   end
 
   def install
@@ -37,5 +32,6 @@ class TranslateToolkit < Formula
 
   test do
     system bin/"pretranslate", "-h"
+    system bin/"podebug", "-h"
   end
 end

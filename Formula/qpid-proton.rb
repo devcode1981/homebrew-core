@@ -1,27 +1,32 @@
 class QpidProton < Formula
   desc "High-performance, lightweight AMQP 1.0 messaging library"
   homepage "https://qpid.apache.org/proton/"
-  url "https://www.apache.org/dyn/closer.lua?path=qpid/proton/0.24.0/qpid-proton-0.24.0.tar.gz"
-  sha256 "384aba2561388f1fa592809a058f5cc93579beab398721182d58df6469b1ae25"
-  head "https://git.apache.org/qpid-proton.git"
+  url "https://www.apache.org/dyn/closer.lua?path=qpid/proton/0.35.0/qpid-proton-0.35.0.tar.gz"
+  mirror "https://archive.apache.org/dist/qpid/proton/0.35.0/qpid-proton-0.35.0.tar.gz"
+  sha256 "a2d21cd9612dd79332ca18b794e372256e9b8eb12195cd8ffcb69043e32b5926"
+  license "Apache-2.0"
+  head "https://gitbox.apache.org/repos/asf/qpid-proton.git"
 
   bottle do
-    cellar :any
-    sha256 "832fd7db6ac604c47d66b35d4171eb26d523b7916ac10345da3355477cc191e5" => :mojave
-    sha256 "c6f6a73a0277433a7241ffd8f13de0a7ddf2b6a7e894169026db2dbdf1665c66" => :high_sierra
-    sha256 "70f55ed22438eb4beec799b70723f104eb9bb9e53988b54e2b0bf69c344991b3" => :sierra
-    sha256 "f73b3ecdfcdc3743181e7daae8e0f4fb00a47a07e1960a3836c9d70c71bf7499" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "5771a4a81c0ddaae9e6c8f1620c59c250d96af2eab7891989afa56117d2458d0"
+    sha256 cellar: :any, big_sur:       "7a3a7e1b0e3345e8a818790d1998f0cd23e8b35a4dfeec7e7ba351bd1074949d"
+    sha256 cellar: :any, catalina:      "7a5eb027bc0c1a91fbadc053db6a6aec8d2bda10026fe9e77b0bdbee072e9cdd"
+    sha256 cellar: :any, mojave:        "e14be728833288e29ac4b153e1b99d398a9ea0cdef1aef7665dc62c358892ea9"
   end
 
   depends_on "cmake" => :build
   depends_on "libuv"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
 
   def install
-    system "cmake", ".", "-DBUILD_BINDINGS=",
+    mkdir "build" do
+      system "cmake", "..", "-DBUILD_BINDINGS=",
                          "-DLIB_INSTALL_DIR=#{lib}",
+                         "-DBUILD_TESTING=OFF",
+                         "-Dproactor=libuv",
                          *std_cmake_args
-    system "make", "install"
+      system "make", "install"
+    end
   end
 
   test do

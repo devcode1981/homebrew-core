@@ -1,34 +1,55 @@
 class Bento4 < Formula
   desc "Full-featured MP4 format and MPEG DASH library and tools"
   homepage "https://www.bento4.com/"
-  url "https://github.com/axiomatic-systems/Bento4/archive/v1.5.1-624.tar.gz"
-  version "1.5.1-624"
-  sha256 "eda725298e77df83e51793508a3a2640eabdfda1abc8aa841eca69983de83a4c"
-  revision 2
+  url "https://www.bok.net/Bento4/source/Bento4-SRC-1-6-0-638.zip"
+  version "1.6.0-638"
+  sha256 "e9cb2d60ca681663c071e6552c5c570ba45fde558654d8b40f0d5e627d867948"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "c9300512cdb5392d0f714a4c5bb35842e7a560ad8772c75dbc4c31d60160ced4" => :mojave
-    sha256 "2936c7c89761533861eb2ce35d9745f4ff2b762a670430f6c6b9e8a5cb8f44c8" => :high_sierra
-    sha256 "698127156bc77e4e5efcea4a1693939aed88f507344a4b580a2ca13c930df8e3" => :sierra
+  livecheck do
+    url "https://www.bok.net/Bento4/source/"
+    regex(/href=.*?Bento4-SRC[._-]v?(\d+(?:[.-]\d+)+)\.zip/i)
   end
 
-  depends_on :xcode => :build
-  depends_on "python"
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "6aca82528cbf94a1ef17a0d70030a8d1b283c952123562d903bcde469c0ed1c9"
+    sha256 cellar: :any_skip_relocation, big_sur:       "bcd39d888aaf6b72f83e5f6235744ae11acb9e1330ff0766310fd2b1a9efee3d"
+    sha256 cellar: :any_skip_relocation, catalina:      "bef6df08fd97cb7824c49fd890ae11184fd90fadb789aa80cd699a0e0f0a91b1"
+    sha256 cellar: :any_skip_relocation, mojave:        "7c1b3a269b3fbeb4768896aefe7a224fc1b7ceb4072ad60f752e3ac4e98031cb"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6c8ed04f699e29cb193e4f035d4bb876bf1f8eb9b668689d87bfd0da5b925ebd"
+  end
 
-  conflicts_with "gpac", :because => "both install `mp42ts` binaries"
-  conflicts_with "mp4v2",
-    :because => "both install `mp4extract` and `mp4info` binaries"
+  depends_on xcode: :build
+  depends_on "python@3.9"
+
+  on_linux do
+    depends_on "cmake" => :build
+  end
+
+  conflicts_with "gpac", because: "both install `mp42ts` binaries"
+  conflicts_with "mp4v2", because: "both install `mp4extract` and `mp4info` binaries"
 
   def install
-    cd "Build/Targets/universal-apple-macosx" do
-      xcodebuild "-target", "All", "-configuration", "Release", "SYMROOT=build"
-      programs = Dir["build/Release/*"].select do |f|
-        next if f.end_with? ".dylib"
-        next if f.end_with? "Test"
-        File.file?(f) && File.executable?(f)
+    on_macos do
+      cd "Build/Targets/universal-apple-macosx" do
+        xcodebuild "-target", "All", "-configuration", "Release", "SYMROOT=build"
+        programs = Dir["build/Release/*"].select do |f|
+          next if f.end_with? ".dylib"
+          next if f.end_with? "Test"
+
+          File.file?(f) && File.executable?(f)
+        end
+        bin.install programs
       end
-      bin.install programs
+    end
+    on_linux do
+      mkdir "cmakebuild" do
+        system "cmake", "..", *std_cmake_args
+        system "make"
+        programs = Dir["./*"].select do |f|
+          File.file?(f) && File.executable?(f)
+        end
+        bin.install programs
+      end
     end
 
     rm Dir["Source/Python/wrappers/*.bat"]

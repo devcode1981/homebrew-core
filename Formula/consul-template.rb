@@ -2,37 +2,30 @@ class ConsulTemplate < Formula
   desc "Generic template rendering and notifications with Consul"
   homepage "https://github.com/hashicorp/consul-template"
   url "https://github.com/hashicorp/consul-template.git",
-      :tag      => "v0.19.5",
-      :revision => "f8c8205caf458dfd0ecab69d029ab112803aa587"
+      tag:      "v0.26.0",
+      revision: "3b7f233ac5e22ac50bbebaf522bfff7516f85aa2"
+  license "MPL-2.0"
   head "https://github.com/hashicorp/consul-template.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "921d8401cb88f770060bbe6f59eb5a0499764b8539b42682cddaaf8db526ecc2" => :mojave
-    sha256 "859b8ac6cb1aaff1d1b7be4b41d0eef356d86634eb76a2601d3cce1626d03bb4" => :high_sierra
-    sha256 "4bc3abb371cf2a3f6243800d7b9325a0479639d488a20911eff3ff11a68f2a15" => :sierra
-    sha256 "dec98da73d913cf2a2d4364826427eb42dab3638d09ac198e7f9e449082aa8ad" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "56b59914fc661788361c781d81bbebadf5c271869ef2cf1a2b07a55aae2507d0"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b0e75b93a96a65db4c740c4f9cb182a4f9633453b19642596f0166e758fcf0ac"
+    sha256 cellar: :any_skip_relocation, catalina:      "9b9b74bf2862b9da6fbe3b09800d035ea6cb02a4a955a20e61d4263b6bce97b9"
+    sha256 cellar: :any_skip_relocation, mojave:        "c53892e3727810906a27b366a8b6f25faa5fae481289027e156767f5ab770878"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "44c40971f97814d0a432861c9630260b4bf40790f8505032cb08f41e5121a4ee"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    arch = MacOS.prefer_64_bit? ? "amd64" : "386"
-    ENV["XC_OS"] = "darwin"
-    ENV["XC_ARCH"] = arch
-    dir = buildpath/"src/github.com/hashicorp/consul-template"
-    dir.install buildpath.children - [buildpath/".brew_home"]
-
-    cd dir do
-      project = "github.com/hashicorp/consul-template"
-      commit = Utils.popen_read("git rev-parse --short HEAD").chomp
-      ldflags = ["-X #{project}/version.Name=consul-template",
-                 "-X #{project}/version.GitCommit=#{commit}"]
-      system "go", "build", "-o", bin/"consul-template", "-ldflags",
-             ldflags.join(" ")
-      prefix.install_metafiles
-    end
+    project = "github.com/hashicorp/consul-template"
+    ldflags = %W[
+      -s -w
+      -X #{project}/version.Name=consul-template
+      -X #{project}/version.GitCommit=#{Utils.git_short_head}
+    ]
+    system "go", "build", "-ldflags", ldflags.join(" "), *std_go_args
+    prefix.install_metafiles
   end
 
   test do

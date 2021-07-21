@@ -1,81 +1,78 @@
 class Mkvtoolnix < Formula
   desc "Matroska media files manipulation tools"
-  homepage "https://www.bunkus.org/videotools/mkvtoolnix/"
-  url "https://mkvtoolnix.download/sources/mkvtoolnix-28.2.0.tar.xz"
-  sha256 "aa54b39790e619b2cfdefdd083c735503834eb05c665cd85f9b5a8383bcc5843"
+  homepage "https://mkvtoolnix.download/"
+  url "https://mkvtoolnix.download/sources/mkvtoolnix-59.0.0.tar.xz"
+  sha256 "e92e6af241a34d2339c1909b3fc57acab8e6e94d51fee8c287975bc63cfc8453"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url "https://mkvtoolnix.download/sources/"
+    regex(/href=.*?mkvtoolnix[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "867c24499ef7b380be139c5dae287548808892469479738d825348f582248185" => :mojave
-    sha256 "9d8c46126e6643a5f15400dd7988d1b881a9471fa4f705d58f6b608ccba8d36c" => :high_sierra
-    sha256 "1fba15cc9878269d10c4f2a529a5840ba2388c2ff7d39b64e67401b2f7ba454e" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "32962fb1d4e43d5fd1d49dbc4cf28d9522ce697b146bdb0b3f5a75488905584c"
+    sha256 cellar: :any, big_sur:       "6b62d6f86f1b4fc53656c677b6620f3d84aff2932821a314f18a0b9d792b6a6d"
+    sha256 cellar: :any, catalina:      "935d8f626a7342072cc3fa711fa7f4310691ba0c35de67f7a7499b1c59d74123"
   end
 
   head do
-    url "https://gitlab.com/mbunkus/mkvtoolnix.git"
+    url "https://gitlab.com/mbunkus/mkvtoolnix.git", branch: "main"
     depends_on "autoconf" => :build
     depends_on "automake" => :build
     depends_on "libtool" => :build
   end
 
-  option "with-qt", "Build with Qt GUI"
-
-  deprecated_option "with-qt5" => "with-qt"
-
   depends_on "docbook-xsl" => :build
   depends_on "pkg-config" => :build
-  depends_on "pugixml" => :build
-  depends_on "ruby" => :build if MacOS.version <= :mountain_lion
   depends_on "boost"
   depends_on "flac"
+  depends_on "fmt"
+  depends_on "gettext"
+  depends_on "gmp"
   depends_on "libebml"
-  depends_on "libmagic"
   depends_on "libmatroska"
   depends_on "libogg"
   depends_on "libvorbis"
-  depends_on "gettext" => :optional
-  depends_on "qt" => :optional
-  depends_on "cmark" if build.with? "qt"
+  # https://mkvtoolnix.download/downloads.html#macosx
+  depends_on macos: :catalina # C++17
+  depends_on "nlohmann-json"
+  depends_on "pugixml"
+  # TODO: update to "qt" in version > 59.0.0
+  depends_on "qt@5"
+  depends_on "utf8cpp"
 
-  needs :cxx11
+  uses_from_macos "libxslt" => :build
+  uses_from_macos "ruby" => :build
+
+  on_linux do
+    depends_on "gcc" => :build
+  end
+
+  fails_with gcc: "5"
 
   def install
     ENV.cxx11
 
-    features = %w[flac libmagic libogg libvorbis libebml libmatroska]
-
+    features = %w[flac gmp libebml libmatroska libogg libvorbis]
     extra_includes = ""
     extra_libs = ""
     features.each do |feature|
       extra_includes << "#{Formula[feature].opt_include};"
       extra_libs << "#{Formula[feature].opt_lib};"
     end
+    extra_includes << "#{Formula["utf8cpp"].opt_include}/utf8cpp;"
     extra_includes.chop!
     extra_libs.chop!
 
-    args = %W[
-      --disable-debug
-      --prefix=#{prefix}
-      --with-boost=#{Formula["boost"].opt_prefix}
-      --with-docbook-xsl-root=#{Formula["docbook-xsl"].opt_prefix}/docbook-xsl
-      --with-extra-includes=#{extra_includes}
-      --with-extra-libs=#{extra_libs}
-    ]
-
-    if build.with?("qt")
-      qt = Formula["qt"]
-
-      args << "--with-moc=#{qt.opt_bin}/moc"
-      args << "--with-uic=#{qt.opt_bin}/uic"
-      args << "--with-rcc=#{qt.opt_bin}/rcc"
-      args << "--enable-qt"
-    else
-      args << "--disable-qt"
-    end
-
     system "./autogen.sh" if build.head?
-
-    system "./configure", *args
-
+    system "./configure", "--disable-debug",
+                          "--prefix=#{prefix}",
+                          "--with-boost=#{Formula["boost"].opt_prefix}",
+                          "--with-docbook-xsl-root=#{Formula["docbook-xsl"].opt_prefix}/docbook-xsl",
+                          "--with-extra-includes=#{extra_includes}",
+                          "--with-extra-libs=#{extra_libs}",
+                          "--disable-gui"
     system "rake", "-j#{ENV.make_jobs}"
     system "rake", "install"
   end

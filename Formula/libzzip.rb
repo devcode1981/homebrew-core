@@ -1,31 +1,29 @@
 class Libzzip < Formula
   desc "Library providing read access on ZIP-archives"
   homepage "https://github.com/gdraheim/zziplib"
-  url "https://github.com/gdraheim/zziplib/archive/v0.13.69.tar.gz"
-  sha256 "846246d7cdeee405d8d21e2922c6e97f55f24ecbe3b6dcf5778073a88f120544"
+  url "https://github.com/gdraheim/zziplib/archive/v0.13.72.tar.gz"
+  sha256 "93ef44bf1f1ea24fc66080426a469df82fa631d13ca3b2e4abaeab89538518dc"
+  license any_of: ["LGPL-2.0-or-later", "MPL-1.1"]
+  revision 1
 
   bottle do
-    cellar :any
     rebuild 1
-    sha256 "2e293f90e2ebee0734ff9bb6a23cdcd562383d87e801de996f57296aef3a15b4" => :mojave
-    sha256 "7ae8222e9b3f3d56639d19de2666eb1dffb6399d5985a64f52a24cdbe3763b58" => :high_sierra
-    sha256 "72c6927e722159e240f313b0bbc5dfd7648b340fd7a9c732d99e9eeaac6d4945" => :sierra
-    sha256 "2ed4dd48a0e3ae9b528164456652b0d5e8730153c398b6441a1ffb7d44e45f4d" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "43fbba2b7e506170bf0f03a8c281c142b04cd1b95365392d36dcc014e5f24743"
+    sha256 cellar: :any, big_sur:       "f4471c0801590824b9fa2de9a5f25c14fc42dc8d87a5efcdf16144a116d5b997"
+    sha256 cellar: :any, catalina:      "0d0827679b5108d79b6bcbf8a3f1ede078d547bb1986d4b7808d6cdb77104023"
+    sha256 cellar: :any, mojave:        "f165f79a37ac61eeb25c2f9b4756848f4c3a9ddcb7250b9de0e6cc5640b00598"
   end
 
+  depends_on "cmake" => :build
   depends_on "pkg-config" => :build
-  depends_on "xmlto" => :build
+  depends_on "python@3.9" => :build
 
   def install
-    ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
-
-    args = %W[
-      --without-debug
-      --disable-dependency-tracking
-      --prefix=#{prefix}
-    ]
-    system "./configure", *args
-    system "make", "install"
+    mkdir "build" do
+      system "cmake", "..", *std_cmake_args, "-DZZIPTEST=OFF", "-DZZIPSDL=OFF", "-DCMAKE_INSTALL_RPATH=#{rpath}"
+      system "make", "man"
+      system "make", "install"
+    end
   end
 
   test do

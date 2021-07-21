@@ -1,15 +1,22 @@
 class OsrmBackend < Formula
   desc "High performance routing engine"
   homepage "http://project-osrm.org/"
-  url "https://github.com/Project-OSRM/osrm-backend/archive/v5.19.0.tar.gz"
-  sha256 "d3671630712c6b3e6a47e12ce0376a75c8915a0072bfec17ed10f3767549be93"
+  url "https://github.com/Project-OSRM/osrm-backend/archive/v5.25.0.tar.gz"
+  sha256 "6da276d609a54600bb37007fd98d14c2a48639f51dda0d962b5801dd0118dfbb"
+  license "BSD-2-Clause"
+  revision 1
   head "https://github.com/Project-OSRM/osrm-backend.git"
 
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "8b771a3f519c6f19f13e4e60f8e7493cfbe0e7293895f03d8324f7cc6c453856" => :mojave
-    sha256 "0a055f3732a598f0f42fb7e9b0091c8662eba79459b90684c4b5935299f680a7" => :high_sierra
-    sha256 "d2196fefcad4ac94ed008796272d49ee7fe674f6a95c204a41cebb1f382f6be1" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "4f459e02861a2bd1f069f4e4eaf5d067c3f8533c45f05e5d92e3485ba6eed0de"
+    sha256 cellar: :any, big_sur:       "9503f806b2f88daf95a054754e3fcee7c49cb4e89414d1ff18452b476ea80cf1"
+    sha256 cellar: :any, catalina:      "a28c8d9695583ead07fc870472a2701ff9702493147f04467e73371899e88abd"
+    sha256 cellar: :any, mojave:        "1a2240493d43b788bd4c5e0018ed8fa076833b28068364806a9ef9754323a84a"
   end
 
   depends_on "cmake" => :build
@@ -18,16 +25,16 @@ class OsrmBackend < Formula
   depends_on "libxml2"
   depends_on "libzip"
   depends_on "lua"
-
-  # "invalid use of non-static data member 'offset'"
-  # https://github.com/Project-OSRM/osrm-backend/issues/3719
-  depends_on :macos => :el_capitan
-
-  depends_on "tbb"
+  depends_on "tbb@2020"
 
   def install
+    lua = Formula["lua"]
+    luaversion = lua.version.major_minor
     mkdir "build" do
-      system "cmake", "..", "-DENABLE_CCACHE:BOOL=OFF", *std_cmake_args
+      system "cmake", "..", "-DENABLE_CCACHE:BOOL=OFF",
+                            "-DLUA_INCLUDE_DIR=#{lua.opt_include}/lua#{luaversion}",
+                            "-DLUA_LIBRARY=#{lua.opt_lib}/liblua.#{luaversion}.dylib",
+                            *std_cmake_args
       system "make"
       system "make", "install"
     end

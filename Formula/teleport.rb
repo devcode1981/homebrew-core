@@ -1,31 +1,46 @@
 class Teleport < Formula
   desc "Modern SSH server for teams managing distributed infrastructure"
   homepage "https://gravitational.com/teleport"
-  url "https://github.com/gravitational/teleport/archive/v3.0.1.tar.gz"
-  sha256 "621e9281b7851f88a51da5d857c4f1a53b3b7911151a6420d77bbf227f0f573a"
+  url "https://github.com/gravitational/teleport/archive/v6.2.7.tar.gz"
+  sha256 "cd13a2085f6f6475d37eac81a5973890c56ef410432fe84453283fde6eb79a80"
+  license "Apache-2.0"
+  head "https://github.com/gravitational/teleport.git"
+
+  # We check the Git tags instead of using the `GithubLatest` strategy, as the
+  # "latest" version can be incorrect. As of writing, two major versions of
+  # `teleport` are being maintained side by side and the "latest" tag can point
+  # to a release from the older major version.
+  livecheck do
+    url :stable
+    strategy :git
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    sha256 "1bdb2bb7e97862291f12792743102365b1b8b40efd12d43df96f88bb5af0e4c3" => :mojave
-    sha256 "a0fa2cf128d526c24fa547f399c83f0481ce04ffcd5c47dfb67e99166ab68660" => :high_sierra
-    sha256 "c2667661301acd34d625575055c9a29139262bf17bec531467d807afb005375f" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "02063234d1b82f32911e02f1542732fe786ab16d576123e419b8468b06a41720"
+    sha256 cellar: :any_skip_relocation, big_sur:       "e5ba46d46053809b32eea9e695ddd4e1335c6cf84a520717b2b36c5c2e247f44"
+    sha256 cellar: :any_skip_relocation, catalina:      "8e072c6a15d16cfd667925c222a087bc5829f017f4261e1df17d5fd108887d35"
+    sha256 cellar: :any_skip_relocation, mojave:        "ef7cccb8afb6a6dfae9ef218dd01f99434f3c107001b99f1895f7e8aa55f3061"
   end
 
   depends_on "go" => :build
 
-  conflicts_with "etsh", :because => "both install `tsh` binaries"
+  uses_from_macos "curl" => :test
+  uses_from_macos "netcat" => :test
+  uses_from_macos "zip"
+
+  conflicts_with "etsh", because: "both install `tsh` binaries"
+
+  # Keep this in sync with https://github.com/gravitational/teleport/tree/v#{version}
+  resource "webassets" do
+    url "https://github.com/gravitational/webassets/archive/5adea0140c19514f77b1327c4315f99ee77e8261.tar.gz"
+    sha256 "97e253e414430b6a3493502639640c76f272a931d3fcaf55d0a91fc77e3367dd"
+  end
 
   def install
-    ENV["GOOS"] = "darwin"
-    ENV["GOARCH"] = MacOS.prefer_64_bit? ? "amd64" : "386"
-    ENV["GOPATH"] = buildpath
-    ENV["GOROOT"] = Formula["go"].opt_libexec
-
-    (buildpath/"src/github.com/gravitational/teleport").install buildpath.children
-    cd "src/github.com/gravitational/teleport" do
-      ENV.deparallelize { system "make", "full" }
-      bin.install Dir["build/*"]
-      prefix.install_metafiles
-    end
+    (buildpath/"webassets").install resource("webassets")
+    ENV.deparallelize { system "make", "full" }
+    bin.install Dir["build/*"]
   end
 
   test do

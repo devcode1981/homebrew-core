@@ -1,55 +1,55 @@
 class Postgis < Formula
   desc "Adds support for geographic objects to PostgreSQL"
   homepage "https://postgis.net/"
-  url "https://download.osgeo.org/postgis/source/postgis-2.5.0.tar.gz"
-  sha256 "be73abd747e9665f29748e0e7dc6b3f7b1ce98f32e3567f08259420ca10e36d5"
+  url "https://download.osgeo.org/postgis/source/postgis-3.1.3.tar.gz"
+  sha256 "71e929553bb73a0413206a0f92df5180ac6579c500d8ddce3a03559f1b349fcb"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url "https://download.osgeo.org/postgis/source/"
+    regex(/href=.*?postgis[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "32fb1898e0968379c3f389f367ded066b0a8a7480b8215019fa8855e56c25ee6" => :mojave
-    sha256 "b215ee5f65c4303ecff061913bf943837bdd93b647dce31836f71fed0fd3b356" => :high_sierra
-    sha256 "3fff4467b70a0320fc9e99a72e256a957cc1d8bfcaeac1b3bdbf25d20baed435" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "d9d4b2c3f78267a6874343c6b89391b327ef0a60bab41eda87956a7ae795e6a7"
+    sha256 cellar: :any, big_sur:       "0ceed87827d6d5498962bb491665f5e66399bcaf7bf6f9c1a5917444ebb19b89"
+    sha256 cellar: :any, catalina:      "cb262d75f5a910a4b014f1092f8fd05618dab11a7ad36a89243efb4f1f27fbef"
+    sha256 cellar: :any, mojave:        "30a08d37b4baafb362585b4975aada6d58e7460ce6a0e263f9ebc01cd2ffc8c4"
   end
 
   head do
-    url "https://svn.osgeo.org/postgis/trunk/"
+    url "https://git.osgeo.org/gitea/postgis/postgis.git"
 
     depends_on "autoconf" => :build
     depends_on "automake" => :build
     depends_on "libtool" => :build
   end
 
-  option "with-gui", "Build shp2pgsql-gui in addition to command line tools"
-  option "with-protobuf-c", "Build with protobuf-c to enable Geobuf and Mapbox Vector Tile support"
-
   depends_on "gpp" => :build
   depends_on "pkg-config" => :build
   depends_on "gdal" # for GeoJSON and raster handling
   depends_on "geos"
-  depends_on "gtk+" if build.with? "gui"
   depends_on "json-c" # for GeoJSON and raster handling
   depends_on "pcre"
   depends_on "postgresql"
-  depends_on "proj"
+  depends_on "proj@7"
+  depends_on "protobuf-c" # for MVT (map vector tiles) support
   depends_on "sfcgal" # for advanced 2D/3D functions
-  depends_on "protobuf-c" => :optional
 
   def install
     ENV.deparallelize
 
     args = [
-      "--with-projdir=#{Formula["proj"].opt_prefix}",
+      "--with-projdir=#{Formula["proj@7"].opt_prefix}",
       "--with-jsondir=#{Formula["json-c"].opt_prefix}",
       "--with-pgconfig=#{Formula["postgresql"].opt_bin}/pg_config",
+      "--with-protobufdir=#{Formula["protobuf-c"].opt_bin}",
       # Unfortunately, NLS support causes all kinds of headaches because
       # PostGIS gets all of its compiler flags from the PGXS makefiles. This
       # makes it nigh impossible to tell the buildsystem where our keg-only
       # gettext installations are.
       "--disable-nls",
     ]
-
-    args << "--with-gui" if build.with? "gui"
-    args << "--with-protobufdir=#{Formula["protobuf-c"].opt_bin}" if build.with? "protobuf-c"
 
     system "./autogen.sh" if build.head?
     system "./configure", *args
@@ -79,24 +79,6 @@ class Postgis < Formula
     ]
 
     man1.install Dir["doc/**/*.1"]
-  end
-
-  def caveats
-    <<~EOS
-      To create a spatially-enabled database, see the documentation:
-        https://postgis.net/docs/manual-2.4/postgis_installation.html#create_new_db_extensions
-      If you are currently using PostGIS 2.0+, you can go the soft upgrade path:
-        ALTER EXTENSION postgis UPDATE TO "#{version}";
-      Users of 1.5 and below will need to go the hard-upgrade path, see here:
-        https://postgis.net/docs/manual-2.4/postgis_installation.html#upgrading
-
-      PostGIS SQL scripts installed to:
-        #{opt_pkgshare}
-      PostGIS plugin libraries installed to:
-        #{HOMEBREW_PREFIX}/lib
-      PostGIS extension modules installed to:
-        #{HOMEBREW_PREFIX}/share/postgresql/extension
-    EOS
   end
 
   test do
@@ -133,7 +115,7 @@ class Postgis < Formula
       igAAABI=
     EOS
     result = shell_output("#{bin}/shp2pgsql #{testpath}/brew.shp")
-    assert_match /Point/, result
-    assert_match /AddGeometryColumn/, result
+    assert_match(/Point/, result)
+    assert_match(/AddGeometryColumn/, result)
   end
 end

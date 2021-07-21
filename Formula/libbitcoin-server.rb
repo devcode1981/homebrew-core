@@ -1,14 +1,16 @@
 class LibbitcoinServer < Formula
   desc "Bitcoin Full Node and Query Server"
   homepage "https://github.com/libbitcoin/libbitcoin-server"
-  url "https://github.com/libbitcoin/libbitcoin-server/archive/v3.5.0.tar.gz"
-  sha256 "37ef8d572fb7400565655501ffdea5d07a1de10f3d9fa823d33e2bf68ef8c3ce"
-  revision 3
+  url "https://github.com/libbitcoin/libbitcoin-server/archive/v3.6.0.tar.gz"
+  sha256 "283fa7572fcde70a488c93e8298e57f7f9a8e8403e209ac232549b2c433674e1"
+  license "AGPL-3.0"
+  revision 7
 
   bottle do
-    sha256 "2890cde785c48f5ce32ddfa80d820b8ff4f33b15fbfbfc1edaed1b2f273ebbe4" => :mojave
-    sha256 "88ae4e496aac860ed64b1e0284b92df9bfc9a865fa8cd1d50387764e66caf3be" => :high_sierra
-    sha256 "f54c1c09d92ed6f4f5e4bfb8782625a987f4258599f83a62888216d64e9cdd09" => :sierra
+    sha256 arm64_big_sur: "7efe8bcecf7a2d191790ed5ef7e7ed2035c5b21647c1cca030a485a20e1efbbe"
+    sha256 big_sur:       "14d83e9545bea5d9d4c6c794b0dca5b58d4e36c90773e1b82db2ce346cb8bce4"
+    sha256 catalina:      "03a1363d1b924bc9ce0cbbb4aa080e1c71b66374d6dd8def2b03023bff6595cb"
+    sha256 mojave:        "23a267d222b28729da3e7dfefe559aba8f97b668910e08ce33f4016b067d8dff"
   end
 
   depends_on "autoconf" => :build
@@ -19,18 +21,21 @@ class LibbitcoinServer < Formula
   depends_on "libbitcoin-protocol"
 
   def install
+    ENV.cxx11
     ENV.prepend_path "PKG_CONFIG_PATH", Formula["libbitcoin"].opt_libexec/"lib/pkgconfig"
 
     system "./autogen.sh"
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
-                          "--prefix=#{prefix}"
+                          "--prefix=#{prefix}",
+                          "--with-boost-libdir=#{Formula["boost"].opt_lib}"
     system "make", "install"
 
     bash_completion.install "data/bs"
   end
 
   test do
+    boost = Formula["boost"]
     (testpath/"test.cpp").write <<~EOS
       #include <bitcoin/server.hpp>
       int main() {
@@ -42,7 +47,7 @@ class LibbitcoinServer < Formula
     system ENV.cxx, "-std=c++11", "test.cpp", "-o", "test",
                     "-L#{Formula["libbitcoin"].opt_lib}", "-lbitcoin",
                     "-L#{lib}", "-lbitcoin-server",
-                    "-L#{Formula["boost"].opt_lib}", "-lboost_system"
+                    "-L#{boost.opt_lib}", "-lboost_system"
     system "./test"
   end
 end

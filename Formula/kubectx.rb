@@ -1,19 +1,19 @@
 class Kubectx < Formula
   desc "Tool that can switch between kubectl contexts easily and create aliases"
   homepage "https://github.com/ahmetb/kubectx"
-  url "https://github.com/ahmetb/kubectx/archive/v0.6.2.tar.gz"
-  sha256 "95e9b0036bd945948c84e566d750aa178ecd7256fabcdff235f745b6c3d38069"
+  url "https://github.com/ahmetb/kubectx/archive/v0.9.4.tar.gz"
+  sha256 "91e6b2e0501bc581f006322d621adad928ea3bd3d8df6612334804b93efd258c"
+  license "Apache-2.0"
   head "https://github.com/ahmetb/kubectx.git"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "56fca18baee3ff65f4e6ca1491b515f46bcb61c3d184bc68c77c1b06e2e32cfb"
+  end
 
-  option "with-short-names", "link as \"kctx\" and \"kns\" instead"
-
-  depends_on "kubernetes-cli" => :recommended
+  depends_on "kubernetes-cli"
 
   def install
-    bin.install "kubectx" => build.with?("short-names") ? "kctx" : "kubectx"
-    bin.install "kubens" => build.with?("short-names") ? "kns" : "kubens"
+    bin.install "kubectx", "kubens"
 
     bash_completion.install "completion/kubectx.bash" => "kubectx"
     bash_completion.install "completion/kubens.bash" => "kubens"

@@ -1,30 +1,30 @@
 class Ucloud < Formula
-  desc "The official tool to managment your ucloud services"
+  desc "Official tool for managing UCloud services"
   homepage "https://www.ucloud.cn"
-  url "https://github.com/ucloud/ucloud-cli/archive/0.1.5.tar.gz"
-  sha256 "311af69c744804eaef936e5d7c00cf17c178fcb4a2d8c179f99b0694b8c822b1"
+  url "https://github.com/ucloud/ucloud-cli/archive/0.1.36.tar.gz"
+  sha256 "c2594b9d277d50857c9a2ca54d52985138f8672da2aa02c692790a3622a3bdf8"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d6adc62a059cc18ec845ad6742cd8061c0a3248c9277ac544b61987d8d23d8df" => :mojave
-    sha256 "98a66d4be082e582f23fc39ce091007eb65c85618c39d7a548aa9c679008f86a" => :high_sierra
-    sha256 "b2ca54a504052833ced181fe1f7c9adc6ed4682ad6ef7b1a5b3c5c4b837c7b1c" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "4369a8339dfade60520aa14d54f228aa50eaa477131b0cb930d26d49fd1c6cab"
+    sha256 cellar: :any_skip_relocation, big_sur:       "a6501723daea0bcf02429ebbe424acbcd03b3e26529be6396cda2d31099f4607"
+    sha256 cellar: :any_skip_relocation, catalina:      "a402128a3fba94e3c08cd67e716c3f33852d138af48897db5cdf883b0de59441"
+    sha256 cellar: :any_skip_relocation, mojave:        "92bfe9c9fd15143c837bece7bc88296a4287977e156173248b6903dc4e6b817c"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
     dir = buildpath/"src/github.com/ucloud/ucloud-cli"
     dir.install buildpath.children
     cd dir do
-      system "go", "build", "-o", bin/"ucloud"
+      system "go", "build", "-mod=vendor", "-o", bin/"ucloud"
       prefix.install_metafiles
     end
   end
 
   test do
-    system "#{bin}/ucloud", "config", "--project-id", "org-test"
+    system "#{bin}/ucloud", "config", "--project-id", "org-test", "--profile", "default", "--active", "true"
     config_json = (testpath/".ucloud/config.json").read
     assert_match '"project_id":"org-test"', config_json
     assert_match version.to_s, shell_output("#{bin}/ucloud --version")

@@ -1,30 +1,35 @@
 class Jsvc < Formula
   desc "Wrapper to launch Java applications as daemons"
   homepage "https://commons.apache.org/daemon/jsvc.html"
-  url "https://www.apache.org/dyn/closer.cgi?path=commons/daemon/source/commons-daemon-1.1.0-native-src.tar.gz"
-  sha256 "11962bc602619fd2eeb840f74a8c63cc1055221f0cc385a1fa906e758d39888d"
+  url "https://www.apache.org/dyn/closer.lua?path=commons/daemon/source/commons-daemon-1.2.4-src.tar.gz"
+  mirror "https://archive.apache.org/dist/commons/daemon/source/commons-daemon-1.2.4-src.tar.gz"
+  sha256 "5c2e31a7c1198ade5034d625ea10353cdcc4b6e99b84ed7fca4040e3df3339db"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "751f890d542cdb78a6d6ba81f00600452576160e8f1293cc28b13e136ff7220c" => :mojave
-    sha256 "867f5db60424ee34f1d72059cb3f60ace96abeca8005c85e4401006b53db1aa5" => :high_sierra
-    sha256 "d67d2a5120584d15afca82c5100c0314c0c865e51f982f1512f2deebbcb14b08" => :sierra
-    sha256 "c3c5ea34eeea62e0c7fc379e6691eed05edbb4ceabe2c568683acd474061e565" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "771e112751eb5c424f61c04f9a4aec6c02e0001ce88b400565c7a2b8fce71a51"
+    sha256 cellar: :any_skip_relocation, big_sur:       "50894019268b0cc6757fb62da6756fbfe92138f79afa4eb363f0e14df81de9d4"
+    sha256 cellar: :any_skip_relocation, catalina:      "2e4c9e5eaf94ec1b3f9bc70288ea4dc4459e766dbc0f4df9c018f3bbdbf62456"
+    sha256 cellar: :any_skip_relocation, mojave:        "357dc6a1c7e9f7c5e07263e0e9985ed3e2a578e9319289479ca204f7c10efc8d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "69433491ae0f64432cc5235647d041fef5c8afeeef379d97590bc3c3d9ab2f02"
   end
 
-  depends_on :java
+  depends_on "openjdk"
 
   def install
-    ENV.append "CFLAGS", "-arch #{MacOS.preferred_arch}"
-    ENV.append "LDFLAGS", "-arch #{MacOS.preferred_arch}"
-    ENV.append "CPPFLAGS", "-I/System/Library/Frameworks/JavaVM.framework/Versions/Current/Headers"
-
     prefix.install %w[NOTICE.txt LICENSE.txt RELEASE-NOTES.txt]
 
-    cd "unix"
-    system "./configure", "--with-java=/System/Library/Frameworks/JavaVM.framework",
-                          "--with-os-type=Headers"
-    system "make"
-    bin.install "jsvc"
+    cd "src/native/unix" do
+      system "./configure", "--with-java=#{Formula["openjdk"].opt_prefix}"
+      system "make"
+
+      libexec.install "jsvc"
+      (bin/"jsvc").write_env_script libexec/"jsvc", Language::Java.overridable_java_home_env
+    end
+  end
+
+  test do
+    output = shell_output("#{bin}/jsvc -help")
+    assert_match "jsvc (Apache Commons Daemon)", output
   end
 end

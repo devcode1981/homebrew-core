@@ -1,16 +1,22 @@
 class Rlwrap < Formula
   desc "Readline wrapper: adds readline support to tools that lack it"
   homepage "https://github.com/hanslub42/rlwrap"
-  url "https://github.com/hanslub42/rlwrap/archive/v0.43.tar.gz"
-  sha256 "29e5a850fbe4753f353b0734e46ec0da043621bdcf7b52a89b77517f3941aade"
+  url "https://github.com/hanslub42/rlwrap/archive/v0.45.2.tar.gz"
+  sha256 "7197559f193918cc8782421b5b1313abbde5e3b965a5f91f9ee25aee9b172ec5"
+  license "GPL-2.0-or-later"
   head "https://github.com/hanslub42/rlwrap.git"
 
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
+
   bottle do
-    sha256 "eb96e68e1ec7e76dc4e64dd638662d3248487bdbc84d4f96690babaa22ac9a2c" => :mojave
-    sha256 "a756fa3e95c418932e6791d3d6f4feaa88b4ac3e0da66c38285ce2bc54882063" => :high_sierra
-    sha256 "689b716c824586bdd0399f0acce9271417222436b387862567dc9d48aba2ece7" => :sierra
-    sha256 "b0548979bc62fadccf1d3f6f13f0df1c851e30e4d282d7ac20f9936f3e4b975f" => :el_capitan
-    sha256 "7b8a163bb614b481b88a627ad9a579e5b0acb24deb736ccea02da2606b6dc8a0" => :yosemite
+    sha256 arm64_big_sur: "d7f6b7527f6b090fe587c18ba314460a84949a81158399ff143521c2bf949e91"
+    sha256 big_sur:       "4776bfe5bf3753463d331b150b37be72f4729aa144d9bb45030c56e9ad16c6a0"
+    sha256 catalina:      "ca0fa52e2eb8649716938dd6d21a15652a7eeaf2ba0acfcb9cbd6cb9a5dae490"
+    sha256 mojave:        "fcfe56a0eac619bcf9d9d1f8f5ddda648e09719c8c78c0db3d599f7edb7a59b7"
+    sha256 x86_64_linux:  "525f35129e98623fbebda88c217862faf363bd9641d20858a9b8c14c120f4458"
   end
 
   depends_on "autoconf" => :build

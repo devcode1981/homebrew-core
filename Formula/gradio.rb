@@ -1,14 +1,19 @@
 class Gradio < Formula
   desc "GTK3 app for finding and listening to internet radio stations"
   homepage "https://github.com/haecker-felix/Gradio"
-  url "https://github.com/haecker-felix/Gradio/archive/v7.2.tar.gz"
-  sha256 "5a85d7d4afb1424e46c935114b268e4a65de2629d60f48eccd75d67ff4b113d2"
+  url "https://github.com/haecker-felix/Gradio/archive/v7.3.tar.gz"
+  sha256 "5c5afed83fceb9a9f8bc7414b8a200128b3317ccf1ed50a0e7321ca15cf19412"
+  license "GPL-3.0-or-later"
+  revision 1
 
   bottle do
-    sha256 "6dbf39c1065e7b56c72d503e873fa09f1ae7e39d4954b0c535709a9b7011ed30" => :mojave
-    sha256 "3d0c607e60a10c4d4cf747582a2a9e31c4e79cc6da43f8203bfd3394e2d82588" => :high_sierra
-    sha256 "3538e5558fcda654089ae4db90a1ce7fe9c59d4e8bbd8ca9324f925ae1f316cb" => :sierra
+    sha256 big_sur:     "e6468d6afe0f7e65ebf642bf4a5935464b0e390f6c607f58573221e8a0ff03f4"
+    sha256 catalina:    "80de210e71cbf7bd18f125ed1b74c58939046418905bbbbe03892b1b7d4dc8ca"
+    sha256 mojave:      "afed2590e43bb873751bf147da70228edf518aaa4da9a47a8e74a339385e7407"
+    sha256 high_sierra: "772bc7cd809b085f9eaf2419ae9ddae50e80cbaaace480fe1f3d23c26bd8f164"
   end
+
+  deprecate! date: "2019-11-16", because: :repo_archived
 
   depends_on "meson" => :build
   depends_on "ninja" => :build
@@ -23,13 +28,13 @@ class Gradio < Formula
   depends_on "hicolor-icon-theme"
   depends_on "json-glib"
   depends_on "libsoup"
-  depends_on "python"
+  depends_on "python@3.7"
 
   def install
     # stop meson_post_install.py from doing what needs to be done in the post_install step
     ENV["DESTDIR"] = "/"
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", ".."
+      system "meson", *std_meson_args, ".."
       system "ninja"
       system "ninja", "install"
     end

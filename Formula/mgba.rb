@@ -1,46 +1,33 @@
 class Mgba < Formula
   desc "Game Boy Advance emulator"
   homepage "https://mgba.io/"
-  revision 2
+  url "https://github.com/mgba-emu/mgba/archive/0.9.2.tar.gz"
+  sha256 "29ca22ebc56b26a4e7224efbb5fa12c9c006563d41990afb0874d048db76add4"
+  license "MPL-2.0"
   head "https://github.com/mgba-emu/mgba.git"
 
-  stable do
-    url "https://github.com/mgba-emu/mgba/archive/0.6.3.tar.gz"
-    sha256 "35c8906c01206adae714fee9c2bc39698c514a4adb32c9c4a5a3fa58b2d10f9a"
-
-    # Fix build with Qt 5.11.0
-    # https://github.com/Homebrew/homebrew-core/issues/28455
-    patch do
-      url "https://github.com/mgba-emu/mgba/commit/7f41dd35417.patch?full_index=1"
-      sha256 "14a3c1100830d13f0e6e1656b502c34cfc527b6e4db0d47a07e613caa622d47d"
-    end
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
   bottle do
-    cellar :any
-    sha256 "05f047199b814a992bd330dae526874a425f52d0e0ef674b4040950d0053b4ec" => :mojave
-    sha256 "b35eb17585007f58d73104a6cee5c9fd4ade4073f714f8cd4d595eeb9b1e9073" => :high_sierra
-    sha256 "c4a7b9598e074a904a466d4f7f540a67c511131f780a6898b1b8def3e33058ba" => :sierra
-    sha256 "fafaa47a86e92ad1877814abcf7a6d7159188e02ba2e63ad8f171116d49f5546" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "748990bd29b7c677472169b38a191bb6845e0380332f674b18acae32bc872a28"
+    sha256 cellar: :any, big_sur:       "bbd6ee9c4ef3698e28e58da996235b1c51b085f79f8f9042aff9d9b25950f6dc"
+    sha256 cellar: :any, catalina:      "c3719a69184da453cbab9569ca328bde05a46b157fc1b8f1668e7c481e1b161c"
+    sha256 cellar: :any, mojave:        "ae8283ff8e328160830007d48d4b1338ffa17e01dd41e3fc9438c447f18c473d"
   end
 
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
   depends_on "ffmpeg"
-  depends_on "imagemagick"
   depends_on "libepoxy"
   depends_on "libpng"
   depends_on "libzip"
-  depends_on "qt"
+  depends_on "qt@5"
   depends_on "sdl2"
 
   def install
-    # Fix "error: 'future<void>' is unavailable: introduced in macOS 10.8"
-    # Reported 11 Dec 2017 https://github.com/mgba-emu/mgba/issues/944
-    if MacOS.version <= :el_capitan
-      ENV["MACOSX_DEPLOYMENT_TARGET"] = MacOS.version
-    end
-
     # Install .app bundle into prefix, not prefix/Applications
     inreplace "src/platform/qt/CMakeLists.txt", "Applications", "."
 

@@ -1,41 +1,69 @@
-# Xcode 4.3 provides the Apple libtool.
-# This is not the same so as a result we must install this as glibtool.
-
 class Libtool < Formula
   desc "Generic library support script"
   homepage "https://www.gnu.org/software/libtool/"
   url "https://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.xz"
   mirror "https://ftpmirror.gnu.org/libtool/libtool-2.4.6.tar.xz"
   sha256 "7c87a8c2c8c0fc9cd5019e402bed4292462d00a718a7cd5f11218153bf28b26f"
-  revision 1
+  license "GPL-2.0-or-later"
+  revision 3
 
   bottle do
-    cellar :any
-    sha256 "c92ab35c3706c255a36b733aa7a475159da9cf375c275d230fd6a7802a94e4dc" => :mojave
-    sha256 "ebb50367eb2336ee317841587e24690de124fb2c3e4d346405e9b41c4e6120ae" => :high_sierra
-    sha256 "78a1f6c6644eae01eb5c204ef705f7e48721a0fe8ece492c10c84791061885db" => :sierra
-    sha256 "b7651d0a082e2f103f03ca3a5ed831e2ff5655ccc1044ac0452e4d1825475a35" => :el_capitan
-    sha256 "0eb206c0f51e8ce2e3e9340b5ce3c8ecef961ae6696f676073327a7ac04e5c0b" => :yosemite
-    sha256 "2e51ef82ef2bd1ad9d921a9016b9e5d7fa82d131849e2c32a3c90daa119e2eda" => :mavericks
+    sha256 cellar: :any,                 arm64_big_sur: "904c534919bf6dc14fb561dc56012b44af838f8c21fa4e948ff7a7a773b11f20"
+    sha256 cellar: :any,                 big_sur:       "a70ed5b9d74ec3b06bfc202ab36491c3ecd3da4ff2b602478675ba0c533aa466"
+    sha256 cellar: :any,                 catalina:      "9e4b12c13734a5f1b72dfd48aa71faa8fd81bbf2d16af90d1922556206caecc3"
+    sha256 cellar: :any,                 mojave:        "0aa094832dfcc51aadc22056ebf72af91144cb69369043fc6ccc6a052df577aa"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "38b1502dbd6ad03c38dd4d4f6111a316c96fd1c58209b3d57b367659c9464919"
+  end
+
+  depends_on "m4"
+
+  # Fixes the build on macOS 11:
+  # https://lists.gnu.org/archive/html/libtool-patches/2020-06/msg00001.html
+  patch :p0 do
+    url "https://github.com/Homebrew/formula-patches/raw/e5fbd46a25e35663059296833568667c7b572d9a/libtool/dynamic_lookup-11.patch"
+    sha256 "5ff495a597a876ce6e371da3e3fe5dd7f78ecb5ebc7be803af81b6f7fcef1079"
   end
 
   def install
-    ENV["SED"] = "sed" # prevent libtool from hardcoding sed path from superenv
-    system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}",
-                          "--program-prefix=g",
-                          "--enable-ltdl-install"
+    # Ensure configure is happy with the patched files
+    %w[aclocal.m4 libltdl/aclocal.m4 Makefile.in libltdl/Makefile.in
+       config-h.in libltdl/config-h.in configure libltdl/configure].each do |file|
+      touch file
+    end
+
+    args = %W[
+      --disable-dependency-tracking
+      --prefix=#{prefix}
+      --enable-ltdl-install
+    ]
+
+    on_macos do
+      args << "--program-prefix=g"
+    end
+
+    system "./configure", *args
     system "make", "install"
+
+    on_linux do
+      bin.install_symlink "libtool" => "glibtool"
+      bin.install_symlink "libtoolize" => "glibtoolize"
+
+      # Avoid references to the Homebrew shims directory
+      inreplace bin/"libtool", HOMEBREW_SHIMS_PATH/"linux/super/", "/usr/bin/"
+    end
   end
 
-  def caveats; <<~EOS
-    In order to prevent conflicts with Apple's own libtool we have prepended a "g"
-    so, you have instead: glibtool and glibtoolize.
-  EOS
+  def caveats
+    on_macos do
+      <<~EOS
+        In order to prevent conflicts with Apple's own libtool we have prepended a "g"
+        so, you have instead: glibtool and glibtoolize.
+      EOS
+    end
   end
 
   test do
-    system "#{bin}/glibtool", "execute", "/usr/bin/true"
+    system "#{bin}/glibtool", "execute", File.executable?("/usr/bin/true") ? "/usr/bin/true" : "/bin/true"
     (testpath/"hello.c").write <<~EOS
       #include <stdio.h>
       int main() { puts("Hello, world!"); return 0; }

@@ -3,15 +3,19 @@ class Pdf2htmlex < Formula
   homepage "https://coolwanglu.github.io/pdf2htmlEX/"
   url "https://github.com/coolwanglu/pdf2htmlEX/archive/v0.14.6.tar.gz"
   sha256 "320ac2e1c2ea4a2972970f52809d90073ee00a6c42ef6d9833fb48436222f0e5"
-  revision 20
+  license "GPL-3.0-or-later"
+  revision 24
   head "https://github.com/coolwanglu/pdf2htmlEX.git"
 
   bottle do
-    sha256 "44c53a6568f7ccf89f3c2ee6ecb9b68e852b98ac3e8aac394815b03a42bbc07d" => :mojave
-    sha256 "316df8e38b0533e5c7ebbd3b120fe4e5d2957f7d7de92ccc0dbe75c72d1285b6" => :high_sierra
-    sha256 "e02628e81215b1e9fea902f9b353e6f8ea93f1eda7e385f886cee95e39627d20" => :sierra
-    sha256 "5c72b64128d75ce84c0158f6c90c8e710c299de71f593a5b15868c006c5396fb" => :el_capitan
+    sha256 arm64_big_sur: "8c29d3c811e6e6580644620a76848458db39181b996cc15e4df2589c8de40e27"
+    sha256 big_sur:       "7cb1691e750ce40dfc9dbb9e9faba3138158c31e3221335acd3d4f25eb7bf3c3"
+    sha256 catalina:      "76c5b16da33231ee6d269f95c5b9b3f0f06b9f5d5634e003d55e6ad5e123a387"
+    sha256 mojave:        "0cf6aa3cd87e96aab2fc58b618f8a9127edec88a624bd6cf2f5816fd575c0a50"
+    sha256 high_sierra:   "8a55a7cd0d373d223162ee92bc6f02c269b4f17fe987471ba3388ea257cf870f"
   end
+
+  deprecate! date: "2016-12-12", because: :repo_archived
 
   depends_on "autoconf" => :build # for fontforge
   depends_on "automake" => :build # for fontforge
@@ -27,7 +31,7 @@ class Pdf2htmlex < Formula
   depends_on "libpng" # for fontforge
   depends_on "libtiff" # for fontforge
   depends_on "libtool" # for fontforge
-  depends_on :macos => :lion
+
   depends_on "openjpeg" # for poppler
   depends_on "pango" # for fontforge
   depends_on "ttfautohint"
@@ -35,7 +39,7 @@ class Pdf2htmlex < Formula
   # Pdf2htmlex use an outdated, customised Fontforge installation.
   # See https://github.com/coolwanglu/pdf2htmlEX/wiki/Building
   resource "fontforge" do
-    url "https://github.com/coolwanglu/fontforge.git", :branch => "pdf2htmlEX"
+    url "https://github.com/coolwanglu/fontforge.git", branch: "pdf2htmlEX"
   end
 
   # Upstream issue "poppler 0.59.0 incompatibility"
@@ -51,24 +55,23 @@ class Pdf2htmlex < Formula
   end
 
   def install
-    ENV.cxx11 if MacOS.version < :mavericks
-
     resource("fontforge").stage do
       # Fix for incomplete giflib 5 support, see
       # https://github.com/coolwanglu/pdf2htmlEX/issues/713
       inreplace "gutils/gimagereadgif.c", "DGifCloseFile(gif)", "DGifCloseFile(gif, NULL)"
 
-      # Fix linker error; see: https://trac.macports.org/ticket/25012
-      ENV.append "LDFLAGS", "-lintl"
-
-      # Reset ARCHFLAGS to match how we build
-      ENV["ARCHFLAGS"] = "-arch #{MacOS.preferred_arch}"
+      on_macos do
+        # Fix linker error; see: https://trac.macports.org/ticket/25012
+        ENV.append "LDFLAGS", "-lintl"
+      end
 
       system "./autogen.sh"
       system "./configure", "--prefix=#{libexec}/fontforge",
                             "--without-libzmq",
                             "--without-x",
                             "--without-iconv",
+                            "--without-libspiro",
+                            "--without-libuninameslist",
                             "--disable-python-scripting",
                             "--disable-python-extension"
       system "make"

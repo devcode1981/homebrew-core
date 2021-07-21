@@ -1,13 +1,15 @@
 class Ejabberd < Formula
   desc "XMPP application server"
   homepage "https://www.ejabberd.im"
-  url "https://www.process-one.net/downloads/ejabberd/18.09/ejabberd-18.09.tgz"
-  sha256 "781a68d2deefb4afae563c29a8955063c759c244d308251167d46185f145d4ff"
+  url "https://static.process-one.net/ejabberd/downloads/21.04/ejabberd-21.04.tgz"
+  sha256 "7dc2797b3223bc92f422ee35f53a1cf686a738c99641b87768b519d8c3bfb73a"
+  license "GPL-2.0-only"
 
   bottle do
-    sha256 "a9655946c1b7eaa199339475c84aeec9be1c99b9d541f1b537f1c49bf1f7331c" => :mojave
-    sha256 "226a2827e29c3ad146762d94587c08d0442183e47c68f0eaf3f1aac814700ff4" => :high_sierra
-    sha256 "ed2429d0c5941fbfb7f7f34b3bdf09a73273441b44959a6c81fb2484ef5c56eb" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "e724d35c5572f8c4b4249b4986cfd9641af633c0498247f098b2d84391ecb52f"
+    sha256 cellar: :any, big_sur:       "48160b33cfecd42b409ab92d25301ce7136dd95afbef0ff81ea7ed356030bc71"
+    sha256 cellar: :any, catalina:      "9d168b77adb8fefc6859d7fbad6478c7faaf3aa395d71bd46e3865bcd85407a5"
+    sha256 cellar: :any, mojave:        "adfbcb57cc672dca1db1b09e1b08b20736a5ab17e361f8d50352c065b9b643d2"
   end
 
   head do
@@ -17,12 +19,12 @@ class Ejabberd < Formula
     depends_on "automake" => :build
   end
 
-  depends_on "erlang"
+  depends_on "erlang@22"
   depends_on "gd"
   depends_on "libyaml"
-  depends_on "openssl"
-  # for CAPTCHA challenges
-  depends_on "imagemagick" => :optional
+  depends_on "openssl@1.1"
+
+  conflicts_with "couchdb", because: "both install `jiffy` lib"
 
   def install
     ENV["TARGET_DIR"] = ENV["DESTDIR"] = "#{lib}/ejabberd/erlang/lib/ejabberd-#{version}"
@@ -53,41 +55,53 @@ class Ejabberd < Formula
   def post_install
     (var/"lib/ejabberd").mkpath
     (var/"spool/ejabberd").mkpath
+
+    # Create the vm.args file, if it does not exist. Put a random cookie in it to secure the instance.
+    vm_args_file = etc/"ejabberd/vm.args"
+    unless vm_args_file.exist?
+      require "securerandom"
+      cookie = SecureRandom.hex
+      vm_args_file.write <<~EOS
+        -setcookie #{cookie}
+      EOS
+    end
   end
 
-  def caveats; <<~EOS
-    If you face nodedown problems, concat your machine name to:
-      /private/etc/hosts
-    after 'localhost'.
-  EOS
+  def caveats
+    <<~EOS
+      If you face nodedown problems, concat your machine name to:
+        /private/etc/hosts
+      after 'localhost'.
+    EOS
   end
 
-  plist_options :manual => "#{HOMEBREW_PREFIX}/sbin/ejabberdctl start"
+  plist_options manual: "#{HOMEBREW_PREFIX}/sbin/ejabberdctl start"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>EnvironmentVariables</key>
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
       <dict>
-        <key>HOME</key>
+        <key>EnvironmentVariables</key>
+        <dict>
+          <key>HOME</key>
+          <string>#{var}/lib/ejabberd</string>
+        </dict>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_sbin}/ejabberdctl</string>
+          <string>start</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>WorkingDirectory</key>
         <string>#{var}/lib/ejabberd</string>
       </dict>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_sbin}/ejabberdctl</string>
-        <string>start</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>WorkingDirectory</key>
-      <string>#{var}/lib/ejabberd</string>
-    </dict>
-    </plist>
-  EOS
+      </plist>
+    EOS
   end
 
   test do

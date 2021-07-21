@@ -1,22 +1,26 @@
 class Qjackctl < Formula
   desc "Simple Qt application to control the JACK sound server daemon"
   homepage "https://qjackctl.sourceforge.io/"
-  url "https://downloads.sourceforge.net/qjackctl/qjackctl-0.5.3.tar.gz"
-  sha256 "813be3b92442ee89a1894407980cb3c95b549e6e94b6b155f218d15291530874"
+  url "https://downloads.sourceforge.net/project/qjackctl/qjackctl/0.9.4/qjackctl-0.9.4.tar.gz"
+  sha256 "febf7019f775a07d167f255756c27e55832656ccf69d1c744b4ce563e478d9a0"
+  license "GPL-2.0-or-later"
   head "https://git.code.sf.net/p/qjackctl/code.git"
 
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/qjackctl[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
+
   bottle do
-    sha256 "e661c47a8bb9be298dabc9d0c656f962b7157c6aa7dcebef18119af8ea07c26b" => :mojave
-    sha256 "e23c9278a737692dffba9f15d4ba96ee3545d5054d4dc40b8f298fa2ac88d6d0" => :high_sierra
-    sha256 "b5561ee222cd865048a52ea95c98f1a06b05d17ed31500a8f7e8407ef8caace2" => :sierra
-    sha256 "8c0022b1933f24a53f54ca478a51231951efb00bfbe7f54f68645b5559a551e1" => :el_capitan
+    sha256 arm64_big_sur: "186c081fcdb6bdd0fd58175c8aea96f164bfaa465da97136cd2f8ab9ee1b2227"
+    sha256 big_sur:       "4ed17595db8a68f83e15117bd056b3e67fc45b0f35f22dcd5bbc25c321ad407b"
+    sha256 catalina:      "616930b85129a5cc17239da15363b37c6037731858a17c493fa3dbef737f1373"
+    sha256 mojave:        "c1b716c18fb6fa8c3fd6b4745aa86692666625ae4ab45fd2bb9fa59e22b7eeaf"
   end
 
   depends_on "pkg-config" => :build
   depends_on "jack"
-  depends_on "qt"
-
-  needs :cxx11
+  depends_on "qt@5"
 
   def install
     ENV.cxx11
@@ -26,7 +30,7 @@ class Qjackctl < Formula
                           "--disable-xunique",
                           "--prefix=#{prefix}",
                           "--with-jack=#{Formula["jack"].opt_prefix}",
-                          "--with-qt5=#{Formula["qt"].opt_prefix}"
+                          "--with-qt=#{Formula["qt@5"].opt_prefix}"
 
     system "make", "install"
     prefix.install bin/"qjackctl.app"

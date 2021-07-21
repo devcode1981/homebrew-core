@@ -1,15 +1,17 @@
 class Libbitcoin < Formula
   desc "Bitcoin Cross-Platform C++ Development Toolkit"
-  homepage "https://libbitcoin.org/"
-  url "https://github.com/libbitcoin/libbitcoin/archive/v3.5.0.tar.gz"
-  sha256 "214d9cd6581330b0e1f6fd8f0c634c46b75ae5515806ecac189f21c0291ae2d9"
-  revision 2
+  homepage "https://github.com/libbitcoin/libbitcoin-system"
+  url "https://github.com/libbitcoin/libbitcoin-system/archive/v3.6.0.tar.gz"
+  sha256 "5bcc4c31b53acbc9c0d151ace95d684909db4bf946f8d724f76c711934c6775c"
+  license "AGPL-3.0"
+  revision 7
 
   bottle do
-    cellar :any
-    sha256 "4cd1d0fb5b989561a99bfea5d54d164a0b5f9131fdbcff021c40ebf8e484bb32" => :mojave
-    sha256 "7fd9794276924b9e42d36df244fe6071452fa06d9a726e348e6f121a9efc3abd" => :high_sierra
-    sha256 "06780e45001a9c99e90afd9e571216d22f42730c07516f63dda6debded110568" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "2599894cb2129c474077e7a76a0abf45a9eb328f6dbf8da16946c19781d1ee6b"
+    sha256 cellar: :any,                 big_sur:       "1244b027fc18f6dba8a0126a578165a09b1c01b1ebf87cba093f7a90b5083505"
+    sha256 cellar: :any,                 catalina:      "3229377e4e17745fff4d608d41397c786f6772574bc4957f999cb3bf693e4d4b"
+    sha256 cellar: :any,                 mojave:        "c17b574fa866c922c770dd70c9e08f5d55f2e24d5fabe5c366ffcf68f9bea946"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "9584040cd459dca7dc4e830b4f2b854f9e881dc57d5d8cba2da6df1c51a63dbe"
   end
 
   depends_on "autoconf" => :build
@@ -26,6 +28,7 @@ class Libbitcoin < Formula
   end
 
   def install
+    ENV.cxx11
     resource("secp256k1").stage do
       system "./autogen.sh"
       system "./configure", "--disable-dependency-tracking",
@@ -42,12 +45,14 @@ class Libbitcoin < Formula
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
                           "--prefix=#{prefix}",
+                          "--with-boost-libdir=#{Formula["boost"].opt_lib}",
                           "--with-png",
                           "--with-qrencode"
     system "make", "install"
   end
 
   test do
+    boost = Formula["boost"]
     (testpath/"test.cpp").write <<~EOS
       #include <bitcoin/bitcoin.hpp>
       int main() {
@@ -56,12 +61,12 @@ class Libbitcoin < Formula
         const auto& input = tx.inputs().front();
         const auto script = input.script().to_data(false);
         std::string message(script.begin() + sizeof(uint64_t), script.end());
-        bc::cout << message << std::endl;
+        std::cout << message << std::endl;
         return 0;
       }
     EOS
     system ENV.cxx, "-std=c++11", "test.cpp", "-L#{lib}", "-lbitcoin",
-                    "-L#{Formula["boost"].opt_lib}", "-lboost_system",
+                    "-L#{boost.opt_lib}", "-lboost_system",
                     "-o", "test"
     system "./test"
   end

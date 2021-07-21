@@ -1,23 +1,30 @@
 class BaculaFd < Formula
   desc "Network backup solution"
   homepage "https://www.bacula.org/"
-  url "https://downloads.sourceforge.net/project/bacula/bacula/9.2.0/bacula-9.2.0.tar.gz"
-  sha256 "df6bc7d81dbfe218ee58f9088dc031fce76e0c2e265126646f72ed32610456c7"
+  url "https://downloads.sourceforge.net/project/bacula/bacula/11.0.5/bacula-11.0.5.tar.gz"
+  sha256 "ef5b3b67810442201b80dc1d47ccef77b5ed378fe1285406f3a73401b6e8111a"
 
   bottle do
-    sha256 "0caea93b38810c1b73a262145db3d12565f6f13d49cef4e73c5e39d72c413178" => :mojave
-    sha256 "e5721a004aa365ad12c53c4cb593261ba9e2c809d877480a9efd98d2c6986e73" => :high_sierra
-    sha256 "f4b1f49978b3a4b5082a7514ee4995397e3c40768f6a87f460f262c92805cb96" => :sierra
-    sha256 "cf30893eb978f8da240416e6bcece5154caf59ecc70afb1d8217cf18ffb9421b" => :el_capitan
+    sha256                               arm64_big_sur: "90c424f536aadb83c4532a7b32c2e1e63d3fb1bafc561b9746cfbc27cda3a39e"
+    sha256                               big_sur:       "0912e3a6669920a1935bb6d2fc9eebd610277ce3b2917db4558ca18fb14109bd"
+    sha256                               catalina:      "9d66cc373192f4c50a9a4c22a0cd162c7ce57604d7e89c95197a13e64a7b2973"
+    sha256                               mojave:        "6e21aa8aa033bf0393ce813ebd77890f3ad1b9e68ca58990d6177b219ddd6d71"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "49bdfa04ce4520b84cd06dcc07a45720712866d2a76c0a93bf0905712f45edf4"
   end
 
-  depends_on "openssl"
+  depends_on "openssl@1.1"
   depends_on "readline"
 
+  uses_from_macos "zlib"
+
   conflicts_with "bareos-client",
-    :because => "Both install a `bconsole` executable."
+    because: "both install a `bconsole` executable"
 
   def install
+    # CoreFoundation is also used alongside IOKit
+    inreplace "configure", '"-framework IOKit"',
+                           '"-framework IOKit -framework CoreFoundation"'
+
     # * sets --disable-conio in order to force the use of readline
     #   (conio support not tested)
     # * working directory in /var/lib/bacula, reasonable place that
@@ -34,6 +41,16 @@ class BaculaFd < Formula
     system "make"
     system "make", "install"
 
+    # Avoid references to the Homebrew shims directory
+    on_macos do
+      inreplace Dir[prefix/"etc/bacula_config"],
+                HOMEBREW_SHIMS_PATH/"mac/super/", ""
+    end
+    on_linux do
+      inreplace Dir[prefix/"etc/bacula_config"],
+                HOMEBREW_SHIMS_PATH/"linux/super/", ""
+    end
+
     (var/"lib/bacula").mkpath
   end
 
@@ -41,25 +58,9 @@ class BaculaFd < Formula
     (var/"run").mkpath
   end
 
-  plist_options :startup => true, :manual => "bacula-fd"
-
-  def plist; <<~EOS
-    <?xml version="0.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/bacula-fd</string>
-          <string>-f</string>
-        </array>
-      </dict>
-    </plist>
-  EOS
+  plist_options startup: true
+  service do
+    run [opt_bin/"bacula-fd", "-f"]
   end
 
   test do

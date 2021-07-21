@@ -1,22 +1,33 @@
 class UBootTools < Formula
   desc "Universal boot loader"
   homepage "https://www.denx.de/wiki/U-Boot/"
-  url "http://ftp.denx.de/pub/u-boot/u-boot-2018.07.tar.bz2"
-  sha256 "9f10df88bc91b35642e461217f73256bbaeeca9ae2db8db56197ba5e89e1f6d4"
+  url "https://ftp.denx.de/pub/u-boot/u-boot-2021.01.tar.bz2"
+  sha256 "b407e1510a74e863b8b5cb42a24625344f0e0c2fc7582d8c866bd899367d0454"
+  license all_of: ["GPL-2.0-only", "GPL-2.0-or-later", "BSD-3-Clause"]
 
-  bottle do
-    cellar :any
-    rebuild 1
-    sha256 "ef92748f2dce7b805eb70b9e6381d15c4897206e62cc17041a0ec0ff76bf9078" => :mojave
-    sha256 "c9af409154e2a3c626cab9711d1538b99eec39f977b11f2abf75ca34bae755e9" => :high_sierra
-    sha256 "baef3b783798fee71d0623fc1387954cf1e190d501617ae56238bc75180fc2da" => :sierra
+  livecheck do
+    url "https://ftp.denx.de/pub/u-boot/"
+    regex(/href=.*?u-boot[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  depends_on "openssl"
+  bottle do
+    sha256 cellar: :any,                 big_sur:      "6b4871d6839ee624ddd039dc7e5e59ca7c00d134cf5eb259e1016fba367573eb"
+    sha256 cellar: :any,                 catalina:     "16a44059e70ea3e5b304002930aa64676c0523b4d81cd1dca21de82ceb342f76"
+    sha256 cellar: :any,                 mojave:       "be9e797cbde27d348dfe240985021a162cc390fe9ecff11e8f56666050830dcf"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "736e048541bf3be0bc7b299672078862e501e01dec9b9d4ffee15a42a7385961"
+  end
+
+  depends_on "openssl@1.1"
+
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
 
   def install
+    # Replace keyword not present in make 3.81
+    inreplace "Makefile", "undefine MK_ARCH", "unexport MK_ARCH"
+
     system "make", "sandbox_defconfig"
-    system "make", "tools"
+    system "make", "tools", "NO_SDL=1"
     bin.install "tools/mkimage"
     bin.install "tools/dumpimage"
     man1.install "doc/mkimage.1"

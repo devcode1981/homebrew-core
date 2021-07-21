@@ -1,33 +1,46 @@
 class PostgresqlAT96 < Formula
   desc "Object-relational database system"
   homepage "https://www.postgresql.org/"
-  url "https://ftp.postgresql.org/pub/source/v9.6.10/postgresql-9.6.10.tar.bz2"
-  sha256 "8615acc56646401f0ede97a767dfd27ce07a8ae9c952afdb57163b7234fe8426"
+  url "https://ftp.postgresql.org/pub/source/v9.6.22/postgresql-9.6.22.tar.bz2"
+  sha256 "3d32cd101025a0556813397c69feff3df3d63736adb8adeaf365c522f39f2930"
+  license "PostgreSQL"
+
+  livecheck do
+    url "https://ftp.postgresql.org/pub/source/"
+    regex(%r{href=["']?v?(9\.6(?:\.\d+)*)/?["' >]}i)
+  end
 
   bottle do
-    rebuild 1
-    sha256 "50f7b551e865c43c91507073c44bf454c22f52889326a161b033888dfaba190f" => :mojave
-    sha256 "da0d71fb4913b6ad4fc959a770295416b69c7d04ceb3995b5d46006949fc1c46" => :high_sierra
-    sha256 "ab319da939279bf3409c03ea44885dc96fff01b973c3c20c250b5a52478abc3a" => :sierra
-    sha256 "eb38e039d8390e99f13deb51be32ec9543437f9804bcd9fe391698d8d2ce37df" => :el_capitan
+    sha256 arm64_big_sur: "408a339dc0058f6fb69a894f6faad84241403c698047d77f81d05871d569edff"
+    sha256 big_sur:       "66d141ccf728c3a4c529b227a3a3ece0b767c85b9ef04b5a6d787107a9addc20"
+    sha256 catalina:      "2b8fab60518c228f3dae4830f2ae662a2b5e4b7e968ba50f7ff0288eadb1cbcf"
+    sha256 mojave:        "73a3586e8bc638b8513df4226090fe843c5d4d93bce35120214772ef28c8f3a2"
   end
 
   keg_only :versioned_formula
 
-  option "with-python", "Enable PL/Python3"
+  # https://www.postgresql.org/support/versioning/
+  deprecate! date: "2021-11-11", because: :unsupported
 
-  deprecated_option "with-python3" => "with-python"
-
-  depends_on "openssl"
+  depends_on "openssl@1.1"
   depends_on "readline"
-  depends_on "python" => :optional
+
+  uses_from_macos "krb5"
+  uses_from_macos "libxslt"
+  uses_from_macos "openldap"
+  uses_from_macos "perl"
+
+  on_linux do
+    depends_on "linux-pam"
+    depends_on "util-linux"
+  end
 
   def install
     # avoid adding the SDK library directory to the linker search path
     ENV["XML2_CONFIG"] = "xml2-config --exec-prefix=/usr"
 
-    ENV.prepend "LDFLAGS", "-L#{Formula["openssl"].opt_lib} -L#{Formula["readline"].opt_lib}"
-    ENV.prepend "CPPFLAGS", "-I#{Formula["openssl"].opt_include} -I#{Formula["readline"].opt_include}"
+    ENV.prepend "LDFLAGS", "-L#{Formula["openssl@1.1"].opt_lib} -L#{Formula["readline"].opt_lib}"
+    ENV.prepend "CPPFLAGS", "-I#{Formula["openssl@1.1"].opt_include} -I#{Formula["readline"].opt_include}"
 
     args = %W[
       --disable-debug
@@ -45,38 +58,13 @@ class PostgresqlAT96 < Formula
       --with-libxml
       --with-libxslt
       --with-perl
+      --with-tcl
       --with-uuid=e2fs
     ]
 
-    if build.with?("python")
-      args << "--with-python"
-      ENV["PYTHON"] = which("python3")
-    end
-
-    # The CLT is required to build Tcl support on 10.7 and 10.8 because
-    # tclConfig.sh is not part of the SDK
-    if MacOS.version >= :mavericks || MacOS::CLT.installed?
-      args << "--with-tcl"
-      if File.exist?("#{MacOS.sdk_path}/System/Library/Frameworks/Tcl.framework/tclConfig.sh")
-        args << "--with-tclconfig=#{MacOS.sdk_path}/System/Library/Frameworks/Tcl.framework"
-      end
-    end
-
-    # As of Xcode/CLT 10.x the Perl headers were moved from /System
-    # to inside the SDK, so we need to use `-iwithsysroot` instead
-    # of `-I` to point to the correct location.
-    # https://www.postgresql.org/message-id/153558865647.1483.573481613491501077%40wrigleys.postgresql.org
-    if DevelopmentTools.clang_build_version >= 1000
-      inreplace "configure",
-                "-I$perl_archlibexp/CORE",
-                "-iwithsysroot $perl_archlibexp/CORE"
-      inreplace "contrib/hstore_plperl/Makefile",
-                "-I$(perl_archlibexp)/CORE",
-                "-iwithsysroot $(perl_archlibexp)/CORE"
-      inreplace "src/pl/plperl/GNUmakefile",
-                "-I$(perl_archlibexp)/CORE",
-                "-iwithsysroot $(perl_archlibexp)/CORE"
-    end
+    # PostgreSQL by default uses xcodebuild internally to determine this,
+    # which does not work on CLT-only installs.
+    args << "PG_SYSROOT=#{MacOS.sdk_path}" if MacOS.sdk_root_needed?
 
     system "./configure", *args
     system "make"
@@ -102,58 +90,71 @@ class PostgresqlAT96 < Formula
 
   def post_install
     (var/"log").mkpath
-    (var/name).mkpath
-    unless File.exist? "#{var}/#{name}/PG_VERSION"
-      system "#{bin}/initdb", "#{var}/#{name}"
-    end
+    postgresql_datadir.mkpath
+
+    # Don't initialize database, it clashes when testing other PostgreSQL versions.
+    return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+
+    postgresql_datadir.mkpath
+    system "#{bin}/initdb", postgresql_datadir unless pg_version_exists?
   end
 
-  def caveats; <<~EOS
-    If builds of PostgreSQL 9 are failing and you have version 8.x installed,
-    you may need to remove the previous version first. See:
-      https://github.com/Homebrew/legacy-homebrew/issues/2510
-
-    To migrate existing data from a previous major version (pre-9.0) of PostgreSQL, see:
-      https://www.postgresql.org/docs/9.6/static/upgrading.html
-
-    To migrate existing data from a previous minor version (9.0-9.5) of PostgreSQL, see:
-      https://www.postgresql.org/docs/9.6/static/pgupgrade.html
-
-      You will need your previous PostgreSQL installation from brew to perform `pg_upgrade`.
-        Do not run `brew cleanup postgresql@9.6` until you have performed the migration.
-  EOS
+  def postgresql_datadir
+    var/name
   end
 
-  plist_options :manual => "pg_ctl -D #{HOMEBREW_PREFIX}/var/postgresql@9.6 start"
+  def postgresql_log_path
+    var/"log/#{name}.log"
+  end
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>KeepAlive</key>
-      <true/>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/postgres</string>
-        <string>-D</string>
-        <string>#{var}/#{name}</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>WorkingDirectory</key>
-      <string>#{HOMEBREW_PREFIX}</string>
-      <key>StandardErrorPath</key>
-      <string>#{var}/log/#{name}.log</string>
-    </dict>
-    </plist>
-  EOS
+  def pg_version_exists?
+    (postgresql_datadir/"PG_VERSION").exist?
+  end
+
+  def caveats
+    <<~EOS
+      If builds of PostgreSQL 9 are failing and you have version 8.x installed,
+      you may need to remove the previous version first. See:
+        https://github.com/Homebrew/legacy-homebrew/issues/2510
+
+      This formula has created a default database cluster with:
+        initdb #{postgresql_datadir}
+      For more details, read:
+        https://www.postgresql.org/docs/#{version.major}/app-initdb.html
+    EOS
+  end
+
+  plist_options manual: "pg_ctl -D #{HOMEBREW_PREFIX}/var/postgresql@9.6 start"
+
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>KeepAlive</key>
+        <true/>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/postgres</string>
+          <string>-D</string>
+          <string>#{postgresql_datadir}</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>WorkingDirectory</key>
+        <string>#{HOMEBREW_PREFIX}</string>
+        <key>StandardErrorPath</key>
+        <string>#{postgresql_log_path}</string>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do
-    system "#{bin}/initdb", testpath/"test"
+    system "#{bin}/initdb", testpath/"test" unless ENV["HOMEBREW_GITHUB_ACTIONS"]
     assert_equal pkgshare.to_s, shell_output("#{bin}/pg_config --sharedir").chomp
     assert_equal lib.to_s, shell_output("#{bin}/pg_config --libdir").chomp
     assert_equal lib.to_s, shell_output("#{bin}/pg_config --pkglibdir").chomp

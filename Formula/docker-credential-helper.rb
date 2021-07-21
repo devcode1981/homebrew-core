@@ -1,22 +1,23 @@
 class DockerCredentialHelper < Formula
   desc "macOS Credential Helper for Docker"
   homepage "https://github.com/docker/docker-credential-helpers"
-  url "https://github.com/docker/docker-credential-helpers/archive/v0.6.1.tar.gz"
-  sha256 "9b36ae15d5bceaaf3496b80413acafa6325c633af3ae211ce10724dfa7046883"
+  url "https://github.com/docker/docker-credential-helpers/archive/v0.6.4.tar.gz"
+  sha256 "b97d27cefb2de7a18079aad31c9aef8e3b8a38313182b73aaf8b83701275ac83"
+  license "MIT"
   head "https://github.com/docker/docker-credential-helpers.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "5f9af0fc7921719967f8a27eecc6fb809c9806c6bebb218354c301b0943d2b36" => :mojave
-    sha256 "fdf91bb6156de8ca87959c94720bbe2538e6a6811b2c6a88442fb086c223ed8b" => :high_sierra
-    sha256 "793b4ec299189e18db3b564816fd5dcfcb023a816b5fd8e13c9a1764146265fe" => :sierra
-    sha256 "0bd7b22e7f3e0c399a686b56d07caf308ad56f46c9bc718266e998681ef7d7a9" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "ca1327a8e612c4e5de20796bffbe54cb4aaa3b73b5a0d659e9da0bd701a4bed6"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b86ee5413d74bb4e52c8c7cd056168b421096acb2a20be4ed8fc8192851b2e4a"
+    sha256 cellar: :any_skip_relocation, catalina:      "b0d84bdcdeb21c6a19cd765cd09fe9646e7c50370c61f5f4460e30d730128bbe"
+    sha256 cellar: :any_skip_relocation, mojave:        "b9949fc061dea2f7fcf6e54039203d133ffe3f00706b16e43623f90bb57331d2"
   end
 
   depends_on "go" => :build
 
   def install
     ENV["GOPATH"] = buildpath
+    ENV["GO111MODULE"] = "auto"
     dir = buildpath/"src/github.com/docker/docker-credential-helpers"
     dir.install buildpath.children - [buildpath/".brew_home"]
 

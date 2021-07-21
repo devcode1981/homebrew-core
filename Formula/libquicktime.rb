@@ -3,14 +3,16 @@ class Libquicktime < Formula
   homepage "https://libquicktime.sourceforge.io/"
   url "https://downloads.sourceforge.net/project/libquicktime/libquicktime/1.2.4/libquicktime-1.2.4.tar.gz"
   sha256 "1c53359c33b31347b4d7b00d3611463fe5e942cae3ec0fefe0d2fd413fd47368"
-  revision 4
+  revision 5
 
   bottle do
-    rebuild 1
-    sha256 "2bd4f42d7ce3fe5201adc32a8a861a6a2dffc3fb9a7aaf8abbdd2e976ef37cfd" => :mojave
-    sha256 "aece680a44a90c17ec0302731951e9d6be28e3805faebbcb2c83112051faa621" => :high_sierra
-    sha256 "2d5e161d907515618e2a90795803069d0ceec5d2480b1126041706e480349ded" => :sierra
-    sha256 "bb90ed12e349973bbc4cfd143718801aa60de918325e1a109dd60b704497faae" => :el_capitan
+    sha256 arm64_big_sur: "7d24ece79d6792b731695618cbc2535d5e374b0cb427cb72df1a1526e04b2974"
+    sha256 big_sur:       "4a9a12712bedaa0ca62394a26ae842f64b4ef86108fca99c2e1712c6a7e7d9c4"
+    sha256 catalina:      "33d7a1146846e30e48e637ddd64f3e7541728df03becf8175e798a8fd3eb3bab"
+    sha256 mojave:        "56165e3b70f7e444bca93369b3fa4602eefb1aa4b9624ed1ecbaa4741eb7c245"
+    sha256 high_sierra:   "df1b207f23b3edc587629a0fd700a446d4f8210e6a7de3bbfd3d5c122cef16f7"
+    sha256 sierra:        "1770ac237a79cb0d9ae918e4bcd6d92bcca6a6695823f7a3fde6dde7d3077acb"
+    sha256 x86_64_linux:  "3c5ec43c6051163260865415f7a3fc0b32b7ca6b49e56ea999ac1fe4119c75d4"
   end
 
   depends_on "pkg-config" => :build
@@ -20,8 +22,7 @@ class Libquicktime < Formula
   # Also, fixes from upstream for CVE-2017-9122 through CVE-2017-9128, applied
   # by Debian since 30 Jun 2017.
   patch do
-    url "https://mirrors.ocf.berkeley.edu/debian/pool/main/libq/libquicktime/libquicktime_1.2.4-12.debian.tar.xz"
-    mirror "https://mirrorservice.org/sites/ftp.debian.org/debian/pool/main/libq/libquicktime/libquicktime_1.2.4-12.debian.tar.xz"
+    url "https://deb.debian.org/debian/pool/main/libq/libquicktime/libquicktime_1.2.4-12.debian.tar.xz"
     sha256 "e5b5fa3ec8391b92554d04528568d04ea9eb5145835e0c246eac7961c891a91a"
     apply "patches/CVE-2016-2399.patch"
     apply "patches/CVE-2017-9122_et_al.patch"

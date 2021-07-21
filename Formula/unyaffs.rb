@@ -1,16 +1,18 @@
 class Unyaffs < Formula
   desc "Extract files from a YAFFS2 filesystem image"
-  homepage "https://github.com/ehlers/unyaffs"
-  url "https://github.com/ehlers/unyaffs/archive/0.9.7.tar.gz"
-  sha256 "099ee9e51046b83fe8555d7a6284f6fe4fbae96be91404f770443d8129bd8775"
-  head "https://github.com/ehlers/unyaffs.git"
+  homepage "https://www.b-ehlers.de/projects/unyaffs.html"
+  url "https://git.b-ehlers.de/ehlers/unyaffs/archive/0.9.7.tar.gz"
+  sha256 "792d18c3866910e25026aaa9dcfdec4b67bca7453ce5b2474d1ce8e9d31b2c69"
+  license "GPL-2.0-only"
+  head "https://git.b-ehlers.de/ehlers/unyaffs.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "40557f6cfcea6b1d9528c29f4f4bd1f55272f83e1ff6bbcb4a2b8b9fa39e6b6d" => :mojave
-    sha256 "a5782b3ff1d562df3fc65956293b9fe51e8d75f1c746b0fd62e1b6dd99573ef5" => :high_sierra
-    sha256 "75da4c47cc7a56283d88fc1438a8a91a4d3d4c0e40c3a6e6f228ec69de33c205" => :sierra
-    sha256 "fe8c38e3c09223e9cea5b052a4774b7e502b0a057101c788629727cbf942b786" => :el_capitan
+    rebuild 3
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d5516a71d691f78f1efb0d7f12f2a8ab2b4500ad2a9c1e1ccd5ace316111a1a1"
+    sha256 cellar: :any_skip_relocation, big_sur:       "54982f10cb8c866e7370886765744c109f3566717f7af6f397e8a83a7ca65520"
+    sha256 cellar: :any_skip_relocation, catalina:      "0319fb2b8ee918808e30a0bb5deef42abaf7d4afe35cff538b4ed513f06de16e"
+    sha256 cellar: :any_skip_relocation, mojave:        "1c3b921af84a9fee0bb8faf7d420ff2a3d6e6a4e42aeec235d8587a8ccd5da61"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e3059fb9a522e08ac50f2f45eb62e373bce28b64fb23442d9e4822aaf9d0cb37"
   end
 
   def install

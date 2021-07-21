@@ -1,24 +1,33 @@
 class Diffoscope < Formula
+  include Language::Python::Virtualenv
+
   desc "In-depth comparison of files, archives, and directories"
   homepage "https://diffoscope.org"
-  url "https://files.pythonhosted.org/packages/e2/70/b2b40203fc1eb3ae66c7a45a8db77e4e6c3dc086f3b557f42ef4f234afff/diffoscope-105.tar.gz"
-  sha256 "036fc036a284f1e09ac23502b169e11f0b167b9961e371a2c3cb6fbaf3e6132f"
+  url "https://files.pythonhosted.org/packages/7e/1c/a1cd012af4b8c7362c7cbb414e0cd6f9e6be399a1f862e18a4574af7e0ce/diffoscope-178.tar.gz"
+  sha256 "7454cf417725ef81ffad16e8cc2f62753282f5171b1c651732b99c0b3c19e137"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "2314e9ae0cccd86d91094299f399398bfc860ca3080e29a88f1951cfb078383e" => :mojave
-    sha256 "95ed7d91929d7c5614bbd22da691cc97cbb2a027c59514cd8afb96f9a3a9f8f7" => :high_sierra
-    sha256 "4c7a05bb0b2dcda0bbf252deff08d747693be7ad4441906a8eff59f65fe48834" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "548b05de7d22bbe94429a5d8af9cfcc848f5d282066911c087158a1dd998ece7"
+    sha256 cellar: :any_skip_relocation, big_sur:       "fc31e5ce91a328f72645dfcc81c1c4dc77e347d3b098350d22f29b383184f182"
+    sha256 cellar: :any_skip_relocation, catalina:      "b66a0110598882ad6df5be7007d2f0a553dc327e9505d2bad1c473af57e9e3f9"
+    sha256 cellar: :any_skip_relocation, mojave:        "0de85737972345871184d4361fe049c87a71c1d54d7219918de2b47409a57777"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e3e91b6c1dbf8401c3a1fc941d2725cae73577aeb3264414632a65d7bde0b00d"
   end
 
-  depends_on "gnu-tar"
   depends_on "libarchive"
   depends_on "libmagic"
-  depends_on "python"
+  depends_on "python@3.9"
+
+  # Use resources from diffoscope[cmdline]
+  resource "argcomplete" do
+    url "https://files.pythonhosted.org/packages/6a/b4/3b1d48b61be122c95f4a770b2f42fc2552857616feba4d51f34611bd1352/argcomplete-1.12.3.tar.gz"
+    sha256 "2c7dbffd8c045ea534921e63b0be6fe65e88599990d8dc408ac8c542b72a5445"
+  end
 
   resource "libarchive-c" do
-    url "https://files.pythonhosted.org/packages/b9/2c/c975b3410e148dab00d14471784a743268614e21121e50e4e00b13f38370/libarchive-c-2.8.tar.gz"
-    sha256 "06d44d5b9520bdac93048c72b7ed66d11a6626da16d2086f9aad079674d8e061"
+    url "https://files.pythonhosted.org/packages/53/d5/bee2190570a2b4c372a022f16ebfc2313ff717a023f277f5d6f9ebf281a2/libarchive-c-3.1.tar.gz"
+    sha256 "618a7ecfbfb58ca15e11e3138d4a636498da3b6bc212811af158298530fbb87e"
   end
 
   resource "progressbar" do
@@ -27,28 +36,18 @@ class Diffoscope < Formula
   end
 
   resource "python-magic" do
-    url "https://files.pythonhosted.org/packages/84/30/80932401906eaf787f2e9bd86dc458f1d2e75b064b4c187341f29516945c/python-magic-0.4.15.tar.gz"
-    sha256 "f3765c0f582d2dfc72c15f3b5a82aecfae9498bd29ca840d72f37d7bd38bfcd5"
+    url "https://files.pythonhosted.org/packages/3a/70/76b185393fecf78f81c12f9dc7b1df814df785f6acb545fc92b016e75a7e/python-magic-0.4.24.tar.gz"
+    sha256 "de800df9fb50f8ec5974761054a708af6e4246b03b4bdaee993f948947b0ebcf"
   end
 
   def install
-    ENV.delete("PYTHONPATH") # play nice with libmagic --with-python
+    venv = virtualenv_create(libexec, Formula["python@3.9"].opt_bin/"python3")
+    venv.pip_install resources
+    venv.pip_install buildpath
 
-    pyver = Language::Python.major_minor_version "python3"
-    ENV.prepend_create_path "PYTHONPATH", libexec/"vendor/lib/python#{pyver}/site-packages"
-
-    resources.each do |r|
-      r.stage do
-        system "python3", *Language::Python.setup_install_args(libexec/"vendor")
-      end
-    end
-
-    ENV.prepend_create_path "PYTHONPATH", libexec/"lib/python#{pyver}/site-packages"
-    system "python3", *Language::Python.setup_install_args(libexec)
-    bin.install Dir[libexec/"bin/*"]
-    libarchive = Formula["libarchive"].opt_lib/"libarchive.dylib"
-    bin.env_script_all_files(libexec/"bin", :PYTHONPATH => ENV["PYTHONPATH"],
-                                            :LIBARCHIVE => libarchive)
+    bin.install libexec/"bin/diffoscope"
+    libarchive = Formula["libarchive"].opt_lib/shared_library("libarchive")
+    bin.env_script_all_files(libexec/"bin", LIBARCHIVE: libarchive)
   end
 
   test do

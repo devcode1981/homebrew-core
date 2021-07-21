@@ -1,20 +1,24 @@
 class Wireshark < Formula
   desc "Graphical network analyzer and capture tool"
   homepage "https://www.wireshark.org"
-  url "https://www.wireshark.org/download/src/all-versions/wireshark-2.6.5.tar.xz"
-  mirror "https://1.eu.dl.wireshark.org/src/wireshark-2.6.5.tar.xz"
-  sha256 "93155b798544b2f07693920f4ac1b531c952965ee4eb1d98419961240177438a"
-  head "https://code.wireshark.org/review/wireshark", :using => :git
+  url "https://www.wireshark.org/download/src/all-versions/wireshark-3.4.7.tar.xz"
+  mirror "https://1.eu.dl.wireshark.org/src/all-versions/wireshark-3.4.7.tar.xz"
+  sha256 "6c4cee51ef997cb9d9aaee84113525a5629157d3c743d7c4e320000de804a09d"
+  license "GPL-2.0-or-later"
+  head "https://gitlab.com/wireshark/wireshark.git"
 
-  bottle do
-    sha256 "14930696b3d8b186abb0d76fcc8ce2e77a81bce1974f977cb7fe72a2d57dcfb5" => :mojave
-    sha256 "f67946bde540a9373dc8cd5f5dc92cc294c7085f27815e6994470c248d39884d" => :high_sierra
-    sha256 "b8eb1a5cfa08703cd2389f3f74e3dadd6ede6c9f9fd80476c8b06f46d3a27ef0" => :sierra
+  livecheck do
+    url "https://www.wireshark.org/download.html"
+    regex(/Stable Release \((\d+(?:\.\d+)*)/i)
   end
 
-  option "with-qt", "Build the wireshark command with Qt"
-
-  deprecated_option "with-qt5" => "with-qt"
+  bottle do
+    sha256 arm64_big_sur: "730eaa644bf24aabe272a4f9c583d2a84d21f3128b5697e3e8a29230dc0ae8d3"
+    sha256 big_sur:       "6f4e65abf38e75fabf26c88c20925298787e9003de581b28bad735d0a3951046"
+    sha256 catalina:      "9ec039fbeb3c36fd39b42b8500428a6baa2231bce431923ed5c2868561117cd4"
+    sha256 mojave:        "5e3c1d969c26f6960178b4267163a854368ded9b0ddd456bee7d784508ebebfe"
+    sha256 x86_64_linux:  "5cdfcc92582382ae713df27515d22a09d61ab4eb17ca2b19d64399f9cf191ab5"
+  end
 
   depends_on "cmake" => :build
   depends_on "c-ares"
@@ -24,9 +28,11 @@ class Wireshark < Formula
   depends_on "libmaxminddb"
   depends_on "libsmi"
   depends_on "libssh"
-  depends_on "lua@5.1"
+  depends_on "lua"
   depends_on "nghttp2"
-  depends_on "qt" => :optional
+
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
 
   def install
     args = std_cmake_args + %W[
@@ -36,8 +42,8 @@ class Wireshark < Formula
       -DBUILD_wireshark_gtk=OFF
       -DENABLE_PORTAUDIO=OFF
       -DENABLE_LUA=ON
-      -DLUA_INCLUDE_DIR=#{Formula["lua@5.1"].opt_include}/lua-5.1
-      -DLUA_LIBRARY=#{Formula["lua@5.1"].opt_lib}/liblua5.1.dylib
+      -DLUA_INCLUDE_DIR=#{Formula["lua"].opt_include}/lua
+      -DLUA_LIBRARY=#{Formula["lua"].opt_lib}/liblua.dylib
       -DCARES_INCLUDE_DIR=#{Formula["c-ares"].opt_include}
       -DGCRYPT_INCLUDE_DIR=#{Formula["libgcrypt"].opt_include}
       -DGNUTLS_INCLUDE_DIR=#{Formula["gnutls"].opt_include}
@@ -46,25 +52,14 @@ class Wireshark < Formula
       -DBUILD_sshdump=ON
       -DBUILD_ciscodump=ON
       -DENABLE_NGHTTP2=ON
+      -DBUILD_wireshark=OFF
+      -DENABLE_APPLICATION_BUNDLE=OFF
+      -DENABLE_QT5=OFF
+      -DCMAKE_INSTALL_NAME_DIR:STRING=#{lib}
     ]
 
-    if build.with? "qt"
-      args << "-DBUILD_wireshark=ON"
-      args << "-DENABLE_APPLICATION_BUNDLE=ON"
-      args << "-DENABLE_QT5=ON"
-    else
-      args << "-DBUILD_wireshark=OFF"
-      args << "-DENABLE_APPLICATION_BUNDLE=OFF"
-      args << "-DENABLE_QT5=OFF"
-    end
-
-    system "cmake", *args
+    system "cmake", *args, "."
     system "make", "install"
-
-    if build.with? "qt"
-      prefix.install bin/"Wireshark.app"
-      bin.install_symlink prefix/"Wireshark.app/Contents/MacOS/Wireshark" => "wireshark"
-    end
 
     # Install headers
     (include/"wireshark").install Dir["*.h"]
@@ -78,20 +73,17 @@ class Wireshark < Formula
     (include/"wireshark/wsutil").install Dir["wsutil/*.h"]
   end
 
-  def caveats; <<~EOS
-    This formula only installs the command-line utilities by default.
+  def caveats
+    <<~EOS
+      This formula only installs the command-line utilities by default.
 
-    Wireshark.app can be downloaded directly from the website:
-      https://www.wireshark.org/
+      Install Wireshark.app with Homebrew Cask:
+        brew install --cask wireshark
 
-    Alternatively, install with Homebrew Cask:
-      brew cask install wireshark
-
-    If your list of available capture interfaces is empty
-    (default macOS behavior), install ChmodBPF:
-
-      brew cask install wireshark-chmodbpf
-  EOS
+      If your list of available capture interfaces is empty
+      (default macOS behavior), install ChmodBPF:
+        brew install --cask wireshark-chmodbpf
+    EOS
   end
 
   test do

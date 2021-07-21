@@ -1,47 +1,33 @@
 class Ncmpc < Formula
   desc "Curses Music Player Daemon (MPD) client"
   homepage "https://www.musicpd.org/clients/ncmpc/"
-  url "https://www.musicpd.org/download/ncmpc/0/ncmpc-0.30.tar.xz"
-  sha256 "e3fe0cb58b8a77f63fb1645c2f974b334f1614efdc834ec698ee7d861f1b12a3"
-  revision 1
+  url "https://www.musicpd.org/download/ncmpc/0/ncmpc-0.45.tar.xz"
+  sha256 "17ff446447e002f2ed4342b7324263a830df7d76bcf177dce928f7d3a6f1f785"
+  license "GPL-2.0-or-later"
 
-  bottle do
-    rebuild 1
-    sha256 "91d0a96cb5759db8de8d2fccce6be795cc671937adea732424376c76ff9ddd3b" => :mojave
-    sha256 "74568bc0dcd4f4ad0408328ae49fb85ae3e93efcbefb649d43736e72f8c27a5e" => :high_sierra
-    sha256 "0f155e4eaba3842210c76adeda3250c61f6819bfe108bfee429819c5c579b661" => :sierra
-    sha256 "45b4d4d41251246e32f9ceea92faf205f8059fac4c37fd69f7da2b72fd8e8bcc" => :el_capitan
+  livecheck do
+    url "https://www.musicpd.org/download/ncmpc/0/"
+    regex(/href=.*?ncmpc[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
+  bottle do
+    sha256 cellar: :any, arm64_big_sur: "982287b4dcffb2e5534640b77f22b5f73865f8c0a521089252001557f3fe402a"
+    sha256 cellar: :any, big_sur:       "212ca11a9b74741334dca03a195c1d46898d6d7036708d48cf3ef704f29ddde6"
+    sha256 cellar: :any, catalina:      "6df55c912cf6f466378b548d9752793a9d2b6eb42c55c7cf2c1bc156fd29743c"
+    sha256 cellar: :any, mojave:        "972c8c9f233312353c16e416ecdd8c643fb5d805946c5ca7cdd1e9fae8c792a7"
+  end
+
+  depends_on "boost" => :build
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "gcc" if DevelopmentTools.clang_build_version <= 800
   depends_on "gettext"
-  depends_on "glib"
   depends_on "libmpdclient"
-
-  fails_with :clang do
-    build 800
-    cause "error: no matching constructor for initialization of 'value_type'"
-  end
+  depends_on "pcre"
 
   def install
-    sdk = MacOS.sdk_path_if_needed ? MacOS.sdk_path : ""
-
-    # Fix undefined symbols _COLORS, _COLS, etc.
-    # Reported 21 Sep 2017 https://github.com/MusicPlayerDaemon/ncmpc/issues/6
-    (buildpath/"ncurses.pc").write <<~EOS
-      Name: ncurses
-      Description: ncurses
-      Version: 5.4
-      Libs: -L/usr/lib -lncurses
-      Cflags: -I#{sdk}/usr/include
-    EOS
-    ENV.prepend_path "PKG_CONFIG_PATH", buildpath
-
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", ".."
+      system "meson", *std_meson_args, "-Dcolors=false", "-Dnls=disabled", ".."
       system "ninja", "install"
     end
   end

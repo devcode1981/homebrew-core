@@ -3,19 +3,19 @@ class Lsdvd < Formula
   homepage "https://sourceforge.net/projects/lsdvd"
   url "https://downloads.sourceforge.net/project/lsdvd/lsdvd/lsdvd-0.17.tar.gz"
   sha256 "7d2c5bd964acd266b99a61d9054ea64e01204e8e3e1a107abe41b1274969e488"
+  revision 4
 
   bottle do
-    cellar :any
-    sha256 "3db304db8d99a4e4b0c6f164b68fef1a0a961a5805af1775c5b0cc6be6b8f81a" => :mojave
-    sha256 "ada8d8a799f6138e42cef34f1592e7ff01278ae6b7c7e3a8e519509db2a24ce6" => :high_sierra
-    sha256 "d64473d3ff0f1b1b7dce0435da6305aa384a374ebca7154498770a9c66297cb7" => :sierra
-    sha256 "eefa4b673d38a87354cdac631ee7e7a1054e69e29e912ff52c2fa84995f7e189" => :el_capitan
-    sha256 "4662e19252627e7f8e344fc0f8b52e83e908f26e9253aad7590eef126ebae7f0" => :yosemite
+    sha256 cellar: :any,                 arm64_big_sur: "d581725cf2628d8c123d3f6f54d1baf06cb33362d9f6dc7d033a4f7768729474"
+    sha256 cellar: :any,                 big_sur:       "0d5d1a272ba88ff70ce68ddc35fca9811e2ca5222696373aaf3d2ffc0126a471"
+    sha256 cellar: :any,                 catalina:      "986e89fe0980a78d7d7ef18fd646d3176edbaa7fd6531c38f698d3bdf2aed5dd"
+    sha256 cellar: :any,                 mojave:        "66cbfc0e273fc63813c4948638ab849357ef9d3f72ce5b6322a27f5f614507f9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "fd9145daad69de5b544d8e9824b42829c74b048322044a35b76bd9b2b355f1eb"
   end
 
   depends_on "pkg-config" => :build
+  depends_on "libdvdcss"
   depends_on "libdvdread"
-  depends_on "libdvdcss" => :optional
 
   def install
     system "./configure", "--disable-debug", "--disable-dependency-tracking",

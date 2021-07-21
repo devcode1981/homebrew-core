@@ -1,35 +1,35 @@
 class Vegeta < Formula
   desc "HTTP load testing tool and library"
   homepage "https://github.com/tsenart/vegeta"
-  url "https://github.com/tsenart/vegeta.git",
-      :tag      => "cli/v12.1.0",
-      :revision => "c120b942b43950d4237e41f31152706fbc3d4c0d"
+  url "https://github.com/tsenart/vegeta/archive/v12.8.4.tar.gz"
+  sha256 "418249d07f04da0a587df45abe34705166de9e54a836e27e387c719ebab3e357"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "506681f1819a6b2b0213caa417d5d53a7bf00944053fa882dc076028013fbc6d" => :mojave
-    sha256 "d97eba9cd27f5713cd5007506a3377519d91d1c770072e69e8dbf5e91ccdbbc0" => :high_sierra
-    sha256 "1d67d0b99408572a976af51ddb4194408452eca2e094aa22ea1de80e89a964c8" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "7d95ea4ba41b01adc23e73959805a728a4d279cac33448685cced10e268e2965"
+    sha256 cellar: :any_skip_relocation, big_sur:       "1f2ea9a3a871ff2f93ee65f1a5977aece4479835d954026342ac0c5eb523db27"
+    sha256 cellar: :any_skip_relocation, catalina:      "63b383f4cdff26cc0bf4ba3e24a84ea6d7485a9a61fe49ac62b09f39c5f01e13"
+    sha256 cellar: :any_skip_relocation, mojave:        "76e2d89891ecee0bfa07e939619683cae2d954bca2c5524a6e87b84c105c6c25"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "df3853752133b68c20a9d054c12d36d531779fe595bc6011bb1e2d3245e9df2d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5cf44f8e5a57caff8a709f86cf6abb1c4da290afcdddc1b6088658b424c644b9"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/tsenart/vegeta").install buildpath.children
-    ENV.prepend_create_path "PATH", buildpath/"bin"
-    cd "src/github.com/tsenart/vegeta" do
-      system "make", "vegeta"
-      bin.install "vegeta"
-      prefix.install_metafiles
-    end
+    ldflags = %W[
+      -s -w
+      -X main.Version=#{version}
+      -X main.Date=#{time.iso8601}
+    ].join(" ")
+
+    system "go", "build", *std_go_args(ldflags: ldflags)
   end
 
   test do
     input = "GET https://google.com"
     output = pipe_output("#{bin}/vegeta attack -duration=1s -rate=1", input, 0)
     report = pipe_output("#{bin}/vegeta report", output, 0)
-    assert_match /Success +\[ratio\] +100.00%/, report
+    assert_match(/Success +\[ratio\] +100.00%/, report)
   end
 end

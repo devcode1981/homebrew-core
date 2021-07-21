@@ -1,18 +1,25 @@
 class ArgusClients < Formula
   desc "Audit Record Generation and Utilization System clients"
-  homepage "https://qosient.com/argus/"
+  homepage "https://openargus.org"
   url "https://qosient.com/argus/src/argus-clients-3.0.8.2.tar.gz"
   sha256 "32073a60ddd56ea8407a4d1b134448ff4bcdba0ee7399160c2f801a0aa913bb1"
-  revision 2
+  revision 4
 
-  bottle do
-    cellar :any
-    sha256 "36e51aaa7622a2da108c7ad863b52de41c3e0682dfb65b09d1a6e45b3c82db10" => :mojave
-    sha256 "c1e2461ae53031164d50a775b5c3f83b0f4155be54fac037b55934d940a631d4" => :high_sierra
-    sha256 "e1449092f7f8d2645de4339be67f9c84705f84b6d9fee8277277dbb5c3cd6625" => :sierra
-    sha256 "1f9efb0c9ed77f8c546595cfda46c60dcaec81e3c0d01e5a4d7a31595a24f88c" => :el_capitan
+  livecheck do
+    url "https://openargus.org/getting-argus"
+    regex(/href=.*?argus-clients[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
+  bottle do
+    sha256 cellar: :any, arm64_big_sur: "399217b0dc94900b41013e73be7ac85cccf52d9046d42d960f0461d07657739c"
+    sha256 cellar: :any, big_sur:       "8f1f7bfced13b9a62c6455be898a72e545f60d6f3c42a7ca9809bb8723ca4042"
+    sha256 cellar: :any, catalina:      "579d10c6b410d1fe18fb653c6413a30ea04f8826f441094bcb944244e9dfdfd5"
+    sha256 cellar: :any, mojave:        "ed00932e81d23c0a2cb872190088994a190967f4bbe8dc08e9f04212e6ede2e0"
+    sha256 cellar: :any, high_sierra:   "3c231bbc8dccff67f8eadb490bb128bbf063e9200993d53d0306e1730ea0bc5e"
+    sha256 cellar: :any, sierra:        "edfae9718df8bd3d4fe6225cca8170513638b1581234fffa8deaa5f9e228593d"
+  end
+
+  depends_on "geoip"
   depends_on "readline"
   depends_on "rrdtool"
 

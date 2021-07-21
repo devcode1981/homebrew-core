@@ -1,20 +1,17 @@
 class Dylibbundler < Formula
   desc "Utility to bundle libraries into executables for macOS"
   homepage "https://github.com/auriamg/macdylibbundler"
-  url "https://downloads.sourceforge.net/project/macdylibbundler/macdylibbundler/0.4.4/dylibbundler-0.4.4.zip"
-  sha256 "65d050327df99d12d96ae31a693bace447f4115e6874648f1b3960a014362200"
+  url "https://github.com/auriamg/macdylibbundler/archive/1.0.0.tar.gz"
+  sha256 "9e2c892f0cfd7e10cef9af1127fee6c18a4c391463b9fc50574667eec4ec2c60"
+  license "MIT"
   head "https://github.com/auriamg/macdylibbundler.git"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "4a5ee8ce4167301c5af472a253d615a67cdb276b58f961ef031845c3ec41fae7" => :mojave
-    sha256 "54e0ca248e9030351699e9ff31ed02dfe280a9dd97e1446966d0c81b14f644ee" => :high_sierra
-    sha256 "3d3297c9884ca982ce3a2ef9d31a53a1f96390268d0d9b378e3a954e0ad74996" => :sierra
-    sha256 "5dff018e62a9787871e45f4ae976358cfc3f7f85972a0aa0d4e039f97d4b8e0f" => :el_capitan
-    sha256 "eee9c829e932d8d25ded1e249bbf372ebfa0c9911dd3adc11a642184ecb6a6b7" => :yosemite
-    sha256 "49c1600c49ff7b10bdae8dc7351496680a9a4fb434ce6cd7393d10008506393e" => :mavericks
-    sha256 "351213e36062eee71018bb8ff9c0fa02d351fad63993c46f984223426ffe3efd" => :mountain_lion
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d7560a5028b5bb8300dcf33492c54f7fc148c9cd7af0ae58aac40184cb7d28de"
+    sha256 cellar: :any_skip_relocation, big_sur:       "62008e896c348f9714b20c04696595d0e858dd56457845de973c8089b83bde66"
+    sha256 cellar: :any_skip_relocation, catalina:      "ca4b42c902bd1ac60982c99415bb32e7faf3a7be6ef2f40c6961c2e6828daeab"
+    sha256 cellar: :any_skip_relocation, mojave:        "401e1ed1a81e08b88c5c3515677b8b5acbaa11c8c5b9f5ea854a3e8aaa3a4a33"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "2b2307946efce558f78aaea82b9abada919dc1e70cbf214fcb012f3fda12ff3e"
   end
 
   def install

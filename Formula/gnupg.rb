@@ -1,18 +1,25 @@
 class Gnupg < Formula
   desc "GNU Pretty Good Privacy (PGP) package"
   homepage "https://gnupg.org/"
-  url "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.11.tar.bz2"
-  sha256 "496c3e123ef53f35436ddccca58e82acaa901ca4e21174e77386c0cea0c49cd9"
+  url "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.3.1.tar.bz2"
+  sha256 "c498db346a9b9a4b399e514c8f56dfc0a888ce8f327f10376ff984452cd154ec"
+  license "GPL-3.0-or-later"
+  revision 1
+
+  livecheck do
+    url "https://gnupg.org/ftp/gcrypt/gnupg/"
+    regex(/href=.*?gnupg[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "96fed47873d43556d02e50ae30507db87ee99756667903a8b580140be1d289c1" => :mojave
-    sha256 "f4d023bce034fd3048894189c9a84156fbcef7d748905b6bbbeefcf030e6fec1" => :high_sierra
-    sha256 "ad74386e76f74636cd0c15a09c21b63d90b5f58bfeec7d8e267cb73a6a9735c9" => :sierra
+    sha256 arm64_big_sur: "fd27ef93bf469e8f5689c372f6b6dba70f2fb777b8056b22e5688b67a146b902"
+    sha256 big_sur:       "d1459dc52e4360dd6d812a833218e5ced1f08c10b131981a3ec2aab9fc5d7f9c"
+    sha256 catalina:      "fbdc50f45c45b3444b7d4dd48334e91b8a0c9dbf84da85f379981bbb2ee1a5a3"
+    sha256 mojave:        "bbbcdf26abc4cb46557b59ba60320317d457e7f794ed3092891df29153b5d807"
+    sha256 x86_64_linux:  "24dc3ed7dfaf78ef664f64389aac520950b8e82e43c2381a00123909c7bcb676"
   end
 
   depends_on "pkg-config" => :build
-  depends_on "sqlite" => :build if MacOS.version == :mavericks
-  depends_on "adns"
   depends_on "gettext"
   depends_on "gnutls"
   depends_on "libassuan"
@@ -23,6 +30,16 @@ class Gnupg < Formula
   depends_on "npth"
   depends_on "pinentry"
 
+  uses_from_macos "sqlite", since: :catalina
+
+  on_linux do
+    depends_on "libidn"
+  end
+
+  # Fix tests for gnupg 2.3.1, remove in the next release
+  # Patch ref: https://dev.gnupg.org/rGd36c4dc95b72b780375d57311bdf4ae842fd54fa
+  patch :DATA
+
   def install
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
@@ -30,27 +47,25 @@ class Gnupg < Formula
                           "--sbindir=#{bin}",
                           "--sysconfdir=#{etc}",
                           "--enable-all-tests",
-                          "--enable-symcryptrun",
                           "--with-pinentry-pgm=#{Formula["pinentry"].opt_bin}/pinentry"
     system "make"
     system "make", "check"
     system "make", "install"
+
+    # Configure scdaemon as recommended by upstream developers
+    # https://dev.gnupg.org/T5415#145864
+    on_macos do
+      # write to buildpath then install to ensure existing files are not clobbered
+      (buildpath/"scdaemon.conf").write <<~EOS
+        disable-ccid
+      EOS
+      pkgetc.install "scdaemon.conf"
+    end
   end
 
   def post_install
     (var/"run").mkpath
-    quiet_system "killall", "gpg-agent"
-  end
-
-  def caveats; <<~EOS
-    Once you run this version of gpg you may find it difficult to return to using
-    a prior 1.4.x or 2.0.x. Most notably the prior versions will not automatically
-    know about new secret keys created or imported by this version. We recommend
-    creating a backup of your `~/.gnupg` prior to first use.
-
-    For full details on each change and how it could impact you please see
-      https://www.gnupg.org/faq/whats-new-in-2.1.html
-  EOS
+    quiet_system "gpgconf", "--reload", "all"
   end
 
   test do
@@ -75,3 +90,17 @@ class Gnupg < Formula
     end
   end
 end
+
+__END__
+diff --git a/tests/openpgp/defs.scm b/tests/openpgp/defs.scm
+index 768d479aa..86d312f82 100644
+--- a/tests/openpgp/defs.scm
++++ b/tests/openpgp/defs.scm
+@@ -338,6 +338,7 @@
+   (create-file "common.conf"
+ 	       (if (flag "--use-keyboxd" *args*)
+ 		   "use-keyboxd" "#use-keyboxd")
++	       (string-append "keyboxd-program " (tool 'keyboxd))
+ 	       )
+
+   (create-file "gpg.conf"

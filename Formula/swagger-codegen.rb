@@ -1,28 +1,28 @@
 class SwaggerCodegen < Formula
   desc "Generate clients, server stubs, and docs from an OpenAPI spec"
   homepage "https://swagger.io/swagger-codegen/"
-  url "https://github.com/swagger-api/swagger-codegen/archive/v3.0.3.tar.gz"
-  sha256 "6b6e3e892ac32e329eab0f95d824257b628f7dcf6b7d31097c6099593234309f"
+  url "https://github.com/swagger-api/swagger-codegen/archive/v3.0.26.tar.gz"
+  sha256 "01db9839aa443f4c351324c4150af8b5e06eca95452e6195354c3fcd91a052b3"
+  license "Apache-2.0"
   head "https://github.com/swagger-api/swagger-codegen.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "60825fac6d6996854f48c315f613dc9c3ff445f12a04019831d19e37d3dda79b" => :mojave
-    sha256 "fd34374939e14763e276b9360a3e299501ba889007780048454a08cfb86a00f1" => :high_sierra
-    sha256 "b53225cc14072d989e87075c3fc4f0db908444971b26edd16e6b6a30af8f96c0" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "b4174bfcb8d3f5809017cbfc9ba3af8e474a969bbfd8ed81d1848568dcb0a0df"
+    sha256 cellar: :any_skip_relocation, big_sur:       "f892a33ad66e1e5de46a01f4fb832d6b7d412f5bc0444a891a0246a962cc59d4"
+    sha256 cellar: :any_skip_relocation, catalina:      "e4d0ec8d4c8cdc8f0d8e7b666d2c3e79e5dd81a3abc6c6541abab8fb72eb1131"
+    sha256 cellar: :any_skip_relocation, mojave:        "96c06c66bf4781aa2dccc71cf65edcfb9c60fb2a34177612049acb9c17db20d6"
   end
 
   depends_on "maven" => :build
-  depends_on :java => "1.8"
+  depends_on "openjdk@11"
 
   def install
     # Need to set JAVA_HOME manually since maven overrides 1.8 with 1.7+
-    cmd = Language::Java.java_home_cmd("1.8")
-    ENV["JAVA_HOME"] = Utils.popen_read(cmd).chomp
+    ENV["JAVA_HOME"] = Formula["openjdk@11"].opt_prefix
 
     system "mvn", "clean", "package"
     libexec.install "modules/swagger-codegen-cli/target/swagger-codegen-cli.jar"
-    bin.write_jar_script libexec/"swagger-codegen-cli.jar", "swagger-codegen"
+    bin.write_jar_script libexec/"swagger-codegen-cli.jar", "swagger-codegen", java_version: "11"
   end
 
   test do

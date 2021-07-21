@@ -1,22 +1,20 @@
 class Libvpx < Formula
   desc "VP8/VP9 video codec"
   homepage "https://www.webmproject.org/code/"
-  url "https://github.com/webmproject/libvpx/archive/v1.7.0.tar.gz"
-  sha256 "1fec931eb5c94279ad219a5b6e0202358e94a93a90cfb1603578c326abfc1238"
-  head "https://chromium.googlesource.com/webm/libvpx", :using => :git
+  url "https://github.com/webmproject/libvpx/archive/v1.10.0.tar.gz"
+  sha256 "85803ccbdbdd7a3b03d930187cb055f1353596969c1f92ebec2db839fa4f834a"
+  license "BSD-3-Clause"
+  head "https://chromium.googlesource.com/webm/libvpx.git"
 
   bottle do
-    rebuild 1
-    sha256 "ea63d0340f8acb7222773e1c702caa60aa843cb7106a44880b9e49b258cc0724" => :mojave
-    sha256 "c908bf9b9438bee689162350cdf89e6a7ac612b556dfe557dd6cfee89ff043a8" => :high_sierra
-    sha256 "793fbaf38b905d1831c1264e37bd874e20d563cc4e93878b42ff42471db4679a" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "5e6492d102cbc698f8b604fcc16f5e07156bacf673be966c0ba13cf364655724"
+    sha256 cellar: :any_skip_relocation, big_sur:       "d6c6de387100ba036862042e1d1bfa81faff8dd6668e9b7b35c89dbdc13796f4"
+    sha256 cellar: :any_skip_relocation, catalina:      "41c24761694b0bc761d98e6e2c37e711fb0ea30cc39ef6a07e14b9957297c2d5"
+    sha256 cellar: :any_skip_relocation, mojave:        "951073a889dd7e072aac6241b70a6b415fef0b8a9f92dc93962eaceb139b3f79"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "53cf8bdab9ef3ffc696ffd0ff400e914ad21bf10ca0794d024d122ba61290595"
   end
 
   depends_on "yasm" => :build
-
-  # configure misdetects 32-bit 10.6
-  # https://code.google.com/p/webm/issues/detail?id=401
-  depends_on :macos => :lion
 
   def install
     args = %W[
@@ -25,6 +23,7 @@ class Libvpx < Formula
       --disable-examples
       --disable-unit-tests
       --enable-pic
+      --enable-vp9-highbitdepth
     ]
 
     # https://bugs.chromium.org/p/webm/issues/detail?id=1475

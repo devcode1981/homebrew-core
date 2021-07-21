@@ -1,22 +1,19 @@
 class GnuSmalltalk < Formula
-  desc "GNU Smalltalk interpreter and image"
-  homepage "http://smalltalk.gnu.org/"
+  desc "Implementation of the Smalltalk language"
+  homepage "https://www.gnu.org/software/smalltalk/"
   url "https://ftp.gnu.org/gnu/smalltalk/smalltalk-3.2.5.tar.xz"
   mirror "https://ftpmirror.gnu.org/smalltalk/smalltalk-3.2.5.tar.xz"
   sha256 "819a15f7ba8a1b55f5f60b9c9a58badd6f6153b3f987b70e7b167e7755d65acc"
-  revision 7
+  license "GPL-2.0"
+  revision 9
   head "https://github.com/gnu-smalltalk/smalltalk.git"
 
   bottle do
-    sha256 "94385e9ceb6dac590be88af2d0de7a196d3491747f3772c2aa2f92620ea111db" => :mojave
-    sha256 "9d086ae46e600651c937a8602fbb3a2c1fbe44be15517fe210dd46d21d7a391c" => :high_sierra
-    sha256 "593a5202fc714257dc5ffb0fcad4faa553d63727f74d87a3106eaf6dcae46464" => :sierra
-    sha256 "a2a098e2fd4e07d87b705fc8aaabb6603df62ac437b5af68f610ff5b4797c0d5" => :el_capitan
+    sha256 big_sur:     "9fc21dd5d9f30b200c1d4b1187a22663f100ac4db1363e86edc12d59db96cd43"
+    sha256 catalina:    "8a00e81f1a751efeec308de2bbf2e75a1173a636a29c27cec440c121208f0fe6"
+    sha256 mojave:      "0f569ca28ff2eaa54b36780c278a7170be42ef25e6d305852323952390be7270"
+    sha256 high_sierra: "2f369eed3ac62fbe0c4c257cefa0c9477ce0a806859a18d65ba565fbfdc76786"
   end
-
-  option "with-tcltk", "Build the Tcl/Tk module that requires X11"
-
-  deprecated_option "tcltk" => "with-tcltk"
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
@@ -28,17 +25,8 @@ class GnuSmalltalk < Formula
   depends_on "libsigsegv"
   depends_on "libtool"
   depends_on "readline"
-  depends_on :x11 if build.with? "tcltk"
-  depends_on "glew" => :optional
 
   def install
-    ENV.m32 unless MacOS.prefer_64_bit?
-
-    # Fix build failure "Symbol not found: _clock_gettime"
-    if MacOS.version == "10.11" && MacOS::Xcode.installed? && MacOS::Xcode.version >= "8.0"
-      ENV["ac_cv_search_clock_gettime"] = "no"
-    end
-
     args = %W[
       --disable-debug
       --disable-dependency-tracking
@@ -46,14 +34,10 @@ class GnuSmalltalk < Formula
       --with-lispdir=#{elisp}
       --disable-gtk
       --with-readline=#{Formula["readline"].opt_lib}
+      --without-tcl
+      --without-tk
+      --without-x
     ]
-
-    if build.without? "tcltk"
-      args << "--without-tcl" << "--without-tk" << "--without-x"
-    end
-
-    # Disable generational gc in 32-bit
-    args << "--disable-generational-gc" unless MacOS.prefer_64_bit?
 
     system "autoreconf", "-ivf"
     system "./configure", *args

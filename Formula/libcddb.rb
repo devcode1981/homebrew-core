@@ -1,26 +1,23 @@
 class Libcddb < Formula
   desc "CDDB server access library"
   homepage "https://libcddb.sourceforge.io/"
-  url "https://downloads.sourceforge.net/libcddb/libcddb-1.3.2.tar.bz2"
+  url "https://downloads.sourceforge.net/project/libcddb/libcddb/1.3.2/libcddb-1.3.2.tar.bz2"
   sha256 "35ce0ee1741ea38def304ddfe84a958901413aa829698357f0bee5bb8f0a223b"
-  revision 3
+  revision 4
 
   bottle do
-    cellar :any
-    sha256 "fd4deef19baf21adb361af69392b1f33921d84e0fb4fbd268e08f5abcf3d0a30" => :mojave
-    sha256 "94d7f528e8a973b10e501b390e5bd1c7173b2b63cbcaec311975ab70fba5dc36" => :high_sierra
-    sha256 "05158c1d03538f29cb8f4bd932925efaceba92eb87a748538deb25977b5f3238" => :sierra
-    sha256 "bf7769869336f10b416971cef25252e3afd93a791c4d96ce5d4e134f449a8991" => :el_capitan
+    rebuild 2
+    sha256 cellar: :any,                 arm64_big_sur: "5c01ee6149ed61a23ad7d8a2c09250fedf3b605638552fe82057cf77b0ac61f1"
+    sha256 cellar: :any,                 big_sur:       "e19fbf67a440482346f40076ceae29a8b72590ef1376e6c5454d9f7814984e3b"
+    sha256 cellar: :any,                 catalina:      "ca3cb9caeed526ef59a167293871d7b739c2ee6271571225dd1640f4af101140"
+    sha256 cellar: :any,                 mojave:        "534e9e7afc756a552c414b224d86ffa84c9966bbccf3a7d781a6b55a482e9bdf"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "a96b2ab16f2b983fa13921bc81d7b368a594620efd857d84ee8fb1667a18799d"
   end
 
   depends_on "pkg-config" => :build
   depends_on "libcdio"
 
   def install
-    if MacOS.version == :yosemite && MacOS::Xcode.installed? && MacOS::Xcode.version >= "7.0"
-      ENV.delete("SDKROOT")
-    end
-
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}"
     system "make", "install"

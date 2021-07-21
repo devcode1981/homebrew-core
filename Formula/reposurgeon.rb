@@ -2,24 +2,27 @@ class Reposurgeon < Formula
   desc "Edit version-control repository history"
   homepage "http://www.catb.org/esr/reposurgeon/"
   url "https://gitlab.com/esr/reposurgeon.git",
-      :tag      => "3.44",
-      :revision => "f37fa1aa8e3235bb4c64cbcd9e85a6907b4dea50"
+      tag:      "4.27",
+      revision: "39b0cac8387c888d3dfb5fbbb9ab69fc0fecc79b"
+  license "BSD-2-Clause"
   head "https://gitlab.com/esr/reposurgeon.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "9666a908f723015481c74de2aa895ff09f55a8a66cda57317c681593d0cf87f2" => :mojave
-    sha256 "8dae663f9138b383b4fdbe1f8a66b87cbb05f518ae929441ff46707b5bade762" => :high_sierra
-    sha256 "2dc5be9011fa4d7aad8f5ecc6ff125876a61769341d15661f93513e5603a8733" => :sierra
-    sha256 "d0ff9f9c06bd124bc9e8dc31bf59eaae1a28b124234d4b359ad719144cdff9ab" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "28135b31b2a2a3340107e0773c4edb46a58216131529f4ae5349c06df3e8d854"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b90757c1fa826ff66296c4b3150758448b5a7972e4688fe137583b5274f44d4a"
+    sha256 cellar: :any_skip_relocation, catalina:      "7afe781fbea234675b80909026416003e5c39f27d1c32f16670bcb25182ce657"
+    sha256 cellar: :any_skip_relocation, mojave:        "ec2899c973fac83e3b67ba5326b9c7b9d0f23bf381373ed4d0f3fac763586baf"
   end
 
-  depends_on "asciidoc" => :build
-  depends_on "xmlto" => :build
-  depends_on "pypy"
+  depends_on "asciidoctor" => :build
+  depends_on "gawk" => :build if MacOS.version <= :catalina
+  depends_on "go" => :build
+  depends_on "git" # requires >= 2.19.2
 
   def install
+    ENV.append_path "GEM_PATH", Formula["asciidoctor"].opt_libexec
     ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
+    system "make"
     system "make", "install", "prefix=#{prefix}"
     elisp.install "reposurgeon-mode.el"
   end

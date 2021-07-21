@@ -1,15 +1,23 @@
 class Opensc < Formula
   desc "Tools and libraries for smart cards"
   homepage "https://github.com/OpenSC/OpenSC/wiki"
-  url "https://github.com/OpenSC/OpenSC/releases/download/0.19.0/opensc-0.19.0.tar.gz"
-  sha256 "2c5a0e4df9027635290b9c0f3addbbf0d651db5ddb0ab789cb0e978f02fd5826"
+  url "https://github.com/OpenSC/OpenSC/releases/download/0.21.0/opensc-0.21.0.tar.gz"
+  sha256 "2bfbbb1dcb4b8d8d75685a3e95c30798fb6411d4efab3690fd89d2cb25f3325e"
+  license "LGPL-2.1-or-later"
   head "https://github.com/OpenSC/OpenSC.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    sha256 "75862725aed348f1f4dce78e71a384c6b5439cd7487e77710494fe66ac430ea0" => :mojave
-    sha256 "407bc8be487da4744b24fb2a5e931a2b0397a5376b17350771df3328a99a9fa3" => :high_sierra
-    sha256 "d0f61b74690cd648f36acc10890372688c84ac231fa9456193121a60fbc0d980" => :sierra
-    sha256 "e265daf4221e14d23b6a8a82d657a87bd4c5291a0577b43ca5377a08a0f19f09" => :el_capitan
+    rebuild 2
+    sha256 arm64_big_sur: "885a597c41199253c351ca6ff2e74e37d4e185689aa39f13427c23f9c0ec230d"
+    sha256 big_sur:       "c65a43909f56d856d4a3dea6ff2010d0f4933dd8508e6cc0ee1898884e802df9"
+    sha256 catalina:      "483b47da8bd5a8339fc4dc6b2498b6c662cb0783801e5dfa2651602d7153fd86"
+    sha256 mojave:        "32df51660a704109b38931903b89c88ca79e98ce806f83d59fff486275edfdab"
+    sha256 x86_64_linux:  "f958a474641861b3a404dce4b482045a6ae7760ff3e4b8ad8d11b4164b07681c"
   end
 
   depends_on "autoconf" => :build
@@ -17,7 +25,9 @@ class Opensc < Formula
   depends_on "docbook-xsl" => :build
   depends_on "libtool" => :build
   depends_on "pkg-config" => :build
-  depends_on "openssl"
+  depends_on "openssl@1.1"
+
+  uses_from_macos "pcsc-lite"
 
   def install
     args = %W[
@@ -32,5 +42,17 @@ class Opensc < Formula
     system "./bootstrap"
     system "./configure", *args
     system "make", "install"
+  end
+
+  def caveats
+    <<~EOS
+      The OpenSSH PKCS11 smartcard integration will not work from High Sierra
+      onwards. If you need this functionality, unlink this formula, then install
+      the OpenSC cask.
+    EOS
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/opensc-tool -i")
   end
 end

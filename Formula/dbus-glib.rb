@@ -1,15 +1,20 @@
 class DbusGlib < Formula
   desc "GLib bindings for the D-Bus message bus system"
   homepage "https://wiki.freedesktop.org/www/Software/DBusBindings/"
-  url "https://dbus.freedesktop.org/releases/dbus-glib/dbus-glib-0.110.tar.gz"
-  sha256 "7ce4760cf66c69148f6bd6c92feaabb8812dee30846b24cd0f7395c436d7e825"
+  url "https://dbus.freedesktop.org/releases/dbus-glib/dbus-glib-0.112.tar.gz"
+  sha256 "7d550dccdfcd286e33895501829ed971eeb65c614e73aadb4a08aeef719b143a"
+
+  livecheck do
+    url "https://dbus.freedesktop.org/releases/dbus-glib/"
+    regex(/href=.*?dbus-glib[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "ef484037321aebc8a9b334044df997131aac7c269f13eafd33ebe23db8a08c90" => :mojave
-    sha256 "4e7193ebfc16eeb9635ae90023890df2735bcf8b28851ed8d284969548a3d4bd" => :high_sierra
-    sha256 "9eae92ddc86a2b845e3de72e75c8cf5f965e170c921b30dc6540e4126ee89ed8" => :sierra
-    sha256 "122823a60de6d94f947fd7a0db6f28ceb7c751b55e72a48d14917d021ed033ae" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "d87340d630e5e4e08fcaf5c557ad1577736069561e3903f763cb50396b417830"
+    sha256 cellar: :any,                 big_sur:       "b8b40647f906afbe0c3c35be698d77b02e22fe204cad83e1cda62842aba68ea2"
+    sha256 cellar: :any,                 catalina:      "5f964469ee5636271ebb40d0df69cd2e71dc292cf229b59be6b0a15543016373"
+    sha256 cellar: :any,                 mojave:        "ba4476464714dcde25a52ba1a3ae3a9646b9a293ab63ceb2f0ea5fc4192df97a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "40299090266efbefb057847af56cbccedf7c96ba98107c86fe4c7c0b8254cf0c"
   end
 
   depends_on "pkg-config" => :build

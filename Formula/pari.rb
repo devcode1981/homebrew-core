@@ -1,29 +1,45 @@
 class Pari < Formula
   desc "Computer algebra system designed for fast computations in number theory"
   homepage "https://pari.math.u-bordeaux.fr/"
-  url "https://pari.math.u-bordeaux.fr/pub/pari/unix/pari-2.11.0.tar.gz"
-  sha256 "3835caccaa3e0c64764521032d89efeb8773cce841f6655fec6d58e790f4c9a1"
+  url "https://pari.math.u-bordeaux.fr/pub/pari/unix/pari-2.13.2.tar.gz"
+  sha256 "1679985094a0b723d14f49aa891dbe5ec967aa4040050a2c50bd764ddb3eba24"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url "https://pari.math.u-bordeaux.fr/pub/pari/unix/"
+    regex(/href=.*?pari[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "62dd478f21d266b95bc7ef62a1cefbb760416540fa9ad4c481dab4160c61f6ae" => :mojave
-    sha256 "695ad213a9fbb81ca3ae948b5b597f5bd992e4f016fd04631aa031f455a2a218" => :high_sierra
-    sha256 "5763ae6604f64710145363b7eaf3e6a2c14f759f05329222da4ef973da1ceeed" => :sierra
-    sha256 "0445d9d8f3cfe90c13ed276b869b847667a4e610dc99477f02e4af356c02eff7" => :el_capitan
+    sha256 arm64_big_sur: "ded4bc8651cbbab6d1c13f1209b3d013c39d712dee28ed38e2e927052d4acd77"
+    sha256 big_sur:       "84b7739fcd41c82756c2610a6b6e7686d52d9b338b9cd23b9bc7405aea3b8901"
+    sha256 catalina:      "6eafc6e4947af844a2984f78ee3769df27be397d2beeab046595c87cf54a0576"
+    sha256 mojave:        "6f745e024e7cd4acbea3db05f8942c843549aa0003c621bb597ac9982a65e56d"
   end
 
   depends_on "gmp"
   depends_on "readline"
-  depends_on :x11
 
   def install
     readline = Formula["readline"].opt_prefix
     gmp = Formula["gmp"].opt_prefix
     system "./Configure", "--prefix=#{prefix}",
                           "--with-gmp=#{gmp}",
-                          "--with-readline=#{readline}"
+                          "--with-readline=#{readline}",
+                          "--graphic=ps"
     # make needs to be done in two steps
     system "make", "all"
     system "make", "install"
+
+    # Avoid references to Homebrew shims
+    inreplace lib/"pari/pari.cfg", HOMEBREW_LIBRARY/"Homebrew/shims/mac/super/", "/usr/bin/"
+  end
+
+  def caveats
+    <<~EOS
+      If you need the graphical plotting functions you need to install X11 with:
+        brew install --cask xquartz
+    EOS
   end
 
   test do

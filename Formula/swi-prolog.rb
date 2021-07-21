@@ -1,62 +1,52 @@
 class SwiProlog < Formula
   desc "ISO/Edinburgh-style Prolog interpreter"
-  homepage "http://www.swi-prolog.org/"
-  url "http://www.swi-prolog.org/download/stable/src/swipl-7.6.4.tar.gz"
-  sha256 "2d3d7aabd6d99a02dcc2da5d7604e3500329e541c6f857edc5aa06a3b1267891"
+  homepage "https://www.swi-prolog.org/"
+  url "https://www.swi-prolog.org/download/stable/src/swipl-8.2.4.tar.gz"
+  sha256 "f4bcc78437f9080ab089762e9e6afa7071df7f584c14999b92b9a90a4efbd7d8"
+  license "BSD-2-Clause"
+  head "https://github.com/SWI-Prolog/swipl-devel.git"
+
+  livecheck do
+    url "https://www.swi-prolog.org/download/stable/src/"
+    regex(/href=.*?swipl[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "5076f120b7f2775fc0968885d2d0e82cb7a93f3040c1c39243abdd8ec3ba1e59" => :mojave
-    sha256 "7a1a76d4b9160e0fea1899a8af0dcd448f71efef8476b1732d75e8d0339ac419" => :high_sierra
-    sha256 "af00bfcc0da68a800dd50e608aabc6620db00de1a7bf1b986a7bc49ae58ea234" => :sierra
-    sha256 "2016d9b076b252805f48f705181d03cd26183b0f74a026c029cd34f9e8afb79d" => :el_capitan
+    sha256 arm64_big_sur: "3a899873b22a6e4e380498ec855d2c0c7919c848872087da676d385745e39179"
+    sha256 big_sur:       "1a5384ec31ca1088eff1e16d1977a4120f12e8c15e3703ef3c80c564848e2e5c"
+    sha256 catalina:      "06c31b007436027785e73cdbf16d82dd6356766b821580a4fceda8db5eb4c86c"
+    sha256 mojave:        "1deeaab4064bf3da632a28e539f46790252cfec839ae932bc729ecc239e347c3"
   end
 
-  head do
-    url "https://github.com/SWI-Prolog/swipl-devel.git"
-
-    depends_on "autoconf" => :build
-  end
-
-  option "with-jpl", "Enable JPL (Java Prolog Bridge)"
-  option "with-xpce", "Enable XPCE (Prolog Native GUI Library)"
-
+  depends_on "cmake" => :build
   depends_on "pkg-config" => :build
+  depends_on "berkeley-db"
   depends_on "gmp"
-  depends_on "openssl"
+  depends_on "jpeg"
+  depends_on "libarchive"
+  depends_on "libyaml"
+  depends_on "openssl@1.1"
+  depends_on "pcre"
   depends_on "readline"
-  depends_on "libarchive" => :optional
-
-  if build.with? "xpce"
-    depends_on :x11
-    depends_on "jpeg"
-  end
+  depends_on "unixodbc"
 
   def install
-    if build.with? "libarchive"
-      ENV["ARPREFIX"] = Formula["libarchive"].opt_prefix
-    else
-      ENV.append "DISABLE_PKGS", "archive"
+    mkdir "build" do
+      system "cmake", "..", *std_cmake_args,
+                      "-DSWIPL_PACKAGES_JAVA=OFF",
+                      "-DSWIPL_PACKAGES_X=OFF",
+                      "-DCMAKE_INSTALL_PREFIX=#{libexec}"
+      system "make", "install"
     end
 
-    args = ["--prefix=#{libexec}", "--mandir=#{man}"]
-    ENV.append "DISABLE_PKGS", "jpl" if build.without? "jpl"
-    ENV.append "DISABLE_PKGS", "xpce" if build.without? "xpce"
-
-    # SWI-Prolog's Makefiles don't add CPPFLAGS to the compile command, but do
-    # include CIFLAGS. Setting it here. Also, they clobber CFLAGS, so including
-    # the Homebrew-generated CFLAGS into COFLAGS here.
-    ENV["CIFLAGS"] = ENV.cppflags
-    ENV["COFLAGS"] = ENV.cflags
-
-    # './prepare' prompts the user to build documentation
-    # (which requires other modules). '3' is the option
-    # to ignore documentation.
-    system "echo 3 | ./prepare" if build.head?
-    system "./configure", *args
-    system "make"
-    system "make", "install"
-
     bin.write_exec_script Dir["#{libexec}/bin/*"]
+
+    on_linux do
+      inreplace "libexec/lib/swipl/bin/x86_64-linux/swipl-ld",
+        HOMEBREW_SHIMS_PATH/"linux/super/", "/usr/bin/"
+      inreplace "libexec/lib/swipl/lib/x86_64-linux/libswipl.so.#{version}",
+        HOMEBREW_SHIMS_PATH/"linux/super/", "/usr/bin/"
+    end
   end
 
   test do

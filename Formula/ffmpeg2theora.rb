@@ -1,43 +1,42 @@
 class Ffmpeg2theora < Formula
   desc "Convert video files to Ogg Theora format"
   homepage "https://v2v.cc/~j/ffmpeg2theora/"
-  revision 2
-
-  stable do
-    url "https://v2v.cc/~j/ffmpeg2theora/downloads/ffmpeg2theora-0.30.tar.bz2"
-    sha256 "4f6464b444acab5d778e0a3359d836e0867a3dcec4ad8f1cdcf87cb711ccc6df"
-
-    depends_on "libkate" => :optional
-  end
+  url "https://v2v.cc/~j/ffmpeg2theora/downloads/ffmpeg2theora-0.30.tar.bz2"
+  sha256 "4f6464b444acab5d778e0a3359d836e0867a3dcec4ad8f1cdcf87cb711ccc6df"
+  revision 9
+  head "https://gitlab.xiph.org/xiph/ffmpeg2theora.git"
 
   bottle do
-    cellar :any
-    sha256 "a517dd9bad22e77eb93ca62d3ad06f47f2a75c0104e651ae610b12158e9b1788" => :mojave
-    sha256 "e77079f5d599e4caeb3db3892d16234436918a6c4d8fe2cb2adb3b263ca57250" => :high_sierra
-    sha256 "f3dac1a662858bce6a7249233075612405fc438e78d81c4076daeb0e15d445db" => :sierra
-    sha256 "a85645fc31da1e0180c316eb93f8ad54e903d4c61bf3ef42aab17e5d6b5cd21c" => :el_capitan
-  end
-
-  head do
-    url "https://git.xiph.org/ffmpeg2theora.git"
-
-    depends_on "libkate" => :recommended
+    sha256 cellar: :any, arm64_big_sur: "114e5f48ead0a1375f4dab1217723fe5f6850529ee5fc3f5fe4042295adf327a"
+    sha256 cellar: :any, big_sur:       "1c2718b1a6c348dfceaeef1bd155b6caf385cf4756feefb568cb6f42a6f099e2"
+    sha256 cellar: :any, catalina:      "05f0fb622f434c062ea69f39a09ea1db62824efb26fcb8adf0921600785e0b3c"
+    sha256 cellar: :any, mojave:        "30967cb12c298c6441bb8f4d283a9659c314639cc0409a1a446cb1a80216a31b"
   end
 
   depends_on "pkg-config" => :build
   depends_on "scons" => :build
   depends_on "ffmpeg"
+  depends_on "libkate"
   depends_on "libogg"
   depends_on "libvorbis"
   depends_on "theora"
 
+  # Use python3 print()
+  patch do
+    url "https://salsa.debian.org/multimedia-team/ffmpeg2theora/-/raw/master/debian/patches/0002-Use-python3-print.patch"
+    sha256 "8cf333e691cf19494962b51748b8246502432867d9feb3d7919d329cb3696e97"
+  end
+
   def install
+    # Fix unrecognized "PRId64" format specifier
+    inreplace "src/theorautils.c", "#include <limits.h>", "#include <limits.h>\n#include <inttypes.h>"
+
     args = [
       "prefix=#{prefix}",
       "mandir=PREFIX/share/man",
       "APPEND_LINKFLAGS=-headerpad_max_install_names",
     ]
-    scons "install", *args
+    system "scons", "install", *args
   end
 
   test do

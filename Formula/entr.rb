@@ -1,20 +1,22 @@
 class Entr < Formula
   desc "Run arbitrary commands when files change"
-  homepage "http://entrproject.org/"
-  url "http://entrproject.org/code/entr-4.1.tar.gz"
-  sha256 "c503c93ccffc1e6b2da979cdcb88c5a686e261103501eede7077fa089cdfef78"
+  homepage "https://eradman.com/entrproject/"
+  url "https://eradman.com/entrproject/code/entr-5.0.tar.gz"
+  sha256 "2a87bb7d9e5e89b6f614495937b557dbb8144ea53d0c1fa1812388982cd41ebb"
+  license "ISC"
+  head "https://github.com/eradman/entr.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "ebeddbb2db1e63b3b272ffae240e493baa883a3b24bbbf7efdfd7a354503d8a5" => :mojave
-    sha256 "52b11e50b2d4be63553eed9a303932a4f1da19fe0969d6846f38a28b26ea8fcc" => :high_sierra
-    sha256 "ec7a54d7b401a96eb335cd18869c528378196ea185fdba7d00de8a38b626868c" => :sierra
-    sha256 "5547fc0dd281c1478b87d53f6de5502bbab1738aa3301beea655485404b23077" => :el_capitan
+  livecheck do
+    url "https://eradman.com/entrproject/code/"
+    regex(/href=.*?entr[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  head do
-    url "https://bitbucket.org/eradman/entr", :using => :hg
-    depends_on "mercurial" => :build
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "3f16eedf5935042476d987e023d856cf2600b88c591cc175c3b8d84c3d5f5a99"
+    sha256 cellar: :any_skip_relocation, big_sur:       "34c0d604196544f8ae2e42b12aa74f00629cac3f5bfb98afc129fed8d67b2098"
+    sha256 cellar: :any_skip_relocation, catalina:      "d8da9de096d0a21583ca63bc426b0880ad873b89d003beac8e99d5208b58daa1"
+    sha256 cellar: :any_skip_relocation, mojave:        "a892e39fd5faed448d1cca2fcee8a961dda60cb8bb811f63f5ed3773e1e84b27"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "54d9d924c7e75e1ff0f336820541204b543a023e85c49f3388536b4aa0e70334"
   end
 
   def install
@@ -31,6 +33,6 @@ class Entr < Formula
       sleep 0.5
       touch testpath/"test.2"
     end
-    assert_equal "New File", pipe_output("#{bin}/entr -p -d echo 'New File'", testpath).strip
+    assert_equal "New File", pipe_output("#{bin}/entr -n -p -d echo 'New File'", testpath).strip
   end
 end

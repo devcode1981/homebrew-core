@@ -1,45 +1,50 @@
 class Autojump < Formula
   desc "Shell extension to jump to frequently used directories"
   homepage "https://github.com/wting/autojump"
-  url "https://github.com/wting/autojump/archive/release-v22.5.1.tar.gz"
-  sha256 "765fabda130eb4df70d1c1e5bc172e1d18f8ec22c6b89ff98f1674335292e99f"
+  url "https://github.com/wting/autojump/archive/release-v22.5.3.tar.gz"
+  sha256 "00daf3698e17ac3ac788d529877c03ee80c3790472a85d0ed063ac3a354c37b1"
+  license "GPL-3.0-or-later"
+  revision 2
   head "https://github.com/wting/autojump.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "80aef4fa4699bad12cae0c1a6d6db2632d15c13b503796db5c9889f7b43a3279" => :mojave
-    sha256 "8e302e0a90b898349749c4b83b3c758f4af76ad415f6ac5e245cc0df9c2c90e6" => :high_sierra
-    sha256 "29d37b9fc31a978d0767c4925e88fa9fe3cebf4a9f9278fa82a96baf5caa0db4" => :sierra
-    sha256 "29d37b9fc31a978d0767c4925e88fa9fe3cebf4a9f9278fa82a96baf5caa0db4" => :el_capitan
-    sha256 "29d37b9fc31a978d0767c4925e88fa9fe3cebf4a9f9278fa82a96baf5caa0db4" => :yosemite
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "0c57ada4da08511d187b59d225b870c3ebee4c04aeeed9a066980e69a2f1a773"
+    sha256 cellar: :any_skip_relocation, big_sur:       "6a803054ba48635b80cf303c9de79c4b448a6b293168a733c521f3d0b5046dff"
+    sha256 cellar: :any_skip_relocation, catalina:      "6a803054ba48635b80cf303c9de79c4b448a6b293168a733c521f3d0b5046dff"
+    sha256 cellar: :any_skip_relocation, mojave:        "6a803054ba48635b80cf303c9de79c4b448a6b293168a733c521f3d0b5046dff"
   end
 
+  depends_on "python@3.9"
+
   def install
-    system "./install.py", "-d", prefix, "-z", zsh_completion
+    system Formula["python@3.9"].opt_bin/"python3", "install.py", "-d", prefix, "-z", zsh_completion
 
     # Backwards compatibility for users that have the old path in .bash_profile
     # or .zshrc
     (prefix/"etc").install_symlink prefix/"etc/profile.d/autojump.sh"
 
     libexec.install bin
-    bin.write_exec_script libexec/"bin/autojump"
+    (bin/"autojump").write_env_script libexec/"bin/autojump", PATH: "#{Formula["python@3.9"].libexec}/bin:$PATH"
   end
 
-  def caveats; <<~EOS
-    Add the following line to your ~/.bash_profile or ~/.zshrc file (and remember
-    to source the file to update your current session):
-      [ -f #{etc}/profile.d/autojump.sh ] && . #{etc}/profile.d/autojump.sh
+  def caveats
+    <<~EOS
+      Add the following line to your ~/.bash_profile or ~/.zshrc file:
+        [ -f #{etc}/profile.d/autojump.sh ] && . #{etc}/profile.d/autojump.sh
 
-    If you use the Fish shell then add the following line to your ~/.config/fish/config.fish:
-      [ -f #{HOMEBREW_PREFIX}/share/autojump/autojump.fish ]; and source #{HOMEBREW_PREFIX}/share/autojump/autojump.fish
-  EOS
+      If you use the Fish shell then add the following line to your ~/.config/fish/config.fish:
+        [ -f #{HOMEBREW_PREFIX}/share/autojump/autojump.fish ]; and source #{HOMEBREW_PREFIX}/share/autojump/autojump.fish
+
+      Restart your terminal for the settings to take effect.
+    EOS
   end
 
   test do
     path = testpath/"foo/bar"
     path.mkpath
     output = `
-      source #{etc}/profile.d/autojump.sh
+      . #{etc}/profile.d/autojump.sh
       j -a "#{path.relative_path_from(testpath)}"
       j foo >/dev/null
       pwd

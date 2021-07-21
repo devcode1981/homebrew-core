@@ -1,32 +1,32 @@
 class JsonrpcGlib < Formula
   desc "GNOME library to communicate with JSON-RPC based peers"
   homepage "https://gitlab.gnome.org/GNOME/jsonrpc-glib"
-  url "https://download.gnome.org/sources/jsonrpc-glib/3.30/jsonrpc-glib-3.30.1.tar.xz"
-  sha256 "b675ce6f414fb8fc9eeed1ad340dc6d08fc329ed67af927bb0fa6a5d7d731dc7"
+  url "https://download.gnome.org/sources/jsonrpc-glib/3.38/jsonrpc-glib-3.38.0.tar.xz"
+  sha256 "dc5f1914a91152b70fa8fc9a11ede13148ab4af644db27a36632388c927a8a82"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    rebuild 1
-    sha256 "4d2d67165d006e7f07116ee672c8e14e9d5bdb50a315b56221177c32dc298207" => :mojave
-    sha256 "7f4086decc07f94e58d32b2411277c8910dc74e9875ef45dd609acbad20aa001" => :high_sierra
-    sha256 "ac1bbbfd5edb3f6e121df91e3d71ec15e116a5fcf760a205d2e5bf7a0d0e81f1" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "06160c00773beabdcff9556c7b3cc1149b281e693807adb50afa5004999482d1"
+    sha256 cellar: :any,                 big_sur:       "922f8e0d4df5ea8c43e188ca633694d0665046c2a364c62348c32e22309f2b5b"
+    sha256 cellar: :any,                 catalina:      "5dcab8d9974c1bd60c225d8ce2976fd20c0cedcaf2d537a57f42fe80aec20ece"
+    sha256 cellar: :any,                 mojave:        "3a7318d1a9d0bee9a6b234494236778205d9dcbfb20622dbbda6c3007b3f8858"
+    sha256 cellar: :any,                 high_sierra:   "fc193951d9001132ec4fe5ee59fccae34ee8249bf51b386a52924056a0d2f333"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d1411f65d486577ad1214d2a8ff5c6bfddd459b810f1e114fa66719de9c060ca"
   end
 
   depends_on "gobject-introspection" => :build
-  depends_on "meson-internal" => :build
+  depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
   depends_on "vala" => :build
   depends_on "glib"
   depends_on "json-glib"
 
   def install
-    ENV.refurbish_args
-
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", "-Dwith_vapi=true", ".."
-      system "ninja"
-      system "ninja", "install"
+      system "meson", *std_meson_args, "-Dwith_vapi=true", ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
     end
   end
 
@@ -59,12 +59,14 @@ class JsonrpcGlib < Formula
       -lgio-2.0
       -lglib-2.0
       -lgobject-2.0
-      -lintl
       -ljson-glib-1.0
       -ljsonrpc-glib-1.0
-      -Wl,-framework
-      -Wl,CoreFoundation
     ]
+    on_macos do
+      flags << "-lintl"
+      flags << "-Wl,-framework"
+      flags << "-Wl,CoreFoundation"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end

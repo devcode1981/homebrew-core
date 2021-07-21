@@ -1,31 +1,32 @@
 class Sqlite < Formula
   desc "Command-line interface for SQLite"
-  homepage "https://sqlite.org/"
-  url "https://sqlite.org/2018/sqlite-autoconf-3260000.tar.gz"
-  version "3.26.0"
-  sha256 "5daa6a3fb7d1e8c767cd59c4ded8da6e4b00c61d3b466d0685e35c4dd6d7bf5d"
+  homepage "https://sqlite.org/index.html"
+  url "https://sqlite.org/2021/sqlite-autoconf-3360000.tar.gz"
+  version "3.36.0"
+  sha256 "bd90c3eb96bee996206b83be7065c9ce19aef38c3f4fb53073ada0d0b69bbce3"
+  license "blessing"
 
-  bottle do
-    cellar :any
-    sha256 "810b44b487f59d73ef873406f44a1bd355516cea45a2886e2edc749e29e34cc8" => :mojave
-    sha256 "cfa0666026d5360cd73cfb8a51de830fca81db8c6f85743222503204812a5954" => :high_sierra
-    sha256 "9c8e266e082a3b6ba61193759db4361812685228c2d4003c1ee74634194886cc" => :sierra
+  livecheck do
+    url :homepage
+    regex(%r{href=.*?releaselog/v?(\d+(?:[._]\d+)+)\.html}i)
+    strategy :page_match do |page, regex|
+      page.scan(regex).map { |match| match&.first&.gsub("_", ".") }
+    end
   end
 
-  keg_only :provided_by_macos, "macOS provides an older sqlite3"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "b7d98dc89e39bfd68676ce9df2e58d78e790a2591ef204800b27a454c019024a"
+    sha256 cellar: :any,                 big_sur:       "2c9c5f05c16c1fa972fc49c4b2705d7877b99640b6bb0b3908333e17f63dd71b"
+    sha256 cellar: :any,                 catalina:      "3665b75356219a7823309efad0304b40bbccc369576685e8faef280a539e8600"
+    sha256 cellar: :any,                 mojave:        "f96b12f3fe9b69283cb786aee0d034370cb2407a076f58f20e19de08745d58c4"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "1b8faf56c6f089b2538a86678652af07da8eb0db8000e684e875c1ef12be011e"
+  end
 
-  option "with-fts", "Enable the FTS3 module"
-  option "with-fts5", "Enable the FTS5 module (experimental)"
-  option "with-functions", "Enable more math and string functions for SQL queries"
-  option "with-json1", "Enable the JSON1 extension"
+  keg_only :provided_by_macos
 
   depends_on "readline"
 
-  resource "functions" do
-    url "https://sqlite.org/contrib/download/extension-functions.c?get=25"
-    version "2010-02-06"
-    sha256 "991b40fe8b2799edc215f7260b890f14a833512c9d9896aa080891330ffe4052"
-  end
+  uses_from_macos "zlib"
 
   def install
     ENV.append "CPPFLAGS", "-DSQLITE_ENABLE_COLUMN_METADATA=1"
@@ -33,9 +34,8 @@ class Sqlite < Formula
     # applications. Set to 250000 (Same value used in Debian and Ubuntu).
     ENV.append "CPPFLAGS", "-DSQLITE_MAX_VARIABLE_NUMBER=250000"
     ENV.append "CPPFLAGS", "-DSQLITE_ENABLE_RTREE=1"
-    ENV.append "CPPFLAGS", "-DSQLITE_ENABLE_FTS3=1 -DSQLITE_ENABLE_FTS3_PARENTHESIS=1" if build.with? "fts"
-    ENV.append "CPPFLAGS", "-DSQLITE_ENABLE_FTS5=1" if build.with? "fts5"
-    ENV.append "CPPFLAGS", "-DSQLITE_ENABLE_JSON1=1" if build.with? "json1"
+    ENV.append "CPPFLAGS", "-DSQLITE_ENABLE_FTS3=1 -DSQLITE_ENABLE_FTS3_PARENTHESIS=1"
+    ENV.append "CPPFLAGS", "-DSQLITE_ENABLE_JSON1=1"
 
     args = %W[
       --prefix=#{prefix}
@@ -43,61 +43,11 @@ class Sqlite < Formula
       --enable-dynamic-extensions
       --enable-readline
       --disable-editline
+      --enable-session
     ]
 
     system "./configure", *args
     system "make", "install"
-
-    if build.with? "functions"
-      buildpath.install resource("functions")
-      system ENV.cc, "-fno-common",
-                     "-dynamiclib",
-                     "extension-functions.c",
-                     "-o", "libsqlitefunctions.dylib",
-                     *ENV.cflags.to_s.split
-      lib.install "libsqlitefunctions.dylib"
-    end
-  end
-
-  def caveats
-    s = ""
-    if build.with? "functions"
-      s += <<~EOS
-        Usage instructions for applications calling the sqlite3 API functions:
-
-          In your application, call sqlite3_enable_load_extension(db,1) to
-          allow loading external libraries.  Then load the library libsqlitefunctions
-          using sqlite3_load_extension; the third argument should be 0.
-          See https://sqlite.org/loadext.html.
-          Select statements may now use these functions, as in
-          SELECT cos(radians(inclination)) FROM satsum WHERE satnum = 25544;
-
-        Usage instructions for the sqlite3 program:
-
-          If the program is built so that loading extensions is permitted,
-          the following will work:
-           sqlite> SELECT load_extension('#{lib}/libsqlitefunctions.dylib');
-           sqlite> select cos(radians(45));
-           0.707106781186548
-      EOS
-    end
-
-    user_history = "~/.sqlite_history"
-    user_history_path = File.expand_path(user_history)
-    if File.exist?(user_history_path) && File.read(user_history_path).include?("\\040")
-      s += <<~EOS
-        Homebrew has detected an existing SQLite history file that was created
-        with the editline library. The current version of this formula is
-        built with Readline. To back up and convert your history file so that
-        it can be used with Readline, run:
-
-          sed -i~ 's/\\\\040/ /g' #{user_history}
-
-        before using the `sqlite` command-line tool again. Otherwise, your
-        history will be lost.
-      EOS
-    end
-    s
   end
 
   test do

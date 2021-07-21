@@ -1,23 +1,25 @@
 class Libspectre < Formula
   desc "Small library for rendering Postscript documents"
   homepage "https://wiki.freedesktop.org/www/Software/libspectre/"
-  url "https://libspectre.freedesktop.org/releases/libspectre-0.2.8.tar.gz"
-  sha256 "65256af389823bbc4ee4d25bfd1cc19023ffc29ae9f9677f2d200fa6e98bc7a8"
-  revision 7
+  url "https://libspectre.freedesktop.org/releases/libspectre-0.2.9.tar.gz"
+  sha256 "49ae9c52b5af81b405455c19fe24089d701761da2c45d22164a99576ceedfbed"
+  license "GPL-2.0-or-later"
+  revision 2
+
+  livecheck do
+    url "https://libspectre.freedesktop.org/releases/"
+    regex(/href=.*?libspectre[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "14d107a48c6f8bc78134eb5b7d36f89f17a0efd212c1331c4a5ccf2b6f158a12" => :mojave
-    sha256 "52be82741ea6cbbc203f3d6c91c696a5ce286b6e6c48df0293585dd1ab904d6b" => :high_sierra
-    sha256 "8cd6ea1b86def695138d1fadf32e6019719a4ec095a7aa3059fbed758e83d25c" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "569048e256adf2200f0d78bb9e0e69124bfc95d048942a7e7302021d4f26a725"
+    sha256 cellar: :any,                 big_sur:       "dd24fcf3da06f8020b4c5439ca40d1b2eb17a518b62f205e8d34d4e259b0fd7e"
+    sha256 cellar: :any,                 catalina:      "b6010400519844d7e3c0ead42e613279dcf301b69775bbc75f8e93c2cadf797b"
+    sha256 cellar: :any,                 mojave:        "03c755d7c557ed3b53e73f398be9d2a04fd87143fa91d8dcbb010d8a36f313a0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e9d02c4c372a70e15e3a180fc9f8abd855ec7d15086b1d3969aad657735156d0"
   end
 
   depends_on "ghostscript"
-
-  patch do
-    url "https://github.com/Homebrew/formula-patches/raw/master/libspectre/libspectre-0.2.7-gs918.patch"
-    sha256 "e4c186ddc6cebc92ee0aee24bc79c7f5fff147a0c0d9cadf7ebdc3906d44711c"
-  end
 
   def install
     ENV.append "CFLAGS", "-I#{Formula["ghostscript"].opt_include}/ghostscript"

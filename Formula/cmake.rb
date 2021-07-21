@@ -1,34 +1,41 @@
 class Cmake < Formula
   desc "Cross-platform make"
   homepage "https://www.cmake.org/"
-  url "https://github.com/Kitware/CMake/releases/download/v3.13.1/cmake-3.13.1.tar.gz"
-  sha256 "befe1ce6d672f2881350e94d4e3cc809697dd2c09e5b708b76c1dae74e1b2210"
-  head "https://cmake.org/cmake.git"
+  url "https://github.com/Kitware/CMake/releases/download/v3.21.0/cmake-3.21.0.tar.gz"
+  sha256 "4a42d56449a51f4d3809ab4d3b61fd4a96a469e56266e896ce1009b5768bd2ab"
+  license "BSD-3-Clause"
+  head "https://gitlab.kitware.com/cmake/cmake.git"
+
+  # The "latest" release on GitHub has been an unstable version before, so we
+  # check the Git tags instead.
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "62ca3187c2b0b597cf5e83660b2d77a1015cb22abd29c4c52f741122806f0e35" => :mojave
-    sha256 "6cbf6ba51d109f7a9db6dd88538729a643f30fc22c43eaa2eb1823904b8de07b" => :high_sierra
-    sha256 "916ef4954546cdd82931b0b9d63b424030944bf17932bdd5feb28bf1df144de8" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "36d8efbf810ad078aa05f2dc8a9de08ac98e489560c77c6f1b673a3f1bf8a4fa"
+    sha256 cellar: :any_skip_relocation, big_sur:       "9894cc5bc00c7b9b94028f76bd2365ade3ab1d992317b72d1d7a5363a6ba9024"
+    sha256 cellar: :any_skip_relocation, catalina:      "284a8f5addce150f624b96b66a230780eb119cdc0f82fcaba9625a5b0d171073"
+    sha256 cellar: :any_skip_relocation, mojave:        "e21bef39787a34e881d18cb5381bbdb775bb357a166aa7e15ab22a7c3d59517c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e325510e37e74ca83ea4ecc2276aaf6d66c6caa0eddb2a10d9055db0f1569f3e"
   end
 
   depends_on "sphinx-doc" => :build
+
+  uses_from_macos "ncurses"
+
+  on_linux do
+    depends_on "openssl@1.1"
+  end
 
   # The completions were removed because of problems with system bash
 
   # The `with-qt` GUI option was removed due to circular dependencies if
   # CMake is built with Qt support and Qt is built with MySQL support as MySQL uses CMake.
-  # For the GUI application please instead use `brew cask install cmake`.
-
-  needs :cxx11
+  # For the GUI application please instead use `brew install --cask cmake`.
 
   def install
-    ENV.cxx11 if MacOS.version < :mavericks
-
-    # Avoid the following compiler error:
-    # SecKeychain.h:102:46: error: shift expression '(1853123693 << 8)' overflows
-    ENV.append_to_cflags "-fpermissive" if MacOS.version <= :lion
-
     args = %W[
       --prefix=#{prefix}
       --no-system-libs
@@ -39,20 +46,19 @@ class Cmake < Formula
       --sphinx-build=#{Formula["sphinx-doc"].opt_bin}/sphinx-build
       --sphinx-html
       --sphinx-man
-      --system-zlib
-      --system-bzip2
-      --system-curl
     ]
+    on_macos do
+      args += %w[
+        --system-zlib
+        --system-bzip2
+        --system-curl
+      ]
+    end
 
-    # There is an existing issue around macOS & Python locale setting
-    # See https://bugs.python.org/issue18378#msg215215 for explanation
-    ENV["LC_ALL"] = "en_US.UTF-8"
-
-    system "./bootstrap", *args, "--", "-DCMAKE_BUILD_TYPE=Release"
+    system "./bootstrap", *args, "--", *std_cmake_args,
+                                       "-DCMake_INSTALL_EMACS_DIR=#{elisp}"
     system "make"
     system "make", "install"
-
-    elisp.install "Auxiliary/cmake-mode.el"
   end
 
   test do

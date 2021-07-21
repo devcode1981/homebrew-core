@@ -1,29 +1,36 @@
 class Geos < Formula
   desc "Geometry Engine"
   homepage "https://trac.osgeo.org/geos"
-  url "https://download.osgeo.org/geos/geos-3.7.0.tar.bz2"
-  sha256 "4fbf41a792fd74293ab59e0a980e8654cd411a9d45416d66eaa12d53d1393fd7"
+  url "https://download.osgeo.org/geos/geos-3.9.1.tar.bz2"
+  sha256 "7e630507dcac9dc07565d249a26f06a15c9f5b0c52dd29129a0e3d381d7e382a"
+  license "LGPL-2.1"
+
+  livecheck do
+    url "https://download.osgeo.org/geos/"
+    regex(/href=.*?geos[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "d725d907632e2154e703ba12aece1219cab16f1bb37c0abe99e15ae91014bc19" => :mojave
-    sha256 "c2020bfb07cd08dc7165808fd6dbd9618a5fff771c46d35d957156d9d99c981a" => :high_sierra
-    sha256 "21d9a9aa5db75f6f99c00fc11d4789db5f3fd136b99ad0ca39c346d885c50f3f" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "55162eaa549fb0b551ddbd6fa2e7e25da1f9c4cf9772ed62d077f0f8bf03ecbe"
+    sha256 cellar: :any,                 big_sur:       "763727a2a096dd9a5ba2735672f2ff2ee58c7c1efd8b2db8d79dc2e5e6989cbe"
+    sha256 cellar: :any,                 catalina:      "6ebbc7afe80b38660e33be4b95a47654d0d4dc067b13076f1b88d06c52dd717a"
+    sha256 cellar: :any,                 mojave:        "ff5f29ff0856fdc987c5338a066ddbaa2eb3e231ff1a87bc7c166be73dcac892"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "88c1238afa2af41abed21be1069ce32fb5732d3b64317cb96087bdf4c23cbf15"
   end
 
   depends_on "swig" => :build
-  depends_on "python@2"
+  depends_on "python@3.9"
 
   def install
-    # https://trac.osgeo.org/geos/ticket/771
-    inreplace "configure" do |s|
-      s.gsub! /PYTHON_CPPFLAGS=.*/, %Q(PYTHON_CPPFLAGS="#{`python-config --includes`.strip}")
-      s.gsub! /PYTHON_LDFLAGS=.*/, 'PYTHON_LDFLAGS="-Wl,-undefined,dynamic_lookup"'
-    end
+    args = %W[
+      --disable-dependency-tracking
+      --prefix=#{prefix}
+      --enable-python
+      PYTHON=#{Formula["python@3.9"].opt_bin}/python3
+    ]
+    args << "--disable-inline" if Hardware::CPU.arm?
 
-    system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}",
-                          "--enable-python"
+    system "./configure", *args
     system "make", "install"
   end
 

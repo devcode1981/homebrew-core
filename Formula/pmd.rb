@@ -1,23 +1,26 @@
 class Pmd < Formula
   desc "Source code analyzer for Java, JavaScript, and more"
   homepage "https://pmd.github.io"
-  url "https://github.com/pmd/pmd/releases/download/pmd_releases/6.9.0/pmd-bin-6.9.0.zip"
-  sha256 "10d510ad789393eda72b7b6e6caef5392e80a3f2a2ee0b028205c908cf4b26ec"
+  url "https://github.com/pmd/pmd/releases/download/pmd_releases/6.36.0/pmd-bin-6.36.0.zip"
+  sha256 "a3aa27cfa8f72ca56aaaa1f56468ea1decfb1b0d1b57005b4f3c386cb80be7fe"
+  license "BSD-4-Clause"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "8cf358d3273de5f9f2491e815482fe4b576f73ec5283e62cc3cf8b6953a72d14"
+  end
 
-  depends_on :java => "1.8+"
+  depends_on "openjdk"
 
   def install
     rm Dir["bin/*.bat"]
     libexec.install Dir["*"]
-    (bin/"pmd").write_env_script libexec/"bin/run.sh",
-                                 Language::Java.java_home_env("1.8+")
+    (bin/"pmd").write_env_script libexec/"bin/run.sh", Language::Java.overridable_java_home_env
   end
 
-  def caveats; <<~EOS
-    Run with `pmd` (instead of `run.sh` as described in the documentation).
-  EOS
+  def caveats
+    <<~EOS
+      Run with `pmd` (instead of `run.sh` as described in the documentation).
+    EOS
   end
 
   test do

@@ -1,27 +1,45 @@
 class Mdds < Formula
   desc "Multi-dimensional data structure and indexing algorithm"
   homepage "https://gitlab.com/mdds/mdds"
-  url "https://kohei.us/files/mdds/src/mdds-1.4.2.tar.bz2"
-  sha256 "82f38750248c007956c38ffefcc549932c8b257b76c72fb79a06eabc50107369"
+  url "https://kohei.us/files/mdds/src/mdds-1.7.0.tar.bz2"
+  sha256 "a66a2a8293a3abc6cd9baff7c236156e2666935cbfb69a15d64d38141638fecf"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a04c09f5f16e79b77edcf6385658ee28ae8d4187abe10d937acc2e31de33d83f" => :mojave
-    sha256 "f6f6896bcffcedd91647cf06bd924b1a08be6e6654f7a0cba7d1f471744f217c" => :high_sierra
-    sha256 "f6f6896bcffcedd91647cf06bd924b1a08be6e6654f7a0cba7d1f471744f217c" => :sierra
-    sha256 "f6f6896bcffcedd91647cf06bd924b1a08be6e6654f7a0cba7d1f471744f217c" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "f4c421f18efdd519f3ca12a78295c2b1c5e36f6726369736e68ed07870e40a33"
+    sha256 cellar: :any_skip_relocation, big_sur:       "59ebe66bdf74479076e8df76ba906f2bda539f819c778abaf608acbae04343f3"
+    sha256 cellar: :any_skip_relocation, catalina:      "a5e6a996bf112bca0d5c7e628fd15128977b9075938155a4185aaf5613d136bc"
+    sha256 cellar: :any_skip_relocation, mojave:        "5146b50529f63030c978dbdab3755ce7a7383d7c8049e03ae1186fa231f867c9"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "67f497efa10f695da64e4769d3ef5de6fb0e9d3d0d62026c2105b7c5148b91a9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "22d6a3682982e13c35d52afee6e0b9432fd855c51662cc25cfb4531f4fcf3e79"
+  end
+
+  head do
+    url "https://gitlab.com/mdds/mdds.git"
+
+    depends_on "automake" => :build
   end
 
   depends_on "autoconf" => :build
   depends_on "boost"
-  needs :cxx11
 
   def install
+    args = %W[
+      --prefix=#{prefix}
+      --disable-openmp
+    ]
+
     # Gets it to work when the CLT is installed
     inreplace "configure.ac", "$CPPFLAGS -I/usr/include -I/usr/local/include",
                               "$CPPFLAGS -I/usr/local/include"
-    system "autoconf"
-    system "./configure", "--prefix=#{prefix}"
+
+    if build.head?
+      system "./autogen.sh", *args
+    else
+      system "autoconf"
+      system "./configure", *args
+    end
+
     system "make", "install"
   end
 

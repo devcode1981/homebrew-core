@@ -1,24 +1,23 @@
 class Recutils < Formula
   desc "Tools to work with human-editable, plain text data files"
   homepage "https://www.gnu.org/software/recutils/"
-  url "https://ftp.gnu.org/gnu/recutils/recutils-1.7.tar.gz"
-  mirror "https://ftpmirror.gnu.org/recutils/recutils-1.7.tar.gz"
-  sha256 "233dc6dedb1916b887de293454da7e36a74bed9ebea364f7e97e74920051bc31"
-  revision 1
+  url "https://ftp.gnu.org/gnu/recutils/recutils-1.8.tar.gz"
+  mirror "https://ftpmirror.gnu.org/gnu/recutils/recutils-1.8.tar.gz"
+  sha256 "df8eae69593fdba53e264cbf4b2307dfb82120c09b6fab23e2dad51a89a5b193"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "e27983655f55a523db7775de1b86728ba2b4ff289d608f64bcf99e0dc224714d" => :mojave
-    sha256 "577f81582b338d44b2b231ab7a353ceaa0b01cf899b9a5042924568d95b20ec5" => :high_sierra
-    sha256 "13ded271da7be4d07cce7f454d5c6ad871151c08b319f5a1670bdefd882a62da" => :sierra
-    sha256 "e11f1ef2e988f963ddf52088c8d50626c4179b4065b19e254315ae75486439c1" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "0ce93377375f551690f93d4cd68d2042f72354596dcae615ee632e8794bd7744"
+    sha256 cellar: :any, big_sur:       "20ea3e2b014d2300a75f02b3c2beaf4c888c37214df878c5dccbad9255f65de4"
+    sha256 cellar: :any, catalina:      "a55cbe91cc2c264fe53e5e6425c1f3bb0c090f097f16098fdce766807a38ea6d"
+    sha256 cellar: :any, mojave:        "1503a69c0ed988355b959c47b2c8a5e5a4f451d41027f5a06cdf5de19f7d171f"
+    sha256 cellar: :any, high_sierra:   "c2ca0221b7e7091c11840a000f02b130325a188aeb03b100947562aa8d9ce3ef"
+    sha256 cellar: :any, sierra:        "694cfda88a56f30c66d71080b8a1a4763a17789e0ea54b37c778ba84107f6430"
+    sha256               x86_64_linux:  "1197a9f01b9ab6305b788213b0dc00511d919d9adb58b49a3dfd29e9ddeceae9"
   end
 
-  if MacOS.version >= :high_sierra
-    patch :p0 do
-      url "https://raw.githubusercontent.com/macports/macports-ports/b76d1e48dac/editors/nano/files/secure_snprintf.patch"
-      sha256 "57f972940a10d448efbd3d5ba46e65979ae4eea93681a85e1d998060b356e0d2"
-    end
+  on_linux do
+    depends_on "libgcrypt"
   end
 
   def install

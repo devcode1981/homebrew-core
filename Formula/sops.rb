@@ -1,28 +1,30 @@
 class Sops < Formula
   desc "Editor of encrypted files"
   homepage "https://github.com/mozilla/sops"
-  url "https://github.com/mozilla/sops/archive/3.2.0.tar.gz"
-  sha256 "7063b15b8e4a1625e3f2a64d582c424e93ee0b7292de9891dd3918ab1596c8fe"
-  head "https://github.com/mozilla/sops.git"
+  url "https://github.com/mozilla/sops/archive/v3.7.1.tar.gz"
+  sha256 "536ee140d888b53b71c1e8edd669f4c11bc573428983fbea644fbbfcd7d7079a"
+  license "MPL-2.0"
+  head "https://github.com/mozilla/sops.git", branch: "develop"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "3da5dce6c4dbbdfa90521bd63bfeb6f9f84649149626065d59304c150453bcc0" => :mojave
-    sha256 "9829b2d6fbf48db2535736ad92b876421170e28eac8cbfd3d5b5d999a927eb2c" => :high_sierra
-    sha256 "9892a38517b3bbb9894bba47b72d31becd70cee86e5b912a75006b45cf90023c" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "6ed7327988bf2db73d4883d5c4e280cd5e576980b15cd584841175714e9a6a17"
+    sha256 cellar: :any_skip_relocation, big_sur:       "786527c0a00ac74579e50623298aef7f5a996d63211c08d14b87999255f41809"
+    sha256 cellar: :any_skip_relocation, catalina:      "f95b128d36ffb171695376d011dbf1fc971117152367c109f6232949b45e710a"
+    sha256 cellar: :any_skip_relocation, mojave:        "edc533e3636e05deb0a854a1c3950dfdbeb01ac38f7ef6d8857426d55991a542"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "7f81bba58cecb22d7d6f08383e77c7c137bfb93b76860fdf5e5da788ed6b7be2"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    ENV["GOBIN"] = bin
-    (buildpath/"src/go.mozilla.org").mkpath
-    ln_s buildpath, "src/go.mozilla.org/sops"
-    system "make", "install"
+    system "go", "build", "-o", bin/"sops", "go.mozilla.org/sops/v3/cmd/sops"
+    pkgshare.install "example.yaml"
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/sops --version 2>&1")
+    assert_match version.to_s, shell_output("#{bin}/sops --version")
+
+    assert_match "Recovery failed because no master key was able to decrypt the file.",
+      shell_output("#{bin}/sops #{pkgshare}/example.yaml 2>&1", 128)
   end
 end

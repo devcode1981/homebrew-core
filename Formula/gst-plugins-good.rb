@@ -1,36 +1,33 @@
 class GstPluginsGood < Formula
   desc "GStreamer plugins (well-supported, under the LGPL)"
   homepage "https://gstreamer.freedesktop.org/"
-  revision 1
+  url "https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-1.18.4.tar.xz"
+  sha256 "b6e50e3a9bbcd56ee6ec71c33aa8332cc9c926b0c1fae995aac8b3040ebe39b0"
+  license "LGPL-2.0-or-later"
+  head "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good.git"
 
-  stable do
-    url "https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-1.14.4.tar.xz"
-    sha256 "5f8b553260cb0aac56890053d8511db1528d53cae10f0287cfce2cb2acc70979"
-
-    depends_on "check" => :optional
+  livecheck do
+    url "https://gstreamer.freedesktop.org/src/gst-plugins-good/"
+    regex(/href=.*?gst-plugins-good[._-]v?(\d+\.\d*[02468](?:\.\d+)*)\.t/i)
   end
 
   bottle do
-    sha256 "b064a88166dde9a0728e2b4931265c36331fe04763cd86a374f7e871970154b7" => :mojave
-    sha256 "4690c041a027f7f8a4d50a50b704bf4474c457bf6d5587d4f6d00b02e0ae9770" => :high_sierra
-    sha256 "a992fea0e10e1227d9747bfac9a8df892a63e1e23efe753e65a8e9a93f363c34" => :sierra
+    sha256 arm64_big_sur: "f686a1b5f9281dc17de276578ade425e0e3448f0944e6cdeba82fc55a1bae336"
+    sha256 big_sur:       "0572b3c244f34b8772d7903e5e1c57a615550de15668f431dc306bc50f3af9e8"
+    sha256 catalina:      "3adb6e29fbf82dc68d7e19898ab79757d46d648c6f58626133987d0217b96d1c"
+    sha256 mojave:        "635e23e10b8a6a987ec61f12821bcd619b7d9692f4151ee21f30789c492d7e5d"
   end
 
-  head do
-    url "https://anongit.freedesktop.org/git/gstreamer/gst-plugins-good.git"
-
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "libtool" => :build
-    depends_on "check"
-  end
-
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "cairo"
   depends_on "flac"
   depends_on "gettext"
   depends_on "gst-plugins-base"
+  depends_on "gtk+3"
   depends_on "jpeg"
+  depends_on "lame"
   depends_on "libpng"
   depends_on "libshout"
   depends_on "libsoup"
@@ -39,51 +36,17 @@ class GstPluginsGood < Formula
   depends_on "speex"
   depends_on "taglib"
 
-  # Dependencies based on the intersection of
-  # https://cgit.freedesktop.org/gstreamer/gst-plugins-good/tree/REQUIREMENTS
-  # and Homebrew formulae.
-  depends_on "aalib" => :optional
-  depends_on "gdk-pixbuf" => :optional
-  depends_on "gtk+3" => :optional
-  depends_on "jack" => :optional
-  depends_on "libcaca" => :optional
-  depends_on "libdv" => :optional
-  depends_on "pulseaudio" => :optional
-  depends_on :x11 => :optional
-
   def install
-    args = %W[
-      --prefix=#{prefix}
-      --disable-gtk-doc
-      --disable-goom
-      --with-default-videosink=ximagesink
-      --disable-debug
-      --disable-dependency-tracking
-      --disable-silent-rules
+    args = std_meson_args + %w[
+      -Dgoom=disabled
+      -Dximagesrc=disabled
     ]
 
-    args << "--enable-gtk3" if build.with? "gtk+3"
-
-    if build.with? "x11"
-      args << "--with-x"
-    else
-      args << "--disable-x"
+    mkdir "build" do
+      system "meson", *args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
     end
-
-    # This plugin causes hangs on Snow Leopard (and possibly other versions?)
-    # Upstream says it hasn't "been actively tested in a long time";
-    # successor is glimagesink (in gst-plugins-bad).
-    # https://bugzilla.gnome.org/show_bug.cgi?id=756918
-    args << "--disable-osx_video" if MacOS.version == :snow_leopard
-
-    if build.head?
-      ENV["NOCONFIGURE"] = "yes"
-      system "./autogen.sh"
-    end
-
-    system "./configure", *args
-    system "make"
-    system "make", "install"
   end
 
   test do

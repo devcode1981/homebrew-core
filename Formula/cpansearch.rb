@@ -3,14 +3,16 @@ class Cpansearch < Formula
   homepage "https://github.com/c9s/cpansearch"
   url "https://github.com/c9s/cpansearch/archive/0.2.tar.gz"
   sha256 "09e631f361766fcacd608a0f5b3effe7b66b3a9e0970a458d418d58b8f3f2a74"
+  revision 1
   head "https://github.com/c9s/cpansearch.git"
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "69d0e81fd62ba200820ccb848d4b10d970cf01146724653652434d36743a5356" => :mojave
-    sha256 "5d9c3bb958793897bc8933394d1a6a62df3c60a0f96bd8ac33f6486a3f62e8cd" => :high_sierra
-    sha256 "29e1acab7f1755337460172f853968b116d831b43948f6727f5565f3b9ce248e" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "37c73b9a5acde5677d8cb3d423c671eba4f0fae0e01fd057789c20184b033a54"
+    sha256 cellar: :any, big_sur:       "5cf4f854e56de6fb4d1b992f8c3ba9004dac26aa676007841042e8a30e0539c3"
+    sha256 cellar: :any, catalina:      "f5ad7240f2e1d3004c9b80d232192bbc50dcf777bdfe92fa73172e93476f5ef2"
+    sha256 cellar: :any, mojave:        "5d583c37a54d9d6f96c625faf75b40c53a2ae59b8c9960f51a6f9bc215fa5bae"
+    sha256 cellar: :any, high_sierra:   "e8197124d1341e8e5d8348cd322eac2bfa782d885c808b5322a340eb7b91ba8b"
+    sha256 cellar: :any, sierra:        "6b4545b0455642a3b4f3c92ef480e704742cd06fd6ff64d24f9a5edbb3bc33a7"
   end
 
   depends_on "pkg-config" => :build

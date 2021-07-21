@@ -1,37 +1,36 @@
 class Gmic < Formula
   desc "Full-Featured Open-Source Framework for Image Processing"
   homepage "https://gmic.eu/"
-  url "https://gmic.eu/files/source/gmic_2.1.5.tar.gz"
-  sha256 "2f3de90a09bba6d24c89258be016fd6992886bda13dbbcaf03de58c765774845"
-  revision 1
+  url "https://gmic.eu/files/source/gmic_2.9.7.tar.gz"
+  sha256 "942537487ea722141230579db3cd4331368429c0e33cb38fee1b17aae9557f16"
+  license "CECILL-2.1"
   head "https://github.com/dtschump/gmic.git"
 
+  livecheck do
+    url "https://gmic.eu/files/source/"
+    regex(/href=.*?gmic[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "09322413b52ce5865967d68dc2f5a6153a147b83a69f20a3f5b5ac9498676b6b" => :mojave
-    sha256 "13ccaf356dc8be85d6d60078c5c10ad3ae6fd515169c396b6cb1c28b2a348c15" => :high_sierra
-    sha256 "7ed192f9ad04036d236cbe9b854ea54325bb366ec392d4cb977e227167ce1ebf" => :sierra
-    sha256 "db45390cb89c9a1d1280f05543555917d161be399223e79d99f6fcacae6532bf" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "2a684946ab82b40f48894bac5628fd568555c79e412154415149c559b8855439"
+    sha256 cellar: :any,                 big_sur:       "fa3a9f34a4e6af5756037d3d0085cc95192fd2cf133e14985cd98314b46c0d2d"
+    sha256 cellar: :any,                 catalina:      "28d193071d9c956bb8002584cbd7e9439cb3b4fbbce4fb37106345dfcc3898e8"
+    sha256 cellar: :any,                 mojave:        "8a24235a837b3972a6f8b39b3ca219e676c7807ed83daf613576f1acb813faa2"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "dcbd95fd0abcd042ed27b1a964c9c70a3ec9cb89a7e04111d4b955d9c218fa52"
   end
 
   depends_on "cmake" => :build
   depends_on "fftw"
   depends_on "jpeg"
   depends_on "libpng"
-  depends_on "ffmpeg" => :optional
-  depends_on "libtiff" => :optional
-  depends_on "opencv@2" => :optional
-  depends_on "openexr" => :optional
+  depends_on "libtiff"
 
   def install
-    cp "resources/CMakeLists.txt", buildpath
-    args = std_cmake_args
-    args << "-DENABLE_X=OFF"
-    args << "-DENABLE_FFMPEG=OFF" if build.without? "ffmpeg"
-    args << "-DENABLE_OPENCV=OFF" if build.without? "opencv"
-    args << "-DENABLE_OPENEXR=OFF" if build.without? "openexr"
-    args << "-DENABLE_TIFF=OFF" if build.without? "libtiff"
-    system "cmake", *args
+    system "cmake", *std_cmake_args,
+                    "-DENABLE_FFMPEG=OFF",
+                    "-DENABLE_OPENCV=OFF",
+                    "-DENABLE_OPENEXR=OFF",
+                    "-DENABLE_X=OFF"
     system "make", "install"
   end
 
@@ -39,5 +38,8 @@ class Gmic < Formula
     %w[test.jpg test.png].each do |file|
       system bin/"gmic", test_fixtures(file)
     end
+    system bin/"gmic", "-input", test_fixtures("test.jpg"), "rodilius", "10,4,400,16",
+           "smooth", "60,0,1,1,4", "normalize_local", "10,16", "-output", testpath/"test_rodilius.jpg"
+    assert_predicate testpath/"test_rodilius.jpg", :exist?
   end
 end

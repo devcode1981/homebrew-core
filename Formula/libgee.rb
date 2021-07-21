@@ -1,16 +1,16 @@
 class Libgee < Formula
   desc "Collection library providing GObject-based interfaces"
   homepage "https://wiki.gnome.org/Projects/Libgee"
-  url "https://download.gnome.org/sources/libgee/0.20/libgee-0.20.1.tar.xz"
-  sha256 "bb2802d29a518e8c6d2992884691f06ccfcc25792a5686178575c7111fea4630"
-  revision 1
+  url "https://download.gnome.org/sources/libgee/0.20/libgee-0.20.4.tar.xz"
+  sha256 "524c1bf390f9cdda4fbd9a47b269980dc64ab5280f0801b53bc69d782c72de0e"
+  license "LGPL-2.1"
 
   bottle do
-    cellar :any
-    sha256 "8bda00ec686771f7d42a63085b9e11c93202cc9b90adbbc5f61a699666c99db8" => :mojave
-    sha256 "d4afb1bbccfd61b0a106595356d5f571a0df6a5fb0fd5e378c8321a46e152c1b" => :high_sierra
-    sha256 "b70794b96ce5d21dc3dac66f4e0e63177d7507c723d78a786110dc502d7777e1" => :sierra
-    sha256 "7602f76b0667a7dd1527c01285274c2cca24d5e638b9a0c4a90cbc004d5e097e" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "1cf5cbaa60b52012e61477e1dbcb69b77e9cc16846dc456c855bcbc1d2252563"
+    sha256 cellar: :any,                 big_sur:       "0e8f110c3e14f4c45142ad2b215a803b70353e13429a73650e0641cfcda986d5"
+    sha256 cellar: :any,                 catalina:      "ce00019f9ca5b8dc93081d84d99b4587a66a3d87b726080ead7323bbec65f417"
+    sha256 cellar: :any,                 mojave:        "2d77bae2c373c426ae17050025de1ff6183e84673ebfa144c433a45cdbff8781"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "0e064df49b26118cd962fb582add7ead458cec62f5bcdeefcd2f6a0a6c661e46"
   end
 
   depends_on "gobject-introspection" => :build
@@ -54,8 +54,10 @@ class Libgee < Formula
       -lgee-0.8
       -lglib-2.0
       -lgobject-2.0
-      -lintl
     ]
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end

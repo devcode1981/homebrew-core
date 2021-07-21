@@ -1,31 +1,35 @@
 class Libchamplain < Formula
   desc "ClutterActor for displaying maps"
   homepage "https://wiki.gnome.org/Projects/libchamplain"
-  url "https://download.gnome.org/sources/libchamplain/0.12/libchamplain-0.12.16.tar.xz"
-  sha256 "4a7e31cf7889669aebf04631543af64435edd989685159b804911c6005db908d"
-  revision 1
+  url "https://download.gnome.org/sources/libchamplain/0.12/libchamplain-0.12.20.tar.xz"
+  sha256 "0232b4bfcd130a1c5bda7b6aec266bf2d06e701e8093df1886f1e26bc1ba3066"
+  license "LGPL-2.1"
+  revision 2
 
   bottle do
-    sha256 "84d118001a88dda76ad4230ac7e439faff52d15927ae35256203224513cfa5a8" => :mojave
-    sha256 "f6164d934f20edac3cce56807031c6398ab4135ac2d1de189fa507d53646d4fe" => :high_sierra
-    sha256 "4cd4422e4ea30fb60d77bee37e96d2a221cf78d5cfbb56c7bd4ddff503dd9e63" => :sierra
-    sha256 "77dc11f2f53f414fb94db5a48c60827eeda2d54f296a6608aface2d7d7adcba2" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "0d8f75014270cd171c9d059fe9aa9583c5ac7f8d4156d69cf685789218ab8246"
+    sha256 cellar: :any, big_sur:       "b4d05a54fce8efb6482e4dabe54fe8ff184253045c70d76e50b6679915f591fb"
+    sha256 cellar: :any, catalina:      "cb5f211f8fa37e711a6e8888e4dfc873599defae9bad26f2d4310d798d0df98f"
+    sha256 cellar: :any, mojave:        "451b57e103a89cbd80b18fe98012f5ff2a56de6ef0fbca9d0b2e49279c0f06dd"
+    sha256 cellar: :any, high_sierra:   "139ae58e12b28abeeeddedebd802c5183761048c3745f3cb042458f2be3f9602"
   end
 
+  depends_on "gnome-common" => :build
   depends_on "gobject-introspection" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "clutter"
   depends_on "clutter-gtk"
   depends_on "gtk+3"
   depends_on "libsoup"
-  depends_on "vala" => :optional
 
   def install
-    system "./configure", "--disable-debug",
-                          "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--prefix=#{prefix}"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args, "-Ddocs=false", ".."
+      system "ninja"
+      system "ninja", "install"
+    end
   end
 
   test do
@@ -69,7 +73,7 @@ class Libchamplain < Formula
       -I#{glib.opt_lib}/glib-2.0/include
       -I#{gtkx3.opt_include}/gtk-3.0
       -I#{harfbuzz.opt_include}/harfbuzz
-      -I#{include}/libchamplain-0.12
+      -I#{include}/champlain-0.12
       -I#{json_glib.opt_include}/json-glib-1.0
       -I#{libepoxy.opt_include}
       -I#{libpng.opt_include}/libpng16

@@ -1,15 +1,16 @@
 class When < Formula
   desc "Tiny personal calendar"
   homepage "http://www.lightandmatter.com/when/when.html"
-  url "https:/deb.debian.org/debian/pool/main/w/when/when_1.1.38.orig.tar.gz"
-  sha256 "139834945142f5e3ea6b20f43ba740d30b4a87b42ce5767026094e633dca999f"
+  url "https://github.com/bcrowell/when/archive/1.1.40.tar.gz"
+  sha256 "1363d48c32c4bb528514abf012ae0a61e7c686504a047ce870e72e791447c3d1"
   head "https://github.com/bcrowell/when.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "652f84f91cbb5bd61f34b0b90124fc17beb94654150b548348aaee28951b1510" => :mojave
-    sha256 "7645dbb878781cae6f691fd4b0888f85a37ce55eebb7871276aad1bc0c8b6707" => :high_sierra
-    sha256 "7645dbb878781cae6f691fd4b0888f85a37ce55eebb7871276aad1bc0c8b6707" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "cdde93a2d4051259f3b693d3ef55b11f52765bb789b592e0622ae7b42e1e7100"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c92678460a5deb08ee3c85dc76650914f691a3cd2e43ccb7424ba62882489947"
+    sha256 cellar: :any_skip_relocation, catalina:      "88a5d4653d7062e0ac6d9913d35390126c1739fe04f0f458624f0199046d0fcd"
+    sha256 cellar: :any_skip_relocation, mojave:        "18c0460162e7dcb98d499fb8622a471162897a91f4f844fe46f42a52182cc69e"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "a0623fd31e458f82217956bd98e72964634f5d632025336386e824a27fe654ae"
   end
 
   def install

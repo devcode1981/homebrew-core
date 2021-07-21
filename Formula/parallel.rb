@@ -1,26 +1,37 @@
 class Parallel < Formula
   desc "Shell command parallelization utility"
   homepage "https://savannah.gnu.org/projects/parallel/"
-  url "https://ftp.gnu.org/gnu/parallel/parallel-20181122.tar.bz2"
-  mirror "https://ftpmirror.gnu.org/parallel/parallel-20181122.tar.bz2"
-  sha256 "2f06580c833ca30f434511ea28a0c097e75e3ee35a87b3a58512bd6d5cf598d5"
+  url "https://ftp.gnu.org/gnu/parallel/parallel-20210622.tar.bz2"
+  mirror "https://ftpmirror.gnu.org/parallel/parallel-20210622.tar.bz2"
+  sha256 "7b33279bf71e76c52c393081d2db69057dd320be019759c4e704841a6761ec86"
+  license "GPL-3.0-or-later"
+  version_scheme 1
   head "https://git.savannah.gnu.org/git/parallel.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "f554dc0c5acc329c6aa09b5cea696611f2d361d9425075325db0704dcb7f59aa" => :mojave
-    sha256 "5e76c786e5f9561f09e4598d8e43f4ecabeb103fbdd9a2a3e7c14b0d39769274" => :high_sierra
-    sha256 "5e76c786e5f9561f09e4598d8e43f4ecabeb103fbdd9a2a3e7c14b0d39769274" => :sierra
+  livecheck do
+    url :homepage
+    regex(/GNU Parallel v?(\d{6,8}).*? released \[stable\]/i)
   end
 
-  if Tab.for_name("moreutils").with?("parallel")
-    conflicts_with "moreutils",
-      :because => "both install a `parallel` executable."
+  bottle do
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, all: "32a13cdbba0c37c6d19fcd2b8c4389adbe4096dbdd39a5d334a3244fa62df1fd"
   end
+
+  conflicts_with "moreutils", because: "both install a `parallel` executable"
 
   def install
     system "./configure", "--prefix=#{prefix}"
     system "make", "install"
+
+    inreplace_files = [
+      bin/"parallel",
+      doc/"parallel.texi",
+      doc/"parallel_design.texi",
+      man1/"parallel.1",
+      man7/"parallel_design.7",
+    ]
+    inreplace inreplace_files, "/usr/local", HOMEBREW_PREFIX
   end
 
   test do

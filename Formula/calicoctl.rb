@@ -2,31 +2,32 @@ class Calicoctl < Formula
   desc "Calico CLI tool"
   homepage "https://www.projectcalico.org"
   url "https://github.com/projectcalico/calicoctl.git",
-      :tag      => "v3.1.3",
-      :revision => "231083c2ce934b7946ebed3ed96f4fc1a3ba4f69"
+      tag:      "v3.19.1",
+      revision: "6fc0db96a3d2df7bd2eb0929f9c3d327380b0ed0"
+  license "Apache-2.0"
+  head "https://github.com/projectcalico/calicoctl.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "f16fc8a7934c3dd46552224353a1a36a5ed1fc9c5265a81e48f1dc4226646b9e" => :mojave
-    sha256 "0a050b4fd951cd8cf7593a436fe99571d6e7ce325a2449a12d6168972a1c714c" => :high_sierra
-    sha256 "1d8f80446c3395ea05dce58b3ff04f9ec9b5bafee6598c0c5704475e00f1786d" => :sierra
-    sha256 "f3c800eb604d967120d6b26897b25a85b2e877d05502baaa17ecd1d8dbbdb24a" => :el_capitan
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
-  depends_on "glide" => :build
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1a0f248d5b5f9059ed24a4cd762adb2e195f7a1c721d4f4ec40f7f707d9c892c"
+    sha256 cellar: :any_skip_relocation, big_sur:       "400e7c298d661badd89ac967a33921297657a6f53a4155ee4fa620c7b71b8040"
+    sha256 cellar: :any_skip_relocation, catalina:      "ad8a82058db04666e990a8963dfa233b5db2d852257b14a7b98d05771d96a38a"
+    sha256 cellar: :any_skip_relocation, mojave:        "a44473b4ee9ce7ca1a4a9444a1a4d06e51f6ecc0142a00b62d2f2c1e0024c1ff"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "af530644558d1fcf213d9d08c4f98d7cfe8dc1483ecc80f2a0dfde44ac0f10eb"
+  end
+
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    ENV["GLIDE_HOME"] = HOMEBREW_CACHE/"glide_home/#{name}"
-    dir = buildpath/"src/github.com/projectcalico/calicoctl"
-    dir.install buildpath.children
-    cd dir do
-      system "glide", "install", "-strip-vendor"
-      system "make", "binary"
-      bin.install "dist/calicoctl-darwin-amd64" => "calicoctl"
-      prefix.install_metafiles
-    end
+    commands = "github.com/projectcalico/calicoctl/v3/calicoctl/commands"
+    ldflags = "-X #{commands}.VERSION=#{version} " \
+              "-X #{commands}.GIT_REVISION=#{Utils.git_short_head} " \
+              "-s -w"
+    system "go", "build", *std_go_args(ldflags: ldflags), "calicoctl/calicoctl.go"
   end
 
   test do

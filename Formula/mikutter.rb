@@ -1,86 +1,99 @@
 class Mikutter < Formula
   desc "Extensible Twitter client"
   homepage "https://mikutter.hachune.net/"
-  url "https://mikutter.hachune.net/bin/mikutter.3.7.4.tar.gz"
-  sha256 "7695a76a809555b2688b56f5335834fd876f82ce1b645815ec2020aedbdff55c"
-  revision 1
-  head "git://toshia.dip.jp/mikutter.git", :branch => "develop"
+  url "https://mikutter.hachune.net/bin/mikutter-4.1.1.tar.gz"
+  sha256 "4cce3a4770a0d9a2691d21e3379fe616797e583a47273d69d1ec44f48b98836d"
+  license "MIT"
+  revision 2
+  head "git://mikutter.hachune.net/mikutter.git", branch: "develop"
+
+  livecheck do
+    url "https://mikutter.hachune.net/download"
+    regex(/href=.*?mikutter.?v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "de88e0c4a6d27768777366da0951616a87da66f443d71495fbb3592a48e7586d" => :mojave
-    sha256 "9b070d5a37ad0c2d828236af63d38edf651542a5871c141c6c2e9539030a1f17" => :high_sierra
-    sha256 "9a5c2066294f9d59f8e45df1f3273b82ac43997c9fcc08583b5d889f7f4bbf97" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "1a3ad524040a6b2f1a9328f231c51f49689731b419650c211a816d144baa3232"
+    sha256 cellar: :any,                 big_sur:       "28bbc7b323d3ecdaf288c71e469192475ecd331518568af06d62035e7f4c1577"
+    sha256 cellar: :any,                 catalina:      "81343393fd8217ae7ce465bc06965b7ecaf218fc8cab32f58fa5f29973c10ff3"
+    sha256 cellar: :any,                 mojave:        "b7c86be22b9559edc1ef689bb4d4470dda8083c90e7218165b67b009418411e5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f9b47e9983d0db76b4261ebe5f7df3d258d62a64abda8fa67d22f0ff6cde6be4"
   end
 
   depends_on "gobject-introspection"
   depends_on "gtk+"
   depends_on "libidn"
-  depends_on "ruby" if MacOS.version <= :high_sierra
-  depends_on "terminal-notifier"
+  depends_on "ruby@2.7"
+
+  uses_from_macos "xz"
+
+  on_macos do
+    depends_on "terminal-notifier"
+  end
 
   resource "addressable" do
-    url "https://rubygems.org/gems/addressable-2.5.2.gem"
-    sha256 "73771ea960b3900d96e6b3729bd203e66f387d0717df83304411bf37efd7386e"
+    url "https://rubygems.org/downloads/addressable-2.7.0.gem"
+    sha256 "5e9b62fe1239091ea9b2893cd00ffe1bcbdd9371f4e1d35fac595c98c5856cbb"
   end
 
   resource "atk" do
-    url "https://rubygems.org/gems/atk-3.2.1.gem"
-    sha256 "cc460c76a8729b49852dfec01e285ba16a52f13e1325f3a4a04f5c8e4beaf2ba"
+    url "https://rubygems.org/downloads/atk-3.4.1.gem"
+    sha256 "88240dd7f28f38d05349363585827df2da258412c531744bf18f74e3824a1829"
   end
 
   resource "cairo" do
-    url "https://rubygems.org/gems/cairo-1.15.13.gem"
-    sha256 "27863a94dd5646afd0a4ce309386e15eebdec6415c58b33017a24f42896b1d26"
+    url "https://rubygems.org/downloads/cairo-1.16.5.gem"
+    sha256 "f11f243d74b6902bb0306c860e17b8be530883a617b0ece1abe488ab40085bba"
   end
 
   resource "cairo-gobject" do
-    url "https://rubygems.org/gems/cairo-gobject-3.2.1.gem"
-    sha256 "36c8e4d9983f7e2544d20152747e8508b2ef5e3789320596c737c5a4a9894776"
+    url "https://rubygems.org/downloads/cairo-gobject-3.4.1.gem"
+    sha256 "4800f1dc9720640060ba63602e235fa5f5b7469434c68788ce3c6f46b56b7d3e"
   end
 
   resource "delayer" do
-    url "https://rubygems.org/gems/delayer-0.0.2.gem"
-    sha256 "39ece17be3e4528d562a88aef7cb25143ef4ce77df2925a7534f8a163af1db94"
+    url "https://rubygems.org/downloads/delayer-1.0.2.gem"
+    sha256 "b5bc78b8d1b484021d91ce630e9d10b4a87ccd8925b2760799f3193d38203842"
   end
 
   resource "delayer-deferred" do
-    url "https://rubygems.org/gems/delayer-deferred-2.0.0.gem"
-    sha256 "bf135b0a76eb30223e447da7afe915726321716856acf5e0e3453efb3dbc787f"
+    url "https://rubygems.org/downloads/delayer-deferred-2.1.3.gem"
+    sha256 "cd1464eb228d4c08ba29af200a28892dde32c4d3f39e6fe6300c7a3c148686de"
   end
 
   resource "diva" do
-    url "https://rubygems.org/gems/diva-0.3.2.gem"
-    sha256 "8d202ef311a94af28d7b2c3b63322f1dd678db154551d40fc6f260da5e11e166"
+    url "https://rubygems.org/downloads/diva-1.0.2.gem"
+    sha256 "4f702b8fee7e737847c25324807f47206d4402969f929b2d7976ef531e279417"
   end
 
   resource "gdk_pixbuf2" do
-    url "https://rubygems.org/gems/gdk_pixbuf2-3.2.1.gem"
-    sha256 "5d380d609e3d05d698317331eaa5456a412f73edcbb659d303edec5653cb4ad0"
+    url "https://rubygems.org/downloads/gdk_pixbuf2-3.4.1.gem"
+    sha256 "55dd9255105b81954c3f49c0669e26262380eea634b323017454c509ec7f2405"
   end
 
   resource "gettext" do
-    url "https://rubygems.org/gems/gettext-3.0.9.gem"
-    sha256 "390ee547437d62d00b859383d1af816cf06f0adee9ced1949f821b720d187c93"
+    url "https://rubygems.org/gems/gettext-3.3.6.gem"
+    sha256 "ee6bbd1b2f833ee52d7797fa68acbfecc4726aec6b6280fd7eab92aa0190b413"
   end
 
   resource "gio2" do
-    url "https://rubygems.org/gems/gio2-3.2.1.gem"
-    sha256 "464df44ac122f9188221acd4d445e6c844de9aa35b72411caf1b857ec0878b14"
+    url "https://rubygems.org/downloads/gio2-3.4.1.gem"
+    sha256 "efd470c1b32641bce0df4ec689a2770d19503a7f98cd5b19eca5acddd6bb72d0"
   end
 
   resource "glib2" do
-    url "https://rubygems.org/gems/glib2-3.2.1.gem"
-    sha256 "7a320d73a9ea15e9af9d018f1da5ffdfc5243e9945a2a18752a5a66d7a95efae"
+    url "https://rubygems.org/downloads/glib2-3.4.1.gem"
+    sha256 "2c60c23752cb62cd82feab5d640844876e6e1a5e2226372d550582eb80f594a1"
   end
 
   resource "gobject-introspection" do
-    url "https://rubygems.org/gems/gobject-introspection-3.2.1.gem"
-    sha256 "11b860f32aa4e001c71476bfced2dddb3a9e7930c1c1b5b20d784aa63b669070"
+    url "https://rubygems.org/downloads/gobject-introspection-3.4.1.gem"
+    sha256 "5680367a577bc1d5a0145d8da26a516b946c0c2f14c91f411f5d2d1d23467da8"
   end
 
   resource "gtk2" do
-    url "https://rubygems.org/gems/gtk2-3.2.1.gem"
-    sha256 "66d3cf80aacb89b6f17da8ef879c46c76e9cffa99e4dcbee2e70f4ade6e2d482"
+    url "https://rubygems.org/downloads/gtk2-3.4.1.gem"
+    sha256 "ad8ae7763cc3e8658e8dd4eca31a639880b8d485e2c9d52648fffb60c1435f9d"
   end
 
   resource "httpclient" do
@@ -88,49 +101,39 @@ class Mikutter < Formula
     sha256 "2951e4991214464c3e92107e46438527d23048e634f3aee91c719e0bdfaebda6"
   end
 
-  resource "idn-ruby" do
-    url "https://rubygems.org/gems/idn-ruby-0.1.0.gem"
-    sha256 "99abba21c66e61fa16f2ddb2a507b4fd5a8d84ece77711f0d2e2bc313da36b1f"
-  end
-
   resource "instance_storage" do
     url "https://rubygems.org/gems/instance_storage-1.0.0.gem"
     sha256 "f41e64da2fe4f5f7d6c8cf9809ef898e660870f39d4e5569c293b584a12bce22"
   end
 
-  resource "json_pure" do
-    url "https://rubygems.org/gems/json_pure-1.8.6.gem"
-    sha256 "55d575c4aec98249473811a256b3f3a7c12a94ad008093032f5e5f28eacd94ee"
-  end
-
   resource "locale" do
-    url "https://rubygems.org/gems/locale-2.1.2.gem"
-    sha256 "1db4a6b5f21fcd64f397d61bf2af69840dc11b3176d1fa6d75a0e749f04a9aea"
+    url "https://rubygems.org/downloads/locale-2.1.3.gem"
+    sha256 "b6ddee011e157817cb98e521b3ce7cb626424d5882f1e844aafdee3e8b212725"
   end
 
   resource "memoist" do
-    url "https://rubygems.org/gems/memoist-0.16.0.gem"
-    sha256 "70bd755b48477c9ef9601daa44d298e04a13c1727f8f9d38c34570043174085f"
+    url "https://rubygems.org/downloads/memoist-0.16.2.gem"
+    sha256 "a52c53a3f25b5875151670b2f3fd44388633486dc0f09f9a7150ead1e3bf3c45"
   end
 
   resource "mini_portile2" do
-    url "https://rubygems.org/gems/mini_portile2-2.3.0.gem"
-    sha256 "216417b241ff4e7b1c726f257241eaf223e3abbe6ec2c6453352dea6a414a38d"
+    url "https://rubygems.org/gems/mini_portile2-2.4.0.gem"
+    sha256 "7e178a397ad62bb8a96977986130dc81f1b13201c6dd95a48bd8cec1dda5f797"
   end
 
   resource "moneta" do
-    url "https://rubygems.org/gems/moneta-1.0.0.gem"
-    sha256 "2224e5a68156e8eceb525fb0582c8c4e0f29f67cae86507cdcfb406abbb1fc5d"
+    url "https://rubygems.org/downloads/moneta-1.4.0.gem"
+    sha256 "1e77130b3ada384fcd965f98428ec87ff41beec66b4928873045df024395289c"
   end
 
   resource "native-package-installer" do
-    url "https://rubygems.org/gems/native-package-installer-1.0.6.gem"
-    sha256 "7cff2ddbedc529e5f98422288e198428fcf420d78ffabfd4c88536870dda0c3f"
+    url "https://rubygems.org/downloads/native-package-installer-1.0.9.gem"
+    sha256 "80bad0273706eeb4fc49ac8fa589b25eb6728c85a09fd241c8f0f06bdca32c5e"
   end
 
   resource "nokogiri" do
-    url "https://rubygems.org/gems/nokogiri-1.8.4.gem"
-    sha256 "ecad8473fbaebaadd060eec15a872fb67c4bd7c6d64904ebbe15d40113ad36c1"
+    url "https://rubygems.org/downloads/nokogiri-1.10.10.gem"
+    sha256 "22ea03a328972467d7da06f4a7d5ac4f1f6410185efb55a4dae9cd222d30ae76"
   end
 
   resource "oauth" do
@@ -139,28 +142,28 @@ class Mikutter < Formula
   end
 
   resource "pango" do
-    url "https://rubygems.org/gems/pango-3.2.1.gem"
-    sha256 "45f13b5ac6435b65af930b6e4964faedc1211ae687ced5fe770ebb8cab860d42"
+    url "https://rubygems.org/downloads/pango-3.4.1.gem"
+    sha256 "77e14073e93bbddb53ad6e3debf3e054f5444de4e2748c36cb2ede8741b10cb4"
   end
 
   resource "pkg-config" do
-    url "https://rubygems.org/gems/pkg-config-1.3.1.gem"
-    sha256 "953afe038297f8f34b4a519a27cf7a3c71a03c541366695dd0da7f3be2e43d7b"
+    url "https://rubygems.org/downloads/pkg-config-1.4.1.gem"
+    sha256 "dca87a58534dfc3ff61c5de1289ed6622a5bd1f5b48fb2dc7a1cc5ef8f6b4ef2"
   end
 
   resource "pluggaloid" do
-    url "https://rubygems.org/gems/pluggaloid-1.1.1.gem"
-    sha256 "f9279fad38d0bf4e20ee70e30882c6cb7916bc764bf72b2f955f0ac0ff0a3a5d"
+    url "https://rubygems.org/gems/pluggaloid-1.2.0.gem"
+    sha256 "108eb89db1cc35f94f69d838f673d9d501b7e1f57e8eec5e200cb1d8a4cc60bf"
   end
 
   resource "public_suffix" do
-    url "https://rubygems.org/gems/public_suffix-3.0.2.gem"
-    sha256 "3a0168c33fa0b00886423a2ceb21c74199273ccd01bc250360fc8d18600bb0f4"
+    url "https://rubygems.org/downloads/public_suffix-4.0.5.gem"
+    sha256 "efbc976b8f8cd7e2f9387b41ad4dc5447bcc7e862cf3afd909f13b0048a3dc6f"
   end
 
-  resource "ruby-hmac" do
-    url "https://rubygems.org/gems/ruby-hmac-0.4.0.gem"
-    sha256 "a4245ecf2cfb2036975b63dc37d41426727d8449617ff45daf0b3be402a9fe07"
+  resource "rake" do
+    url "https://rubygems.org/downloads/rake-13.0.1.gem"
+    sha256 "292a08eb3064e972e3e07e4c297d54a93433439ff429e58a403ae05584fad870"
   end
 
   resource "text" do
@@ -168,62 +171,74 @@ class Mikutter < Formula
     sha256 "2fbbbc82c1ce79c4195b13018a87cbb00d762bda39241bb3cdc32792759dd3f4"
   end
 
-  resource "totoridipjp" do
-    url "https://rubygems.org/gems/totoridipjp-0.1.0.gem"
-    sha256 "93d1245c5273971c855b506a7a913d23d6f524e9d7d4494127ae1bc6174c910d"
-  end
-
-  resource "twitter-text" do
-    url "https://rubygems.org/gems/twitter-text-2.1.0.gem"
-    sha256 "ca4ce1c4bc91c412d5b85c12e12d96aff2b347ca01656a0986981bcb4738fbc5"
-  end
-
   resource "typed-array" do
     url "https://rubygems.org/gems/typed-array-0.1.2.gem"
     sha256 "891fa1de2cdccad5f9e03936569c3c15d413d8c6658e2edfe439d9386d169b62"
   end
 
-  resource "unf" do
-    url "https://rubygems.org/gems/unf-0.1.4.gem"
-    sha256 "4999517a531f2a955750f8831941891f6158498ec9b6cb1c81ce89388e63022e"
-  end
+  # This is annoying - if the gemfile lists test group gems at all,
+  # even if we've explicitly requested to install without them,
+  # bundle install --cache will fail because it can't find those gems.
+  # Handle this by modifying the gemfile to remove these gems.
+  def gemfile_remove_test!
+    gemfile_lines = []
+    test_group = false
+    File.read("Gemfile").each_line do |line|
+      line.chomp!
 
-  resource "unf_ext" do
-    url "https://rubygems.org/gems/unf_ext-0.0.7.5.gem"
-    sha256 "4126717c9ad85bc0d8f62881cabf32e84fe18c47485784d1ba8b0c0fb189e11a"
+      # If this is the closing part of the test group,
+      # swallow this line and then allow writing the test of the file.
+      if test_group && line == "end"
+        test_group = false
+        next
+      # If we're still inside the test group, skip writing.
+      elsif test_group
+        next
+      end
+
+      # If this is the start of the test group, skip writing it and mark
+      # this as part of the group.
+      if line.include?("group :test")
+        test_group = true
+      else
+        gemfile_lines << line
+      end
+    end
+
+    File.open("Gemfile", "w") do |gemfile|
+      gemfile.puts gemfile_lines.join("\n")
+      # Unmarked dependency of atk
+      gemfile.puts "gem 'rake','>= 13.0.1'"
+    end
   end
 
   def install
     (lib/"mikutter/vendor").mkpath
+    (buildpath/"vendor/cache").mkpath
     resources.each do |r|
-      r.verify_download_integrity(r.fetch)
-      system("gem", "install", r.cached_download, "--no-document",
-             "--install-dir", "#{lib}/mikutter/vendor")
+      r.unpack buildpath/"vendor/cache"
     end
+
+    gemfile_remove_test!
+    system "bundle", "install",
+           "--local", "--path=#{lib}/mikutter/vendor"
 
     rm_rf "vendor"
     (lib/"mikutter").install "plugin"
     libexec.install Dir["*"]
 
-    (bin/"mikutter").write(exec_script)
+    ruby_series = Formula["ruby@2.7"].any_installed_version.major_minor
+    env = {
+      DISABLE_BUNDLER_SETUP: "1",
+      GEM_HOME:              HOMEBREW_PREFIX/"lib/mikutter/vendor/ruby/#{ruby_series}.0",
+      GTK_PATH:              HOMEBREW_PREFIX/"lib/gtk-2.0",
+    }
+
+    (bin/"mikutter").write_env_script Formula["ruby@2.7"].opt_bin/"ruby", "#{libexec}/mikutter.rb", env
     pkgshare.install_symlink libexec/"core/skin"
 
     # enable other formulae to install plugins
     libexec.install_symlink HOMEBREW_PREFIX/"lib/mikutter/plugin"
-  end
-
-  def exec_script
-    <<~EOS
-      #!/bin/bash
-
-      export DISABLE_BUNDLER_SETUP=1
-
-      # also include gems/gtk modules from other formulae
-      export GEM_HOME="#{HOMEBREW_PREFIX}/lib/mikutter/vendor"
-      export GTK_PATH="#{HOMEBREW_PREFIX}/lib/gtk-2.0"
-
-      exec #{which("ruby")} "#{libexec}/mikutter.rb" "$@"
-    EOS
   end
 
   test do

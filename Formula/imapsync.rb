@@ -1,17 +1,32 @@
 class Imapsync < Formula
   desc "Migrate or backup IMAP mail accounts"
-  homepage "http://ks.lamiral.info/imapsync/"
-  url "https://imapsync.lamiral.info/dist2/imapsync-1.882.tgz"
-  # Note the mirror will return 404 until the version becomes outdated.
-  sha256 "e4d8556b0273d1f0edaeb8d0d56533f0bfa7154c109bd10c586cd50bfc8a7ed5"
+  homepage "https://imapsync.lamiral.info/"
+  url "https://imapsync.lamiral.info/dist2/imapsync-1.977.tgz"
+  # NOTE: The mirror will return 404 until the version becomes outdated.
+  sha256 "1ce601150568a6b13a5d8730bee07fdc05b35f3f4e35775f1b471ba221940c2a"
+  license "NLPL"
+  revision 1
   head "https://github.com/imapsync/imapsync.git"
 
+  livecheck do
+    url "https://imapsync.lamiral.info/dist2/"
+    regex(/href=.*?imapsync[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "af1e8f2905d31aaa1123c9be542ba94bc6e0141f96a8b264e7dea80c6dbd3d5c" => :mojave
-    sha256 "b68c9774710e5d3c47b88dcb6df93789c868c2dc29bf2380b4f316d560871498" => :high_sierra
-    sha256 "ca33697e25f4b8a971b501ff4e68c52285706dfd450a81525648ebb22058a577" => :sierra
-    sha256 "c0518b4b531892a033cb142f6f1c39919953ba61143b5d8bb9661ea7ae8bb294" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e14410815c60a8df645e24fe6b2ae0549ff16e189ae7cb62ff76e94957028799"
+    sha256 cellar: :any_skip_relocation, big_sur:       "2080287d17a3a513a3e0ce872dfc4eb76b5a0323c6bd397179e5e5225fb6d9c3"
+    sha256 cellar: :any_skip_relocation, catalina:      "9654bda14b00c6c0f0f12c58dcd918618d761ea4c70b4d79ff0916aebb175128"
+    sha256 cellar: :any_skip_relocation, mojave:        "e031d2a41ab746c91045945a0aea0b2dd0e34317a79e17b4205afa41fe98a011"
+  end
+
+  depends_on "pod2man" => :build
+
+  uses_from_macos "perl"
+
+  resource "Encode::IMAPUTF7" do
+    url "https://cpan.metacpan.org/authors/id/P/PM/PMAKHOLM/Encode-IMAPUTF7-1.05.tar.gz"
+    sha256 "470305ddc37483cfe8d3c16d13770a28011f600bf557acb8c3e07739997c37e1"
   end
 
   resource "Unicode::String" do
@@ -30,8 +45,8 @@ class Imapsync < Formula
   end
 
   resource "Mail::IMAPClient" do
-    url "https://cpan.metacpan.org/authors/id/P/PL/PLOBBES/Mail-IMAPClient-3.39.tar.gz"
-    sha256 "b541fdb47d5bca93048bcee69f42ad2cc96af635557ba6a9db1d8f049a434ea3"
+    url "https://cpan.metacpan.org/authors/id/P/PL/PLOBBES/Mail-IMAPClient-3.42.tar.gz"
+    sha256 "1c2264d50c54c839a3e38ce2f8edda3d24f30cc607940d7574beab19cb00ce7e"
   end
 
   resource "IO::Tee" do
@@ -45,13 +60,13 @@ class Imapsync < Formula
   end
 
   resource "JSON" do
-    url "https://cpan.metacpan.org/authors/id/I/IS/ISHIGAKI/JSON-2.97001.tar.gz"
-    sha256 "e277d9385633574923f48c297e1b8acad3170c69fa590e31fa466040fc6f8f5a"
+    url "https://cpan.metacpan.org/authors/id/I/IS/ISHIGAKI/JSON-4.02.tar.gz"
+    sha256 "444a88755a89ffa2a5424ab4ed1d11dca61808ebef57e81243424619a9e8627c"
   end
 
   resource "Test::MockObject" do
-    url "https://cpan.metacpan.org/authors/id/C/CH/CHROMATIC/Test-MockObject-1.20161202.tar.gz"
-    sha256 "14b225fff3645338697976dbbe2c39e44c1c93536855b78b3bbc6e9bfe94a0a2"
+    url "https://cpan.metacpan.org/authors/id/C/CH/CHROMATIC/Test-MockObject-1.20180705.tar.gz"
+    sha256 "4516058d5d511155c1c462dab4027d762d6a474b99f73bf7da20b5ffbd024518"
   end
 
   resource "JSON::WebToken" do
@@ -74,14 +89,25 @@ class Imapsync < Formula
     sha256 "0786319d3a3a8bae5d727939244bf17e140b714f52734d5e9f627203e4cf3e3b"
   end
 
+  resource "File::Tail" do
+    url "https://cpan.metacpan.org/authors/id/M/MG/MGRABNAR/File-Tail-1.3.tar.gz"
+    sha256 "26d09f81836e43eae40028d5283fe5620fe6fe6278bf3eb8eb600c48ec34afc7"
+  end
+
+  resource "IO::Socket::IP" do
+    url "https://cpan.metacpan.org/authors/id/P/PE/PEVANS/IO-Socket-IP-0.39.tar.gz"
+    sha256 "11950da7636cb786efd3bfb5891da4c820975276bce43175214391e5c32b7b96"
+  end
+
   def install
-    ENV.prepend_create_path "PERL5LIB", libexec+"lib/perl5"
+    ENV.prepend_create_path "PERL5LIB", libexec/"lib/perl5"
 
     build_pl = ["JSON::WebToken", "Module::Build::Tiny", "Readonly"]
 
     resources.each do |r|
       r.stage do
         next if build_pl.include? r.name
+
         system "perl", "Makefile.PL", "INSTALL_BASE=#{libexec}"
         system "make"
         system "make", "install"
@@ -97,18 +123,17 @@ class Imapsync < Formula
     end
 
     system "perl", "-c", "imapsync"
-    system "pod2man", "imapsync", "imapsync.1"
+    system "#{Formula["pod2man"].opt_bin}/pod2man", "imapsync", "imapsync.1"
+    inreplace "imapsync", "#!/usr/bin/env perl", "#!/usr/bin/perl"
     bin.install "imapsync"
     man1.install "imapsync.1"
-    bin.env_script_all_files(libexec+"bin", :PERL5LIB => ENV["PERL5LIB"])
+    bin.env_script_all_files(libexec/"bin", PERL5LIB: ENV["PERL5LIB"])
   end
 
   test do
-    output = shell_output("#{bin}/imapsync --dry", 255)
-    assert_match version.to_s, output
-    resources.each do |r|
-      next if ["Module::Build::Tiny", "Readonly", "Sys::MemInfo"].include? r.name
-      assert_match /#{r.name}\s+#{r.version}/, output
-    end
+    assert_match version.to_s, pipe_output("#{bin}/imapsync --dry")
+    shell_output("#{bin}/imapsync --dry \
+       --host1 test1.lamiral.info --user1 test1 --password1 secret1 \
+       --host2 test2.lamiral.info --user2 test2 --password2 secret2")
   end
 end

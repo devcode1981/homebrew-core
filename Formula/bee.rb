@@ -1,12 +1,17 @@
 class Bee < Formula
   desc "Tool for managing database changes"
   homepage "https://github.com/bluesoft/bee"
-  url "https://github.com/bluesoft/bee/releases/download/1.63/bee-1.63.zip"
-  sha256 "8c17b9896ad2072e9a112a94fb8d5d8b4e09430da38b56bb29aaafb0713cb8b1"
+  url "https://github.com/bluesoft/bee/releases/download/1.80/bee-1.80.zip"
+  sha256 "42441cd6e48f1dc491b33384e4c80e72425bca660f4fb1c6e830840c3a397e7d"
+  license "MPL-1.1"
+  revision 1
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "d4224f9390bdaaa778b634dd75e0b5092ba049626b8e9d9dc33f89aa9cfbdefd"
+  end
 
-  depends_on :java => "1.8"
+  depends_on arch: :x86_64 # openjdk@8 doesn't support ARM
+  depends_on "openjdk@8"
 
   def install
     rm_rf Dir["bin/*.bat"]
@@ -22,6 +27,6 @@ class Bee < Formula
       test-database.password=
     EOS
     (testpath/"bee").mkpath
-    system bin/"bee", "dbchange:create new-file"
+    system bin/"bee", "-d", testpath/"bee", "dbchange:create", "new-file"
   end
 end

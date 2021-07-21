@@ -1,33 +1,29 @@
 class Prototool < Formula
   desc "Your Swiss Army Knife for Protocol Buffers"
   homepage "https://github.com/uber/prototool"
-  url "https://github.com/uber/prototool/archive/v1.3.0.tar.gz"
-  sha256 "727c64ce45e2f07445838677bd08009f7975d70648d327008ec5369631266493"
+  url "https://github.com/uber/prototool/archive/v1.10.0.tar.gz"
+  sha256 "5b516418f41f7283a405bf4a8feb2c7034d9f3d8c292b2caaebcd218581d2de4"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b596a61d1a00123c749d473b87460d2dc84123c1b6b2a25307b5a3557232da0e" => :mojave
-    sha256 "d0c768377d7336ace520a3476ec40740a21249b46b600d44c6ef95b23d6dfed0" => :high_sierra
-    sha256 "b2781bc1baccfb8957ecfd2db0c1a67d337dcb6eb123f7cd681ec74bb3157b0f" => :sierra
-    sha256 "b159f5c718bea7a8dae0c5a920ceb9e3de783e7bad8bed4c1898eff874003321" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "ce505a3c8ebc53f48ffee3f5a174073364f462538f4c94458b54dc3e15669106"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c667e52b752c52d3c852a084dad1fb962e3cbdfd75fac5a7092a691f748cd63e"
+    sha256 cellar: :any_skip_relocation, catalina:      "e7c678d2842ce666ddfbeee1092c2354a420c9b8b94244e8db2b382f6568e536"
+    sha256 cellar: :any_skip_relocation, mojave:        "256435ac965872664fc2707b8188090c2a1d369308ef2b224d53e1b972ee7620"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "373cf39c37bd40c8eb4f9261129226bf0f276771872060ea3495d6a2d56fa911"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b193cacb23781483394900b2067c93a1abe8cafe846993a86171ed772c9b18ff"
   end
 
-  depends_on "glide" => :build
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    dir = buildpath/"src/github.com/uber/prototool"
-    dir.install buildpath.children
-    cd dir do
-      system "make", "brewgen"
-      cd "brew" do
-        bin.install "bin/prototool"
-        bash_completion.install "etc/bash_completion.d/prototool"
-        zsh_completion.install "etc/zsh/site-functions/_prototool"
-        man1.install Dir["share/man/man1/*.1"]
-        prefix.install_metafiles
-      end
+    system "make", "brewgen"
+    cd "brew" do
+      bin.install "bin/prototool"
+      bash_completion.install "etc/bash_completion.d/prototool"
+      zsh_completion.install "etc/zsh/site-functions/_prototool"
+      man1.install Dir["share/man/man1/*.1"]
+      prefix.install_metafiles
     end
   end
 

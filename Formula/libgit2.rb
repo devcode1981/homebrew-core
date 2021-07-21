@@ -1,37 +1,38 @@
 class Libgit2 < Formula
   desc "C library of Git core methods that is re-entrant and linkable"
   homepage "https://libgit2.github.com/"
-  url "https://github.com/libgit2/libgit2/archive/v0.27.7.tar.gz"
-  sha256 "1a5435a483759b1cd96feb12b11abb5231b0688016db506ce5947178f6ba2531"
+  url "https://github.com/libgit2/libgit2/archive/v1.1.1.tar.gz"
+  sha256 "13a525373f64c711a00a058514d890d1512080265f98e0935ab279393f21a620"
+  license "GPL-2.0-only"
   head "https://github.com/libgit2/libgit2.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    cellar :any
-    sha256 "640ab236291c600299d1a59545fa4087d5f29672d2687d7e797755e69058edc8" => :mojave
-    sha256 "3ec4d61485eb4e46976aaed7fd1d2cd7f842f8b2c649c870ec3a2ba79517fdd0" => :high_sierra
-    sha256 "9946b33af89f683497ba8a2ac7b992b12d25792ae6b28b6995282c748bfb4c79" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "71ddae10a8e81012cdfb6877791ffeefef8421efcc7077e61d995aca5cc85275"
+    sha256 cellar: :any,                 big_sur:       "86c3794bf3890b7cbe622a1838517a93c4ee380682dae5da9f24c24d9256c094"
+    sha256 cellar: :any,                 catalina:      "9284d9a772c9bc29b52a0eef78f5c4f8a5f1ad659eb4024c53ebe6286a50facd"
+    sha256 cellar: :any,                 mojave:        "f8c6f89c82c013531e7355d79643dff7c7bf658bedaa9ff3fdfa44ee440b2abe"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "06a55904d78e73ea93567d825fbca98102abb496cfcbeb05bfc1a464672bdf53"
   end
 
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
-  depends_on "openssl" if MacOS.version <= :lion # Uses SecureTransport on >10.7
-  depends_on "libssh2" => :recommended
+  depends_on "libssh2"
 
   def install
     args = std_cmake_args
     args << "-DBUILD_EXAMPLES=YES"
     args << "-DBUILD_CLAR=NO" # Don't build tests.
-    args << "-DUSE_SSH=NO" if build.without? "libssh2"
 
     mkdir "build" do
       system "cmake", "..", *args
       system "make", "install"
       cd "examples" do
-        (pkgshare/"examples").install "add", "blame", "cat-file", "cgit2",
-                                      "describe", "diff", "for-each-ref",
-                                      "general", "init", "log", "remote",
-                                      "rev-list", "rev-parse", "showindex",
-                                      "status", "tag"
+        (pkgshare/"examples").install "lg2"
       end
       system "make", "clean"
       system "cmake", "..", "-DBUILD_SHARED_LIBS=OFF", *args

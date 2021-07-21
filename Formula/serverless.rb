@@ -2,15 +2,16 @@ require "language/node"
 
 class Serverless < Formula
   desc "Build applications with serverless architectures"
-  homepage "https://serverless.com"
-  url "https://registry.npmjs.org/serverless/-/serverless-1.33.1.tgz"
-  sha256 "bc148ae6c6bf23124df9806f56b0772cda8c19c7d8c7224868d4d5163d640f34"
+  homepage "https://www.serverless.com/"
+  url "https://github.com/serverless/serverless/archive/v2.52.0.tar.gz"
+  sha256 "bdb7653a0d2db7129cf99700b9c9e51365dd63107b39b5a784803473764d48bf"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d708d77b819afb2896c2cb5a59628e96df5b921356963cf640460bc0451dacc3" => :mojave
-    sha256 "a3456d38a0cc201a1ca7668730c2134b1b52082475bc2ebc46cd14517668ef4f" => :high_sierra
-    sha256 "700b5ba723cc9b5815a70424f5d3748ea6496ce09d5dca7b72c3a2bd92006a04" => :sierra
+    sha256 arm64_big_sur: "9434c348c47893589f3e63563f1409355c9e7689d35a3d9f288375b05953d50b"
+    sha256 big_sur:       "96bce13b0e1a7168716334305e0ad9d12ede6513fc71730c8108574750910005"
+    sha256 catalina:      "c5f89efb6f01d01a531b620cb8d85b6249630c52edc5fcb570555d1d97e72e42"
+    sha256 mojave:        "2019609524bf908ef902728d13cdff3402becce2dc435376b09b735c8d645132"
   end
 
   depends_on "node"
@@ -29,6 +30,8 @@ class Serverless < Formula
         stage: dev
         region: eu-west-1
     EOS
+
+    system("#{bin}/serverless", "config", "credentials", "--provider", "aws", "--key", "aa", "--secret", "xx")
     output = shell_output("#{bin}/serverless package")
     assert_match "Serverless: Packaging service...", output
   end

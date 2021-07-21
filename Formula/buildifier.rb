@@ -1,31 +1,22 @@
 class Buildifier < Formula
   desc "Format bazel BUILD files with a standard convention"
   homepage "https://github.com/bazelbuild/buildtools"
-  url "https://github.com/bazelbuild/buildtools.git",
-      :tag      => "0.17.2",
-      :revision => "7926f6cd8f2568556b0efc23530743df4278e0fe"
+  url "https://github.com/bazelbuild/buildtools/archive/4.0.1.tar.gz"
+  sha256 "c28eef4d30ba1a195c6837acf6c75a4034981f5b4002dda3c5aa6e48ce023cf1"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "f3c17f5b5dcc56bea01dbc84796cfaea83fe4bc991a3c4ba301f7a2c74b4975f" => :mojave
-    sha256 "9146773b6013b16d689769a97ca35b88f63ebfb905415618ad275569f1470f7a" => :high_sierra
-    sha256 "eaae6bfd07289eedced6fec304145d68b297b52440ce4407aaf74a88d2862fe1" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e4e94523c894ce25eb78ca146d6b5381d6a410688a4830e646003cbad414d5ad"
+    sha256 cellar: :any_skip_relocation, big_sur:       "dfec354e37e8027cfc1adbccd17d88e8ea4781d5653389534fbfb802b71d42d7"
+    sha256 cellar: :any_skip_relocation, catalina:      "105cd56c1b0933b8f2afbe283df6a03f7bc038b8b20daa194e5b6e7fc3ed9e6c"
+    sha256 cellar: :any_skip_relocation, mojave:        "7898e9f197210a0bb89f8674d07da5160d77790f7cf58507c47718d332214948"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "45f8da4e8698fef34fa1e3cc6e7cefeaba060f7026925e4be8aa6b898506ddf9"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/bazelbuild").mkpath
-    ln_sf buildpath, buildpath/"src/github.com/bazelbuild/buildtools"
-
-    commit = Utils.popen_read("git", "rev-parse", "HEAD").chomp
-    inreplace "buildifier/buildifier.go" do |s|
-      s.gsub! /^(var buildifierVersion = ")redacted/, "\\1#{version}"
-      s.gsub! /^(var buildScmRevision = ")redacted/, "\\1#{commit}"
-    end
-
-    system "go", "build", "-o", bin/"buildifier", "buildifier/buildifier.go"
+    system "go", "build", *std_go_args, "./buildifier"
   end
 
   test do

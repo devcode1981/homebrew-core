@@ -1,24 +1,30 @@
 class Nss < Formula
   desc "Libraries for security-enabled client and server applications"
-  homepage "https://developer.mozilla.org/docs/NSS"
-  url "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_40_1_RTM/src/nss-3.40.1.tar.gz"
-  sha256 "5e0e6bae2a79c86e506684955d736bfe875ec5a8e95ed3e4ba0852d1aec2c8f1"
+  homepage "https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS"
+  url "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_68_RTM/src/nss-3.68.tar.gz"
+  sha256 "c402b32cac83034ec1c3d826ef4306cd14a066d7d9a6f4c30d82b3bc043c725b"
+  license "MPL-2.0"
 
-  bottle do
-    cellar :any
-    sha256 "de91adeb2b2d78137e03d48e07d91880b41bd0270df50272e4cc782e2a740253" => :mojave
-    sha256 "b08939b2dee9590d851bc4cf5b1a61c7bfd6f8cdcce8e677155c61f877f8511d" => :high_sierra
-    sha256 "3f8c3e64d995c740fe0648f003c8ed3b989aecec0b77989f13068c6218dacce9" => :sierra
+  livecheck do
+    url "https://ftp.mozilla.org/pub/security/nss/releases/"
+    regex(%r{href=.*?NSS[._-]v?(\d+(?:[._]\d+)+)[._-]RTM/?["' >]}i)
   end
 
-  keg_only <<~EOS
-    Firefox can pick this up instead of the built-in library, resulting in
-    random crashes without meaningful explanation.
-
-    Please see https://bugzilla.mozilla.org/show_bug.cgi?id=1142646 for details
-  EOS
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "82c70c600978ee4392e93704b048feba56cc2b6a8615cdde6b32ecd06b07504c"
+    sha256 cellar: :any,                 big_sur:       "d8f984af9c7f027153a8396d3c62b30512540092176d8154678c7e28873f29ff"
+    sha256 cellar: :any,                 catalina:      "c739fae7400a875cc772665a40f956ab837551b8f8121d096b1df7b053eed783"
+    sha256 cellar: :any,                 mojave:        "e49bd11fccbcc8cdadc18d95d4631b8876bb6fc5fb433bf04c336fb04a1cd8bb"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b4400e75fe6a15b04e57981375517df800eb39c120b69fa52044cef8e32f3951"
+  end
 
   depends_on "nspr"
+
+  uses_from_macos "sqlite"
+  uses_from_macos "zlib"
+
+  conflicts_with "resty", because: "both install `pp` binaries"
+  conflicts_with "googletest", because: "both install `libgtest.a`"
 
   def install
     ENV.deparallelize
@@ -26,11 +32,12 @@ class Nss < Formula
 
     args = %W[
       BUILD_OPT=1
+      NSS_ALLOW_SSLKEYLOGFILE=1
       NSS_USE_SYSTEM_SQLITE=1
       NSPR_INCLUDE_DIR=#{Formula["nspr"].opt_include}/nspr
       NSPR_LIB_DIR=#{Formula["nspr"].opt_lib}
+      USE_64=1
     ]
-    args << "USE_64=1" if MacOS.prefer_64_bit?
 
     # Remove the broken (for anyone but Firefox) install_name
     inreplace "coreconf/Darwin.mk", "-install_name @executable_path", "-install_name #{lib}"
@@ -43,7 +50,9 @@ class Nss < Formula
     # rather than copying the referenced file.
     cd "../dist"
     bin.mkpath
-    Dir.glob("Darwin*/bin/*") do |file|
+    os = "Darwin"
+    on_linux { os = "Linux" }
+    Dir.glob("#{os}*/bin/*") do |file|
       cp file, bin unless file.include? ".dylib"
     end
 
@@ -53,7 +62,7 @@ class Nss < Formula
 
     lib.mkpath
     libexec.mkpath
-    Dir.glob("Darwin*/lib/*") do |file|
+    Dir.glob("#{os}*/lib/*") do |file|
       if file.include? ".chk"
         cp file, libexec
       else
@@ -76,30 +85,32 @@ class Nss < Formula
 
   # A very minimal nss-config for configuring firefox etc. with this nss,
   # see https://bugzil.la/530672 for the progress of upstream inclusion.
-  def config_file; <<~EOS
-    #!/bin/sh
-    for opt; do :; done
-    case "$opt" in
-      --version) opt="--modversion";;
-      --cflags|--libs) ;;
-      *) exit 1;;
-    esac
-    pkg-config "$opt" nss
-  EOS
+  def config_file
+    <<~EOS
+      #!/bin/sh
+      for opt; do :; done
+      case "$opt" in
+        --version) opt="--modversion";;
+        --cflags|--libs) ;;
+        *) exit 1;;
+      esac
+      pkg-config "$opt" nss
+    EOS
   end
 
-  def pc_file; <<~EOS
-    prefix=#{prefix}
-    exec_prefix=${prefix}
-    libdir=${exec_prefix}/lib
-    includedir=${prefix}/include/nss
+  def pc_file
+    <<~EOS
+      prefix=#{prefix}
+      exec_prefix=${prefix}
+      libdir=${exec_prefix}/lib
+      includedir=${prefix}/include/nss
 
-    Name: NSS
-    Description: Mozilla Network Security Services
-    Version: #{version}
-    Requires: nspr >= 4.12
-    Libs: -L${libdir} -lnss3 -lnssutil3 -lsmime3 -lssl3
-    Cflags: -I${includedir}
-  EOS
+      Name: NSS
+      Description: Mozilla Network Security Services
+      Version: #{version}
+      Requires: nspr >= 4.12
+      Libs: -L${libdir} -lnss3 -lnssutil3 -lsmime3 -lssl3
+      Cflags: -I${includedir}
+    EOS
   end
 end

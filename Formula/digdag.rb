@@ -1,21 +1,25 @@
 class Digdag < Formula
   desc "Workload Automation System"
   homepage "https://www.digdag.io/"
-  url "https://dl.digdag.io/digdag-0.9.31.jar"
-  sha256 "575261557f66d32eb0bae231dacb40e9f4225e4430e18abc1745f0bc83738fa8"
+  url "https://dl.digdag.io/digdag-0.10.1.jar"
+  sha256 "cd0e5224444a485c4fb3344515f76d5a92c6c5d6d36c854bde336ed2b094e85e"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  livecheck do
+    url "https://github.com/treasure-data/digdag.git"
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
-  depends_on :java => "1.8+"
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "0cf7a0f2c627e31403aab8371873202cd6a328534bd1a3867b71aad913474bea"
+  end
+
+  depends_on arch: :x86_64 # openjdk@8 is not supported on ARM
+  depends_on "openjdk@8"
 
   def install
-    libexec.install "digdag-#{version}.jar" => "digdag.jar"
-
-    # Create a wrapper script to support OS X 10.9.
-    (bin/"digdag").write <<~EOS
-      #!/bin/bash
-      exec /bin/bash "#{libexec}/digdag.jar" "$@"
-    EOS
+    libexec.install "digdag-#{version}.jar"
+    bin.write_jar_script libexec/"digdag-#{version}.jar", "digdag", java_version: "1.8"
   end
 
   test do

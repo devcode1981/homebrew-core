@@ -1,28 +1,25 @@
 class Libosmium < Formula
   desc "Fast and flexible C++ library for working with OpenStreetMap data"
   homepage "https://osmcode.org/libosmium/"
-  url "https://github.com/osmcode/libosmium/archive/v2.14.2.tar.gz"
-  sha256 "24b1a73c43e7b8e412ffcd4fb40f1b152edb316ff2799a60e0f31f1eb1212b35"
+  url "https://github.com/osmcode/libosmium/archive/v2.17.0.tar.gz"
+  sha256 "4a7672d7caf4da3bc68619912b298462370c423c697871a0be6273c6686e10d6"
+  license "BSL-1.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1c233e8c3fe26e8c220fc442f52096d514c6c9896375a0347b0dc8bf69db0464" => :mojave
-    sha256 "859c27ebb1cf975cd895b27a628f86a64043ac06763ea1ea634b5479f4135515" => :high_sierra
-    sha256 "859c27ebb1cf975cd895b27a628f86a64043ac06763ea1ea634b5479f4135515" => :sierra
-    sha256 "859c27ebb1cf975cd895b27a628f86a64043ac06763ea1ea634b5479f4135515" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a670f374f814891e2db3d00de8a156d2d177cbce453435388fa180de343d1f27"
+    sha256 cellar: :any_skip_relocation, big_sur:       "71432c9f74dfe76886bbe1e89d128bf5fa80e2e1ef9d3ea15a18fc9d7a739f34"
+    sha256 cellar: :any_skip_relocation, catalina:      "71432c9f74dfe76886bbe1e89d128bf5fa80e2e1ef9d3ea15a18fc9d7a739f34"
+    sha256 cellar: :any_skip_relocation, mojave:        "3e4d4f6cc29087f12b21f8354c44b0088d7dea65064b9d705d95217ddc9ab248"
   end
 
   depends_on "boost" => :build
   depends_on "cmake" => :build
-  depends_on "doxygen" => :optional
-  depends_on "expat" => :optional
-  depends_on "gdal" => :optional
-  depends_on "google-sparsehash" => :optional
-  depends_on "proj" => :optional
+
+  uses_from_macos "expat"
 
   resource "protozero" do
-    url "https://github.com/mapbox/protozero/archive/v1.6.3.tar.gz"
-    sha256 "c5d3c71f5fb56d867ff0536e55cd7a3f2eb0d09f6ebbf636b0fde4f0e12552f5"
+    url "https://github.com/mapbox/protozero/archive/v1.7.0.tar.gz"
+    sha256 "beffbdfab060854fd770178a8db9c028b5b6ee4a059a2fed82c46390a85f3f31"
   end
 
   def install
@@ -65,7 +62,7 @@ class Libosmium < Formula
       }
     EOS
 
-    system ENV.cxx, "-std=c++11", "-stdlib=libc++", "-lexpat", "-o", "libosmium_read", "test.cpp"
+    system ENV.cxx, "-std=c++11", "-lexpat", "-o", "libosmium_read", "-pthread", "test.cpp"
     system "./libosmium_read", "test.osm"
   end
 end

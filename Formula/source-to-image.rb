@@ -2,26 +2,30 @@ class SourceToImage < Formula
   desc "Tool for building source and injecting into docker images"
   homepage "https://github.com/openshift/source-to-image"
   url "https://github.com/openshift/source-to-image.git",
-      :tag      => "v1.1.12",
-      :revision => "2a783420bb648df7bdd7e1fbf99b8e53bbe4e415"
+      tag:      "v1.3.1",
+      revision: "a5a771479f73be6be4207aadc730351e515aedfb"
+  license "Apache-2.0"
   head "https://github.com/openshift/source-to-image.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "f66686a0a306a83ee579f533890c1e165833045f6b2d64b17ba7b21663404686" => :mojave
-    sha256 "ebaf4a14dbd202fe626ca18b58ef34d2d4e37ce282b0607dfe1c9cc7417431bd" => :high_sierra
-    sha256 "89a37daba6a14df3ae72f9872ec8a48ffd73939d3389ca47926cfe923810b0a4" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "b5ac084c3947f1729b436f7928760e3b33e26d1929dde39a6f53baee93103b38"
+    sha256 cellar: :any_skip_relocation, big_sur:       "885c70eb74a6c0faf5cebdf1468820a26ce8ac08a555821c3d419c7725e09256"
+    sha256 cellar: :any_skip_relocation, catalina:      "3fbf3469cf68fa605bbac9b3cb726ffc5c1f485d27dcacd4b9310e24e8d165e4"
+    sha256 cellar: :any_skip_relocation, mojave:        "c576266fcc9e09cfae7ea91d9bc6f76b4aad025d087cf11acfe94218cdfe1774"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "29fb2fc7a031e904e743264878f9a4010e7c5d6aa0a3091ea0ec1038f312a5ca"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "bcecc2baa3cde24a76d98e4771268feff6c28f91f8e0b4260c3d355027c1988f"
   end
 
   depends_on "go" => :build
 
   def install
-    # Upstream issue from 28 Feb 2018 "Go 1.10 failure due to version comparison bug"
-    # See https://github.com/openshift/source-to-image/issues/851
-    inreplace "hack/common.sh", "go1.4", "go1.0"
-
     system "hack/build-go.sh"
-    bin.install "_output/local/bin/darwin/amd64/s2i"
+    os = "darwin"
+    on_linux do
+      os = "linux"
+    end
+    arch = Hardware::CPU.arm? ? "arm64" : "amd64"
+    bin.install "_output/local/bin/#{os}/#{arch}/s2i"
   end
 
   test do

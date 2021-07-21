@@ -5,19 +5,16 @@ class Woof < Formula
   version "20120531"
   sha256 "d84353d07f768321a1921a67193510bf292cf0213295e8c7689176f32e945572"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "854310e14cd958d44e42c8b6dd5aac3ca360ae2154763a0967cfbe4dee76a512"
+  end
 
   def install
     bin.install "woof-2012-05-31.py" => "woof"
   end
 
   test do
-    require "socket"
-
-    server = TCPServer.new(0)
-    port = server.addr[1]
-    server.close
-
+    port = free_port
     pid = fork do
       exec "#{bin}/woof", "-s", "-p", port.to_s
     end

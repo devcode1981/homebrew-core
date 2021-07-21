@@ -1,41 +1,81 @@
 class Freeswitch < Formula
   desc "Telephony platform to route various communication protocols"
   homepage "https://freeswitch.org"
-  url "https://freeswitch.org/stash/scm/fs/freeswitch.git",
-      :tag      => "v1.6.20",
-      :revision => "987c9b9a2a2e389becf4f390feb9eb14c77e2371"
-  head "https://freeswitch.org/stash/scm/fs/freeswitch.git"
+  license "MPL-1.1"
+  revision 3
+  head "https://github.com/signalwire/freeswitch.git"
 
-  bottle do
-    sha256 "52f44a6e3713c7c5d47f4fc6a78416c7ddddfdf69ee23e7c2caef02f1e47733e" => :mojave
-    sha256 "a44ff9765d3a79e6caf363f94c144ee62139320b274f70c56000d839dec618ad" => :high_sierra
-    sha256 "52aa9f65dbcff17203256154422092c74195c795f50cb10b4c7182e4dcc1361b" => :sierra
-    sha256 "f2d73136027050dc82f3ce4d9e6f131f07a6cf15fba1d2b02c2012eacd1cb525" => :el_capitan
+  stable do
+    url "https://github.com/signalwire/freeswitch.git",
+        tag:      "v1.10.5",
+        revision: "25569c16311afb3fe04a445830a8ab5c88488a5e"
+
+    # Fix find_if_index
+    # see https://github.com/signalwire/freeswitch/issues/859 and https://github.com/signalwire/freeswitch/pull/863
+    #
+    # remove this in next release
+    patch do
+      url "https://github.com/signalwire/freeswitch/commit/611377d40b560402f21ec5bd5a23f32ef09c9d1d.patch?full_index=1"
+      sha256 "95323626a7720e16e3f35e2889d5925fdc6c2c2efbe37f6fe5ab6e8733e3ae4d"
+    end
+
+    # Fix mod_spandsp
+    # see https://github.com/signalwire/freeswitch/pull/812
+    #
+    # remove this in next release
+    patch do
+      url "https://github.com/signalwire/freeswitch/commit/61368b24c16d7f9509fe7f5b1895d8404e23cd50.patch?full_index=1"
+      sha256 "f03fe3f8ae993af045ee7910c6a7446f84c29f8bea936ab4c0f700344f3d5afb"
+    end
+
+    # Fix mod_gsmopen
+    # see https://github.com/signalwire/freeswitch/pull/812
+    #
+    # remove this in next release
+    patch do
+      url "https://github.com/signalwire/freeswitch/commit/51fba83ed3ed2d9753d8e6b13e13001aca50b493.patch?full_index=1"
+      sha256 "1c5332127af09cddd3cba3b71d02de5deb025d552cc93b1f383874d89566956e"
+    end
   end
 
-  option "without-moh", "Do not install music-on-hold"
-  option "without-sounds-en", "Do not install English (Callie) sounds"
-  option "with-sounds-fr", "Install French (June) sounds"
-  option "with-sounds-ru", "Install Russian (Elena) sounds"
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
-  depends_on "apr-util" => :build
+  bottle do
+    sha256 arm64_big_sur: "119079ed092cc07ff5cdedfd8006707720817f4be61a15b450f509a977e027d9"
+    sha256 big_sur:       "19e0a370f2fe60614b445320390d5ebe50394888656504b3f1e880ff25c86ba5"
+    sha256 catalina:      "fa3a8be21c9e496242bdb03328bc00c082482e23fab48dad194b2c4fa73e5936"
+    sha256 mojave:        "a0be2b29eda5a4343b3dc7f244af901ddfa7e6f790da6a49d16ea4ac056c1cc9"
+  end
+
   depends_on "autoconf" => :build
   depends_on "automake" => :build
+  depends_on "cmake" => :build
   depends_on "libtool" => :build
   depends_on "pkg-config" => :build
   depends_on "yasm" => :build
+  depends_on "ffmpeg"
   depends_on "jpeg"
+  depends_on "ldns"
+  depends_on "libpq"
   depends_on "libsndfile"
+  depends_on "libtiff"
   depends_on "lua"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
   depends_on "opus"
   depends_on "pcre"
+  depends_on "sofia-sip"
   depends_on "speex"
   depends_on "speexdsp"
   depends_on "sqlite"
+  depends_on "util-linux"
+
+  uses_from_macos "libedit"
+  uses_from_macos "zlib"
 
   # https://github.com/Homebrew/homebrew/issues/42865
-  fails_with :gcc_4_2
 
   #----------------------- Begin sound file resources -------------------------
   sounds_url_base = "https://files.freeswitch.org/releases/sounds"
@@ -68,91 +108,83 @@ class Freeswitch < Formula
   #-----------
   # sounds-en
   #-----------
-  sounds_en_version = "1.0.51" # from build/sounds_version.txt
+  sounds_en_version = "1.0.52" # from build/sounds_version.txt
   resource "sounds-en-us-callie-8000" do
     url "#{sounds_url_base}/freeswitch-sounds-en-us-callie-8000-#{sounds_en_version}.tar.gz"
     version sounds_en_version
-    sha256 "e48a63bd69e6253d294ce43a941d603b02467feb5d92ee57a536ccc5f849a4a8"
+    sha256 "fbe51296ba5282864a8f0269a968de0783b88b2a75dad710ee076138382a5151"
   end
   resource "sounds-en-us-callie-16000" do
     url "#{sounds_url_base}/freeswitch-sounds-en-us-callie-16000-#{sounds_en_version}.tar.gz"
     version sounds_en_version
-    sha256 "324b1ab5ab754db5697963e9bf6a2f9c7aeb1463755e86bbb6dc4d6a77329da2"
+    sha256 "bf3ac7be99939f57ed4fab7b76d1e47ba78d1573cc72aa0cfe656c559eb097bd"
   end
   resource "sounds-en-us-callie-32000" do
     url "#{sounds_url_base}/freeswitch-sounds-en-us-callie-32000-#{sounds_en_version}.tar.gz"
     version sounds_en_version
-    sha256 "06fd6b8aec937556bf5303ab19a212c60daf00546d395cf269dfe324ac9c6838"
+    sha256 "9091553934f7ee453646058ff54837f55c5b38be11c987148c63a1cccc88b741"
   end
   resource "sounds-en-us-callie-48000" do
     url "#{sounds_url_base}/freeswitch-sounds-en-us-callie-48000-#{sounds_en_version}.tar.gz"
     version sounds_en_version
-    sha256 "cfc50f1d9b5d43cb87a9a2c0ce136c37ee85ac3b0e5be930d8dc2c913c4495aa"
-  end
-
-  #-----------
-  # sounds-fr
-  #-----------
-  sounds_fr_version = "1.0.51" # from build/sounds_version.txt
-  resource "sounds-fr-ca-june-8000" do
-    url "#{sounds_url_base}/freeswitch-sounds-fr-ca-june-8000-#{sounds_fr_version}.tar.gz"
-    version sounds_fr_version
-    sha256 "eada67c61bd62ec420eb017df7524d10de286fba0c2da4800516b9f62c00e78c"
-  end
-  resource "sounds-fr-ca-june-16000" do
-    url "#{sounds_url_base}/freeswitch-sounds-fr-ca-june-16000-#{sounds_fr_version}.tar.gz"
-    version sounds_fr_version
-    sha256 "f942980ad359951ef3f69a324a3299ef86cdb4f8d2c62adaf73a1b95fb39fcc6"
-  end
-  resource "sounds-fr-ca-june-32000" do
-    url "#{sounds_url_base}/freeswitch-sounds-fr-ca-june-32000-#{sounds_fr_version}.tar.gz"
-    version sounds_fr_version
-    sha256 "8966a0c4daf666018cca6d8ba0f7708e251bed952b015d0ca6a0792341fe531b"
-  end
-  resource "sounds-fr-ca-june-48000" do
-    url "#{sounds_url_base}/freeswitch-sounds-fr-ca-june-48000-#{sounds_fr_version}.tar.gz"
-    version sounds_fr_version
-    sha256 "abaea558fb5485abdd01d0b1186e03cf508f96ac90492814cc7ed4475e99a1e0"
-  end
-
-  #-----------
-  # sounds-ru
-  #-----------
-  sounds_ru_version = "1.0.51" # from build/sounds_version.txt
-  resource "sounds-ru-RU-elena-8000" do
-    url "#{sounds_url_base}/freeswitch-sounds-ru-RU-elena-8000-#{sounds_ru_version}.tar.gz"
-    version sounds_ru_version
-    sha256 "d2679503eb1f4dc1716df5f8c4b5a7b721f087b17e96a02b1a92480311074c66"
-  end
-  resource "sounds-ru-RU-elena-16000" do
-    url "#{sounds_url_base}/freeswitch-sounds-ru-RU-elena-16000-#{sounds_ru_version}.tar.gz"
-    version sounds_ru_version
-    sha256 "e5a354cd10401208291f1d0e668a8cf8215d3cdcb93f2cbd4b83dd134425e60b"
-  end
-  resource "sounds-ru-RU-elena-32000" do
-    url "#{sounds_url_base}/freeswitch-sounds-ru-RU-elena-32000-#{sounds_ru_version}.tar.gz"
-    version sounds_ru_version
-    sha256 "a2b43f20246f376d55dd73d269eb238cbeb6a961a40716d2f79a5835344aabfc"
-  end
-  resource "sounds-ru-RU-elena-48000" do
-    url "#{sounds_url_base}/freeswitch-sounds-ru-RU-elena-48000-#{sounds_ru_version}.tar.gz"
-    version sounds_ru_version
-    sha256 "ffd7d34907f6b6ac861e7898d2237ad763f242a17cd23811da28fd7745d3350d"
+    sha256 "9df388d855996a04f6014999d59d4191e22b579f2e8df542834451a25ea3e1cf"
   end
 
   #------------------------ End sound file resources --------------------------
 
-  def install
-    ENV["ac_cv_lib_lzma_lzma_code"] = "no" # prevent opportunistic linkage to xz
+  # There's no tags for now https://github.com/freeswitch/spandsp/issues/13
+  resource "spandsp" do
+    url "https://github.com/freeswitch/spandsp.git",
+        revision: "6351b1824a7634853bf963c0ec399e783e35d4d1"
+  end
 
-    # avoid a dependency on ldns to prevent OpenSSL version conflicts
-    inreplace "build/modules.conf.in", "applications/mod_enum",
-                                       "#applications/mod_enum"
+  resource "libks" do
+    url "https://github.com/signalwire/libks.git",
+        tag:      "1.6.0",
+        revision: "637e0e3db192a6d73a248cf0e794a4b03424805b"
+  end
+
+  resource "signalwire-c" do
+    url "https://github.com/signalwire/signalwire-c.git",
+        tag:      "1.3.0",
+        revision: "e2f3abf59c800c6d39234e9f0a85fb15d1486d8d"
+  end
+
+  def install
+    # Fix build error "use of undeclared identifier 'NSIG'"
+    # Remove when fixed upstream: https://github.com/signalwire/freeswitch/issues/1145
+    on_macos do
+      ENV.append_to_cflags "-D_DARWIN_C_SOURCE"
+    end
+
+    resource("spandsp").stage do
+      system "./bootstrap.sh"
+      system "./configure", "--disable-debug",
+                            "--disable-dependency-tracking",
+                            "--disable-silent-rules",
+                            "--prefix=#{libexec}/spandsp"
+      system "make"
+      ENV.deparallelize { system "make", "install" }
+
+      ENV.append_path "PKG_CONFIG_PATH", "#{libexec}/spandsp/lib/pkgconfig"
+    end
+
+    resource("libks").stage do
+      system "cmake", ".", *std_cmake_args, "-DCMAKE_INSTALL_PREFIX=#{libexec}/libks"
+      system "make", "install"
+
+      ENV.append_path "PKG_CONFIG_PATH", "#{libexec}/libks/lib/pkgconfig"
+      ENV.append "CFLAGS", "-I#{libexec}/libks/include"
+    end
+
+    resource("signalwire-c").stage do
+      system "cmake", ".", *std_cmake_args, "-DCMAKE_INSTALL_PREFIX=#{libexec}/signalwire-c"
+      system "make", "install"
+
+      ENV.append_path "PKG_CONFIG_PATH", "#{libexec}/signalwire-c/lib/pkgconfig"
+    end
 
     system "./bootstrap.sh", "-j"
-
-    # tiff will fail to find OpenGL unless told not to use X
-    inreplace "libs/tiff-4.0.2/configure.gnu", "--with-pic", "--with-pic --without-x"
 
     system "./configure", "--disable-dependency-tracking",
                           "--enable-shared",
@@ -160,74 +192,29 @@ class Freeswitch < Formula
                           "--prefix=#{prefix}",
                           "--exec_prefix=#{prefix}"
 
-    system "make"
-    system "make", "install", "all"
+    system "make", "all"
+    system "make", "install"
 
-    if build.with?("moh")
-      # Should be equivalent to: system "make", "cd-moh-install"
-      mkdir_p prefix/"sounds/music"
-      [8, 16, 32, 48].each do |n|
-        resource("sounds-music-#{n}000").stage do
-          cp_r ".", prefix/"sounds/music"
-        end
+    # Should be equivalent to: system "make", "cd-moh-install"
+    mkdir_p pkgshare/"sounds/music"
+    [8, 16, 32, 48].each do |n|
+      resource("sounds-music-#{n}000").stage do
+        cp_r ".", pkgshare/"sounds/music"
       end
     end
 
-    if build.with?("sounds-en")
-      # Should be equivalent to: system "make", "cd-sounds-install"
-      mkdir_p prefix/"sounds/en"
-      [8, 16, 32, 48].each do |n|
-        resource("sounds-en-us-callie-#{n}000").stage do
-          cp_r ".", prefix/"sounds/en"
-        end
-      end
-    end
-
-    if build.with?("sounds-fr")
-      # Should be equivalent to: system "make", "cd-sounds-fr-install"
-      mkdir_p prefix/"sounds/fr"
-      [8, 16, 32, 48].each do |n|
-        resource("sounds-fr-ca-june-#{n}000").stage do
-          cp_r ".", prefix/"sounds/fr"
-        end
-      end
-    end
-
-    if build.with?("sounds-ru")
-      # Should be equivalent to: system "make", "cd-sounds-ru-install"
-      mkdir_p prefix/"sounds/ru"
-      [8, 16, 32, 48].each do |n|
-        resource("sounds-ru-RU-elena-#{n}000").stage do
-          cp_r ".", prefix/"sounds/ru"
-        end
+    # Should be equivalent to: system "make", "cd-sounds-install"
+    mkdir_p pkgshare/"sounds/en"
+    [8, 16, 32, 48].each do |n|
+      resource("sounds-en-us-callie-#{n}000").stage do
+        cp_r ".", pkgshare/"sounds/en"
       end
     end
   end
 
-  plist_options :manual => "freeswitch -nc --nonat"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>KeepAlive</key>
-        <true/>
-      <key>Label</key>
-        <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/freeswitch</string>
-          <string>-nc</string>
-          <string>-nonat</string>
-        </array>
-      <key>RunAtLoad</key>
-        <true/>
-      <key>ServiceIPC</key>
-        <true/>
-    </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_bin/"freeswitch", "-nc", "-nonat"]
+    keep_alive true
   end
 
   test do

@@ -1,60 +1,45 @@
 class Qca < Formula
   desc "Qt Cryptographic Architecture (QCA)"
   homepage "https://userbase.kde.org/QCA"
-  revision 2
-  head "https://anongit.kde.org/qca.git"
+  url "https://download.kde.org/stable/qca/2.3.3/qca-2.3.3.tar.xz"
+  sha256 "562e8f9b8542944e2c0c18c45c05bb202f620db84032790c54b424454f727b67"
+  license "LGPL-2.1-or-later"
+  head "https://invent.kde.org/libraries/qca.git"
 
-  stable do
-    url "https://github.com/KDE/qca/archive/v2.1.3.tar.gz"
-    sha256 "a5135ffb0250a40e9c361eb10cd3fe28293f0cf4e5c69d3761481eafd7968067"
-
-    # upstream fixes for macOS building (remove on 2.2.0 upgrade)
-    patch do
-      url "https://github.com/KDE/qca/commit/7ba0ee591e0f50a7e7b532f9eb7e500e7da784fb.diff?full_index=1"
-      sha256 "3f6c8a8bbd246556c690142c209a34973981be66e46fee991a456fb2e8b66d72"
-    end
-    patch do
-      url "https://github.com/KDE/qca/commit/b435c1b87b14ac2d2de9f83e586bfd6d8c2a755e.diff?full_index=1"
-      sha256 "9ea01ad6b21282ff62b18ac02588f7106b75056ab8379dff3fdfcff13a6c122f"
-    end
-    patch do
-      url "https://github.com/KDE/qca/commit/f4b2eb0ced5310f3c43398eb1f03e0c065e08a82.diff?full_index=1"
-      sha256 "d6c27ebfd8fec5284e4a0a39faf62e44764be5baff08141bd7f4da6d0b9f438d"
-    end
-
-    # use major version for framework, instead of full version
-    # see: https://github.com/KDE/qca/pull/3
-    patch do
-      url "https://github.com/KDE/qca/pull/3.patch?full_index=1"
-      sha256 "37281b8fefbbdab768d7abcc39fb1c1bf85159730c2a4de6e84f0bf318ebac2c"
-    end
+  livecheck do
+    url "https://download.kde.org/stable/qca/"
+    regex(%r{href=["']?v?(\d+(?:\.\d+)+)/?["' >]}i)
   end
 
   bottle do
-    rebuild 2
-    sha256 "2bb9c83e54cd7ffef77b7111c1163ce2aa2efe450aab7be62c4ba4f8968f2bfc" => :mojave
-    sha256 "ec20d95d269615e6ab276c21866b54ecd13fcaf33d543e47b8b9f45362f4d801" => :high_sierra
-    sha256 "23eeb0c71865eaa6e5c29311480bbdcf2a80aa9c818853e8b7155b5a97689fb1" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "2bb968c7a243d1ffe7d1806dfb6c8454343c6b56da3df6a6742cce67ad67b5e4"
+    sha256 cellar: :any, big_sur:       "bb378103f30533f189ce099b8f15b26999595592c49da114329d8947f10284d3"
+    sha256 cellar: :any, catalina:      "baad850d36e7bd2274b09a600bfe40415994a75c6fce8e07dae612ba446c876b"
+    sha256 cellar: :any, mojave:        "77525c2da0d1f7c77b33058ee58b000bb8f823c2b1c90626d1652b804b2354e6"
   end
 
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
-  depends_on "openssl" # qca-ossl plugin
-  depends_on "qt"
+  depends_on "botan"
+  depends_on "gnupg"
+  depends_on "libgcrypt"
+  depends_on "nss"
+  depends_on "openssl@1.1"
+  depends_on "pkcs11-helper"
+  depends_on "qt@5"
 
   def install
     args = std_cmake_args
-    args << "-DQT4_BUILD=OFF"
     args << "-DBUILD_TESTS=OFF"
     args << "-DQCA_PLUGINS_INSTALL_DIR=#{lib}/qt5/plugins"
 
     # Disable some plugins. qca-ossl, qca-cyrus-sasl, qca-logger,
     # qca-softstore are always built.
-    args << "-DWITH_botan_PLUGIN=NO"
-    args << "-DWITH_gcrypt_PLUGIN=NO"
-    args << "-DWITH_gnupg_PLUGIN=NO"
-    args << "-DWITH_nss_PLUGIN=NO"
-    args << "-DWITH_pkcs11_PLUGIN=NO"
+    args << "-DWITH_botan_PLUGIN=ON"
+    args << "-DWITH_gcrypt_PLUGIN=ON"
+    args << "-DWITH_gnupg_PLUGIN=ON"
+    args << "-DWITH_nss_PLUGIN=ON"
+    args << "-DWITH_pkcs11_PLUGIN=ON"
 
     # ensure opt_lib for framework install name and linking (can't be done via CMake configure)
     inreplace "src/CMakeLists.txt",

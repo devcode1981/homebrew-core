@@ -4,8 +4,18 @@ class Dex2jar < Formula
   url "https://downloads.sourceforge.net/project/dex2jar/dex2jar-2.0.zip"
   mirror "https://bitbucket.org/pxb1988/dex2jar/downloads/dex2jar-2.0.zip"
   sha256 "7907eb4d6e9280b6e17ddce7ee0507eae2ef161ee29f70a10dbc6944fdca75bc"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/dex2jar[._-]v?(\d+(?:\.\d+)+)\.(?:t|zip)}i)
+  end
+
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "d46040686d7dee6a12faa0877a80d4d8cfb285c98681d081eb5a05e31098586c"
+  end
+
+  depends_on "openjdk"
 
   def install
     # Remove Windows scripts
@@ -17,7 +27,7 @@ class Dex2jar < Formula
     libexec.install Dir["*"]
 
     Dir.glob("#{libexec}/*.sh") do |script|
-      bin.install_symlink script => File.basename(script, ".sh")
+      (bin/File.basename(script, ".sh")).write_env_script script, Language::Java.overridable_java_home_env
     end
   end
 

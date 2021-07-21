@@ -1,23 +1,44 @@
 class Gmp < Formula
   desc "GNU multiple precision arithmetic library"
   homepage "https://gmplib.org/"
-  url "https://gmplib.org/download/gmp/gmp-6.1.2.tar.xz"
-  mirror "https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.xz"
-  sha256 "87b565e89a9a684fe4ebeeddb8399dce2599f9c9049854ca8c0dfbdea0e21912"
-  revision 2
+  url "https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz"
+  mirror "https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz"
+  sha256 "fd4829912cddd12f84181c3451cc752be224643e87fac497b69edddadc49b4f2"
+  license any_of: ["LGPL-3.0-or-later", "GPL-2.0-or-later"]
 
-  bottle do
-    cellar :any
-    sha256 "6802f7bc775422af1438c8004bd4fe31614cc83e52fb4091f5f53fb14562e503" => :mojave
-    sha256 "8372dcd88e36997d7aacaffb555709348cc2c57703608b3471cbd71f5054f9ed" => :high_sierra
-    sha256 "087052cc1b49f5e0c42f5bd54f463f7fca7f7c73f00856c576706112bbe2a4c1" => :sierra
-    sha256 "d8f9b3e4da4241dc5996f318df44d99a45db1bcce84a4ce814e8a8912d4cdaef" => :el_capitan
+  livecheck do
+    url "https://gmplib.org/download/gmp/"
+    regex(/href=.*?gmp[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "ff4ad8d068ba4c14d146abb454991b6c4f246796ec2538593dc5f04ca7593eec"
+    sha256 cellar: :any,                 big_sur:       "6a44705536f25c4b9f8547d44d129ae3b3657755039966ad2b86b821e187c32c"
+    sha256 cellar: :any,                 catalina:      "35e9f82d80708ae8dea2d6b0646dcd86d692321b96effaa76b7fad4d6cffa5be"
+    sha256 cellar: :any,                 mojave:        "00fb998dc2abbd09ee9f2ad733ae1adc185924fb01be8814e69a57ef750b1a32"
+    sha256 cellar: :any,                 high_sierra:   "54191ce7fa888df64b9c52870531ac0ce2e8cbd40a7c4cdec74cb2c4a421af97"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c6d4ed0cb050136a5d6a93406427ae3d9aff3287771dc9cefa7ea0dddbab27f8"
+  end
+
+  uses_from_macos "m4" => :build
+
   def install
+    args = std_configure_args
+    args << "--enable-cxx"
+
     # Enable --with-pic to avoid linking issues with the static library
-    args = %W[--prefix=#{prefix} --enable-cxx --with-pic]
-    args << "--build=core2-apple-darwin#{`uname -r`.to_i}" if build.bottle?
+    args << "--with-pic"
+
+    on_macos do
+      cpu = Hardware::CPU.arm? ? "aarch64" : Hardware.oldest_cpu
+      args << "--build=#{cpu}-apple-darwin#{OS.kernel_version.major}"
+    end
+
+    on_linux do
+      args << "--build=core2-linux-gnu"
+      args << "ABI=32" if Hardware::CPU.is_32_bit?
+    end
+
     system "./configure", *args
     system "make"
     system "make", "check"

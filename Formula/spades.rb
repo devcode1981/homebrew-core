@@ -1,27 +1,47 @@
 class Spades < Formula
+  include Language::Python::Shebang
+
   desc "De novo genome sequence assembly"
-  homepage "http://cab.spbu.ru/software/spades/"
-  url "http://cab.spbu.ru/files/release3.13.0/SPAdes-3.13.0.tar.gz"
-  mirror "https://github.com/ablab/spades/releases/download/v3.13.0/SPAdes-3.13.0.tar.gz"
-  sha256 "c63442248c4c712603979fa70503c2bff82354f005acda2abc42dd5598427040"
+  homepage "https://cab.spbu.ru/software/spades/"
+  url "https://cab.spbu.ru/files/release3.15.2/SPAdes-3.15.2.tar.gz"
+  mirror "https://github.com/ablab/spades/releases/download/v3.15.2/SPAdes-3.15.2.tar.gz"
+  sha256 "e93b43951a814dc7bd6a246e1e863bbad6aac4bfe1928569402c131b2af99d0d"
+  license "GPL-2.0-only"
+
+  livecheck do
+    url "https://cab.spbu.ru/files/?C=M&O=D"
+    regex(%r{href=.*?release(\d+(?:\.\d+)+)/?["' >]}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "1728c4d25e0f62e1f630de9622a2b6dc1add3703cfa8d7471c415ee21bd6e36e" => :mojave
-    sha256 "3403d415389703649cd92acec88e85646e755a783d289b8a6beb7508ecf96f21" => :high_sierra
-    sha256 "0d01c5eb1d4072a40ae8a1a2436ecd3987250152f4abc3ba76379b914929bc95" => :sierra
+    sha256 cellar: :any_skip_relocation, big_sur:      "34af086650bb5899077627835d762cfefbf3eb91c455cd5b06366a66f79ce9f4"
+    sha256 cellar: :any_skip_relocation, catalina:     "a8b73043b7c26aa1279b91345022ac31446498af30624562fc2d925097d84cc4"
+    sha256 cellar: :any_skip_relocation, mojave:       "a8afd9fcf696ec82d6faefb29b79751a930eabe8dbf19df053fb1c36a780d6bd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "5687da7587fae4401af8be3c68edcf170363bb6e04566d7752f2283de8ce31af"
   end
 
   depends_on "cmake" => :build
-  depends_on "gcc"
+  depends_on "python@3.9"
 
-  fails_with :clang # no OpenMP support
+  uses_from_macos "bzip2"
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
+
+  on_macos do
+    depends_on "libomp"
+  end
+
+  on_linux do
+    depends_on "jemalloc"
+    depends_on "readline"
+  end
 
   def install
     mkdir "src/build" do
       system "cmake", "..", *std_cmake_args
       system "make", "install"
     end
+    bin.find { |f| rewrite_shebang detected_python_shebang, f }
   end
 
   test do

@@ -1,22 +1,32 @@
 class Bison < Formula
   desc "Parser generator"
   homepage "https://www.gnu.org/software/bison/"
-  url "https://ftp.gnu.org/gnu/bison/bison-3.2.2.tar.gz"
-  mirror "https://ftpmirror.gnu.org/bison/bison-3.2.2.tar.gz"
-  sha256 "3ffd2201041c6c56064b4bdad4dfb8959751efbefa823775242b4f32aa37786c"
+  # X.Y.9Z are beta releases that sometimes get accidentally uploaded to the release FTP
+  url "https://ftp.gnu.org/gnu/bison/bison-3.7.6.tar.xz"
+  mirror "https://ftpmirror.gnu.org/bison/bison-3.7.6.tar.xz"
+  sha256 "67d68ce1e22192050525643fc0a7a22297576682bef6a5c51446903f5aeef3cf"
+  license "GPL-3.0-or-later"
+  version_scheme 1
 
   bottle do
-    sha256 "26e06cc3df3a85706ed99e75c4e8e404cf8e69977c3b749cd24286c3e023feae" => :mojave
-    sha256 "6ca37bd5539ec8420d047e31ac5cdf48b441ed97b3862f03b32808d1bb96ebdb" => :high_sierra
-    sha256 "efb28bf1d0514aa17efce0effa2fb082da4384a2bd87f0f4f6c5b17746e2ebd0" => :sierra
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "ee20f2693b08afe6bf50abad5e9a6adf60b629360c64fb580f0512283d87846f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "9f57b6c53d6595330adf79112e72034895f061769ebc8906a9b5afe9f4f873d0"
+    sha256 cellar: :any_skip_relocation, catalina:      "2276ffa48c694379540f63a5241c39b738f1dcb7424aceec54beb2e7be172489"
+    sha256 cellar: :any_skip_relocation, mojave:        "0dca09521f16b6e49e2c21ae9dec6069fee065a9ffd4b8191dca66b1957937d6"
+    sha256                               x86_64_linux:  "eb96cc1d339ce9801401788533de08223557811d3066622fa6d56d9e59b2eb86"
   end
 
-  keg_only :provided_by_macos, "some formulae require a newer version of bison"
+  keg_only :provided_by_macos
+
+  uses_from_macos "m4"
 
   def install
     system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}"
-    system "make", "install"
+                          "--enable-relocatable",
+                          "--prefix=/output"
+    system "make", "install", "DESTDIR=#{buildpath}"
+    prefix.install Dir["#{buildpath}/output/*"]
   end
 
   test do

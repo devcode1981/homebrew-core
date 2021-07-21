@@ -1,44 +1,49 @@
 class Glade < Formula
   desc "RAD tool for the GTK+ and GNOME environment"
   homepage "https://glade.gnome.org/"
-  url "https://download.gnome.org/sources/glade/3.22/glade-3.22.1.tar.xz"
-  sha256 "dff89a2ef2eaf000ff2a46979978d03cb9202cb04668e01d0ea5c5bb5547e39a"
-  revision 1
+  url "https://download.gnome.org/sources/glade/3.38/glade-3.38.2.tar.xz"
+  sha256 "98fc87647d88505c97dd2f30f2db2d3e9527515b3af11694787d62a8d28fbab7"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    sha256 "354f3f75dd6f67eb7038bf492137c950e742261da55b35ac6aba6e2491ff3621" => :mojave
-    sha256 "8b2006714375e4ea9fc74bbd73e6ef41da6551a2b0e2813cece71d8ce4ca661c" => :high_sierra
-    sha256 "58616499a9a2b2aef8d6568faf7a7fbac66d7954491e6f00c61acdb2b3ea207d" => :sierra
-    sha256 "812042f677b69a24a9aefdbdeb733691813cb46b33ff50d991af97ddfe39fc59" => :el_capitan
+    sha256 arm64_big_sur: "2a55e22c571d0d158c1b66bf18c35c44aeaed0694d139f13c48f5a6642b4785b"
+    sha256 big_sur:       "0fb77b21e6176c6690410a76d843f4582c1ef833e54ce5efa620bfce514e7af7"
+    sha256 catalina:      "e5c239c3d05350ff8a8710ce6beecf7fd22461336e77d55febb338b6a1456a61"
+    sha256 mojave:        "0b641d56f385a798fafe8fe424191de83207dea5b0edcf9d06c8b8b03ad0c68f"
   end
 
   depends_on "docbook-xsl" => :build
   depends_on "gobject-introspection" => :build
-  depends_on "intltool" => :build
   depends_on "itstool" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "adwaita-icon-theme"
   depends_on "gettext"
   depends_on "gtk+3"
-  depends_on "gtk-mac-integration"
   depends_on "hicolor-icon-theme"
   depends_on "libxml2"
+
+  on_macos do
+    depends_on "gtk-mac-integration"
+  end
 
   def install
     # Find our docbook catalog
     ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
 
-    system "./configure", "--disable-debug",
-                          "--disable-dependency-tracking",
-                          "--prefix=#{prefix}",
-                          "--enable-gladeui",
-                          "--enable-introspection"
-    # objective-c is needed for glade-registration.c. unfortunately build fails if -x objective-c is added to global CFLAGS.
-    # Bugreport Upstream: https://bugzilla.gnome.org/show_bug.cgi?id=768032
-    inreplace "src/Makefile", "-c -o glade-glade-registration.o", "-x objective-c -c -o glade-glade-registration.o"
+    # Disable icon-cache update
+    ENV["DESTDIR"] = "/"
 
-    system "make" # separate steps required
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args, "-Dintrospection=true", "-Dgladeui=true", ".."
+      system "ninja"
+      system "ninja", "install"
+    end
+  end
+
+  def post_install
+    system "#{Formula["gtk+3"].opt_bin}/gtk3-update-icon-cache", "-f", "-t", "#{HOMEBREW_PREFIX}/share/icons/hicolor"
   end
 
   test do
@@ -106,11 +111,13 @@ class Glade < Formula
       -lglib-2.0
       -lgobject-2.0
       -lgtk-3
-      -lintl
       -lpango-1.0
       -lpangocairo-1.0
       -lxml2
     ]
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end

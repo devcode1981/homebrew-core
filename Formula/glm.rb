@@ -1,15 +1,24 @@
 class Glm < Formula
   desc "C++ mathematics library for graphics software"
   homepage "https://glm.g-truc.net/"
-  url "https://github.com/g-truc/glm/releases/download/0.9.9.3/glm-0.9.9.3.zip"
-  sha256 "496e855590b8aa138347429b7fc745d66707303fb82c1545260d1888472e137b"
+  url "https://github.com/g-truc/glm/releases/download/0.9.9.8/glm-0.9.9.8.zip"
+  sha256 "37e2a3d62ea3322e43593c34bae29f57e3e251ea89f4067506c94043769ade4c"
+  # GLM is licensed under The Happy Bunny License or MIT License
+  license "MIT"
   head "https://github.com/g-truc/glm.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "cdbc4d3d92fdfe569b1eebccbaa61cf24e2c0c5e67bd10ea815007e01796e46f" => :mojave
-    sha256 "f1c952d3760c940b2409ad95d9c452523c41b8e9b59b267c0a413de67a1071b9" => :high_sierra
-    sha256 "1010aea5652827e3d29edf96c2f27a0793955eb2337ba7b044fec3f3c6365249" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "4835a0d6b85dd518d3b47830bbae5f45521f4588bd02d3f690f792a6960b9492"
+    sha256 cellar: :any_skip_relocation, big_sur:       "0533418aa7813363241f157a547604acc2c097790a6ddaff2967ede127e8225b"
+    sha256 cellar: :any_skip_relocation, catalina:      "9b661be1f704c2e946dbd4d4f96d58ae82427824ef88d7dd9f0f0cfc3fae2233"
+    sha256 cellar: :any_skip_relocation, mojave:        "7210910c6f106de4c22874f3977b1457cea3db6bb03269ea6831ffae861bb80e"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "ea41bb7f8f195c22d6f7834c57684412d752e2c72ff795b9056dd90aaebf9d84"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b5c2dbbad2a1f3c87f7dada3710c9404ec33953f84d6793fba3fc39dd2f683a4"
   end
 
   depends_on "cmake" => :build
@@ -18,8 +27,19 @@ class Glm < Formula
   def install
     mkdir "build" do
       system "cmake", "..", *std_cmake_args
-      system "make", "install"
+      system "make"
     end
+    include.install "glm"
+    lib.install "cmake"
+    (lib/"pkgconfig/glm.pc").write <<~EOS
+      prefix=#{prefix}
+      includedir=${prefix}/include
+
+      Name: GLM
+      Description: OpenGL Mathematics
+      Version: #{version.to_s.match(/\d+\.\d+\.\d+/)}
+      Cflags: -I${includedir}
+    EOS
 
     cd "doc" do
       system "doxygen", "man.doxy"

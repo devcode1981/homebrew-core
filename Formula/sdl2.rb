@@ -1,55 +1,69 @@
 class Sdl2 < Formula
   desc "Low-level access to audio, keyboard, mouse, joystick, and graphics"
   homepage "https://www.libsdl.org/"
-  url "https://libsdl.org/release/SDL2-2.0.9.tar.gz"
-  sha256 "255186dc676ecd0c1dbf10ec8a2cc5d6869b5079d8a38194c2aecdff54b324b1"
+  url "https://libsdl.org/release/SDL2-2.0.14.tar.gz"
+  sha256 "d8215b571a581be1332d2106f8036fcb03d12a70bae01e20f424976d275432bc"
+  license "Zlib"
+  revision 1
+
+  livecheck do
+    url "https://www.libsdl.org/download-2.0.php"
+    regex(/href=.*?SDL2[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "4bb274c9c192aa099d4f9ce7794e25b59161aeb58b72206e2934d4bfb6ac7e32" => :mojave
-    sha256 "c99606f305a37478afffdc9a6f68c712d5271f07381e2dfb110e6f44fefe68ab" => :high_sierra
-    sha256 "3d2472c82b4a210a712178dd8f9137d2e73241a26f163248eba09cad62f2bf56" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "2ae70b6025c4e241400643f2686c8e288d50e3f04311e63d8a1f8180ed4afb07"
+    sha256 cellar: :any, big_sur:       "ccde7145d4334d9274f9588e6b841bf3749729682e1d25f590bdcf7994dfdd89"
+    sha256 cellar: :any, catalina:      "d6ae3300160c5bb495b78a5c5c0fc995f9e797e9cdd4b04ef77d59d45d2d694d"
+    sha256 cellar: :any, mojave:        "4f3988fb3af0f370bc1648d6eb1d6573fd37381df0f3b9ee0874a49d6a7dec2e"
   end
 
   head do
-    url "https://hg.libsdl.org/SDL", :using => :hg
+    url "https://github.com/libsdl-org/SDL.git", branch: "main"
 
     depends_on "autoconf" => :build
     depends_on "automake" => :build
     depends_on "libtool" => :build
   end
 
-  # Upstream commit to fix issue with library version numbers
-  # https://hg.libsdl.org/SDL/rev/d274fa9731b1
-  patch do
-    url "https://hg.libsdl.org/SDL/raw-diff/d274fa9731b1/build-scripts/ltmain.sh"
-    sha256 "9845d8f947dd5b809c1dedba711c878cf2a4644a570cd21a81b574e609eb986b"
-  end
-
-  # https://github.com/mistydemeo/tigerbrew/issues/361
-  if MacOS.version <= :snow_leopard
-    patch do
-      url "https://gist.githubusercontent.com/miniupnp/26d6e967570e5729a757/raw/1a86f3cdfadbd9b74172716abd26114d9cb115d5/SDL2-2.0.3_OSX_104.patch"
-      sha256 "4d01f05f02568e565978308e42e98b4da2b62b1451f71c29d24e11202498837e"
-    end
+  on_linux do
+    depends_on "pkg-config" => :build
+    depends_on "libice"
+    depends_on "libxcursor"
+    depends_on "libxscrnsaver"
+    depends_on "libxxf86vm"
+    depends_on "xinput"
+    depends_on "pulseaudio"
   end
 
   def install
-    # we have to do this because most build scripts assume that all sdl modules
+    # we have to do this because most build scripts assume that all SDL modules
     # are installed to the same prefix. Consequently SDL stuff cannot be
     # keg-only but I doubt that will be needed.
     inreplace %w[sdl2.pc.in sdl2-config.in], "@prefix@", HOMEBREW_PREFIX
 
-    system "./autogen.sh" if build.head? || build.devel?
+    system "./autogen.sh" if build.head?
 
-    args = %W[--prefix=#{prefix} --without-x]
-
-    # LLVM-based compilers choke on the assembly code packaged with SDL.
-    if ENV.compiler == :clang && DevelopmentTools.clang_build_version < 421
-      args << "--disable-assembly"
+    args = %W[--prefix=#{prefix} --enable-hidapi]
+    on_macos do
+      args << "--without-x"
     end
-    args << "--disable-haptic" << "--disable-joystick" if MacOS.version <= :snow_leopard
-
+    on_linux do
+      args << "--with-x"
+      args << "--enable-pulseaudio"
+      args << "--enable-pulseaudio-shared"
+      args << "--enable-video-dummy"
+      args << "--enable-video-opengl"
+      args << "--enable-video-opengles"
+      args << "--enable-video-x11"
+      args << "--enable-video-x11-scrnsaver"
+      args << "--enable-video-x11-xcursor"
+      args << "--enable-video-x11-xinerama"
+      args << "--enable-video-x11-xinput"
+      args << "--enable-video-x11-xrandr"
+      args << "--enable-video-x11-xshape"
+      args << "--enable-x11-shared"
+    end
     system "./configure", *args
     system "make", "install"
   end

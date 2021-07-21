@@ -1,19 +1,15 @@
-require "language/haskell"
-
 class Darcs < Formula
-  include Language::Haskell::Cabal
-
   desc "Distributed version control system that tracks changes, via Haskell"
   homepage "http://darcs.net/"
-  url "https://hackage.haskell.org/package/darcs-2.14.1/darcs-2.14.1.tar.gz"
-  sha256 "61ddbc99acaf06df3a114437064e9241e0da467c23d1d3fb520a782eee32cd35"
+  url "https://hackage.haskell.org/package/darcs-2.16.4/darcs-2.16.4.tar.gz"
+  sha256 "e4166252bc403ffc2518edff48801796b8dab73fd9e0da1fcdda916b207fbe1d"
+  license "GPL-2.0-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "9a709960a2e92c4a1bc77bd1d14e98694a26bce78028c5dcb3c1456b86f1b449" => :mojave
-    sha256 "6618314c01b2aeed0ad4d8f10f017f4ed24ebb4d8bb96d77b92a4be0f5a36dc6" => :high_sierra
-    sha256 "b0063bb736e782887caa458a63899d66f84ebfeb4e950ad41b4ba27128ccf4fb" => :sierra
-    sha256 "61148f3fb7580ada1e83a2f1219942237e7fec26c6161fecdd8aa533e8529f98" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d2eb40b3fb513c55412df418660ad326eafab9f6403b85667e28b07048cc569f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "e43e743a8d663a7383a0c335548a8b2b80fa00844e9cb77da3eb0db67bda93d1"
+    sha256 cellar: :any_skip_relocation, catalina:      "74b07f9931b43dfcffd9b7fc2756ca13fc4d1b283a86d20fcf336a1f0cd19bb5"
+    sha256 cellar: :any_skip_relocation, mojave:        "8c0805744fa94ec0e4467bc44de1fae811090d7987823485d57192cadea7bdd8"
   end
 
   depends_on "cabal-install" => :build
@@ -21,7 +17,8 @@ class Darcs < Formula
   depends_on "gmp"
 
   def install
-    install_cabal_package
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args
   end
 
   test do

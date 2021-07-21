@@ -1,32 +1,32 @@
 class Opencolorio < Formula
   desc "Color management solution geared towards motion picture production"
-  homepage "http://opencolorio.org/"
-  url "https://github.com/imageworks/OpenColorIO/archive/v1.1.0.tar.gz"
-  sha256 "228589879e1f11e455a555304007748a8904057088319ebbf172d9384b93c079"
+  homepage "https://opencolorio.org/"
+  url "https://github.com/imageworks/OpenColorIO/archive/v2.0.1.tar.gz"
+  sha256 "ff1397b4516fdecd75096d5b575d6a23771d0c876bbcfc7beb5a82af37adcdf9"
+  license "BSD-3-Clause"
   head "https://github.com/imageworks/OpenColorIO.git"
 
   bottle do
-    cellar :any
-    sha256 "4058e3194f1d1667165af7af8592ac008768a82a7aea905a01db468daf83ccac" => :mojave
-    sha256 "4025f926a9061c72ebbecf1b5bbcb23d27c0ba6d8e2f578deb4cea45c60f409c" => :high_sierra
-    sha256 "18bf9288a4103a8f57f1869a884d3d1b697305e952eb977bd46f608d7d0695b3" => :sierra
-    sha256 "9eac0c648be323730035b3885b376db665408f02290efa9dd1263655029a914f" => :el_capitan
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "ff7921b54ca7e0589fff3dbf2e8f2b071b0f503f1657f4963d80749a8c5aedf0"
+    sha256 cellar: :any,                 big_sur:       "94fc18f52a783c11afd946c72b100bf16d570767d5934b245c03cabb3f9de715"
+    sha256 cellar: :any,                 catalina:      "8dcc8e3561f9e564239366ed88a2488b36af37c022e8b98f94e2d6cb1e718bde"
+    sha256 cellar: :any,                 mojave:        "c0fa4803986b6960a3a3578f6e453428864eff5fb7ed5f51fd6c505258cc0ca5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "08c2c289893682d242e35d91bde98fab3cf11de92f1e4bae4ad64c34c4b4ce62"
   end
-
-  deprecated_option "with-python" => "with-python@2"
 
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
   depends_on "little-cms2"
-  depends_on "python@2" => :optional
+  depends_on "python@3.9"
 
   def install
-    args = std_cmake_args
-    args << "-DCMAKE_VERBOSE_MAKEFILE=OFF"
-
-    # OCIO's PyOpenColorIO.so doubles as a shared library. So it lives in lib, rather
-    # than the usual HOMEBREW_PREFIX/lib/python2.7/site-packages per developer choice.
-    args << "-DOCIO_BUILD_PYGLUE=OFF" if build.without? "python@2"
+    args = std_cmake_args + %W[
+      -DCMAKE_VERBOSE_MAKEFILE=OFF
+      -DCMAKE_INSTALL_RPATH=#{rpath}
+      -DPYTHON=python3
+      -DPYTHON_EXECUTABLE=#{Formula["python@3.9"].opt_bin}/"python3"
+    ]
 
     mkdir "macbuild" do
       system "cmake", *args, ".."
@@ -39,17 +39,14 @@ class Opencolorio < Formula
     <<~EOS
       OpenColorIO requires several environment variables to be set.
       You can source the following script in your shell-startup to do that:
-
-          #{HOMEBREW_PREFIX}/share/ocio/setup_ocio.sh
+        #{HOMEBREW_PREFIX}/share/ocio/setup_ocio.sh
 
       Alternatively the documentation describes what env-variables need set:
-
-          http://opencolorio.org/installation.html#environment-variables
+        https://opencolorio.org/installation.html#environment-variables
 
       You will require a config for OCIO to be useful. Sample configuration files
       and reference images can be found at:
-
-          http://opencolorio.org/downloads.html
+        https://opencolorio.org/downloads.html
     EOS
   end
 

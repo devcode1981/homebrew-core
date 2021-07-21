@@ -1,28 +1,35 @@
 class Caf < Formula
   # Renamed from libccpa
   desc "Implementation of the Actor Model for C++"
-  homepage "https://actor-framework.org/"
-  url "https://github.com/actor-framework/actor-framework/archive/0.16.2.tar.gz"
-  sha256 "4c1e74dc2b45d14504c6a676dcd6fe168f6b5a5c605cbdb0588e55e58412d29c"
+  homepage "https://www.actor-framework.org/"
+  url "https://github.com/actor-framework/actor-framework/archive/0.18.5.tar.gz"
+  sha256 "4c96f896f000218bb65890b4d7175451834add73750d5f33b0c7fe82b7d5a679"
+  license "BSD-3-Clause"
   head "https://github.com/actor-framework/actor-framework.git"
 
   bottle do
-    cellar :any
-    sha256 "ada965dae932a57c2ac048dc7de4f7bfe4f7f891c85f1eb13bdccb7950247e18" => :mojave
-    sha256 "31905277c00333e688d7a16e0e947496599b1d642e6dd2041aab94949490e251" => :high_sierra
-    sha256 "cac351fa54d253d253aec01142e3b52c4dd6a827266c283c6fdf543f50848f75" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "ab16a7c7af1cb9ebcf94b0f51185d2318de6c658e2c58fea826011eecd3e09f9"
+    sha256 cellar: :any,                 big_sur:       "804cec1ee5419983767ced84f1eaa357ea1d96676725be2f0db85245625c4a17"
+    sha256 cellar: :any,                 catalina:      "8f11ac81d1c3efdd0b4813478336c5e215df2d44d0bd04e770d04bddd598b02e"
+    sha256 cellar: :any,                 mojave:        "ef6ea69f637a890f191b6f584167f9cb9fbe990e040ccce147f64331d305bfda"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d9dd022da722c0bdecfbf643251d9529fde48b2b13576a95fc706df751941df2"
   end
 
   depends_on "cmake" => :build
+  depends_on "openssl@1.1"
 
-  needs :cxx11
+  on_linux do
+    depends_on "gcc" # For C++17
+  end
+
+  fails_with gcc: "5"
 
   def install
-    system "./configure", "--prefix=#{prefix}", "--no-examples",
-                          "--build-static", "--no-opencl"
-    system "make"
-    system "make", "test"
-    system "make", "install"
+    mkdir "build" do
+      system "cmake", "..", *std_cmake_args, "-DCAF_ENABLE_TESTING=OFF"
+      system "make"
+      system "make", "install"
+    end
   end
 
   test do
@@ -35,12 +42,10 @@ class Caf < Formula
         self->spawn([] {
           std::cout << "test" << std::endl;
         });
-        self->await_all_other_actors_done();
       }
       CAF_MAIN()
     EOS
-    ENV.cxx11
-    system *(ENV.cxx.split + %W[test.cpp -L#{lib} -lcaf_core -o test])
+    system ENV.cxx, "-std=c++17", "test.cpp", "-L#{lib}", "-lcaf_core", "-o", "test"
     system "./test"
   end
 end

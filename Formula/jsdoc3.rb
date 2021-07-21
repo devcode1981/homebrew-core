@@ -2,17 +2,15 @@ require "language/node"
 
 class Jsdoc3 < Formula
   desc "API documentation generator for JavaScript"
-  homepage "http://usejsdoc.org/"
-  url "https://registry.npmjs.org/jsdoc/-/jsdoc-3.5.5.tgz"
-  sha256 "f80dd27d77c4b6110cc4c548c2c026eee7df6c86df2bb047e2a6c30594bba088"
+  homepage "https://jsdoc.app/"
+  url "https://registry.npmjs.org/jsdoc/-/jsdoc-3.6.7.tgz"
+  sha256 "c081fb764e73565c2fbc5cfb559c3d0a6a3d82d337dcf146ece76a2ea17b99b8"
+  license "Apache-2.0"
   head "https://github.com/jsdoc3/jsdoc.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a5d72fa1fb4ab24ce45b70e98ef8ee823a772794b54cc78fc859e41ac27e8687" => :mojave
-    sha256 "746c92b92e292189a958f35739ebd267f0a861e33cdd5c08026da3d255d92ad7" => :high_sierra
-    sha256 "bfab5fccdd1e49260dc2166af13885de94d43acb7cc689663aa0414cef88698a" => :sierra
-    sha256 "9d5a8b63309f02f86c42c7cf6973a000f4eda4ad0e1cea080a64674abea0a2da" => :el_capitan
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "d18ac53656e46fd69eef87db5b293f9d54f34edb2de1fb178955116ce522fcc2"
+    sha256 cellar: :any_skip_relocation, all:          "3e64a239db726ef68a27275366f6b233aaeae35d8bd331737a4801c8aa03e48e"
   end
 
   depends_on "node"

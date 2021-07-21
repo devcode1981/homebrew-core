@@ -1,25 +1,32 @@
 class Zstd < Formula
   desc "Zstandard is a real-time compression algorithm"
   homepage "https://facebook.github.io/zstd/"
-  url "https://github.com/facebook/zstd/releases/download/v1.3.7/zstd-1.3.7.tar.gz"
-  sha256 "3277f236df0ca6edae01ae84e865470000c5a3484588fd5bc3d869877fd3573d"
+  url "https://github.com/facebook/zstd/archive/v1.5.0.tar.gz"
+  sha256 "0d9ade222c64e912d6957b11c923e214e2e010a18f39bec102f572e693ba2867"
+  license "BSD-3-Clause"
+  head "https://github.com/facebook/zstd.git", branch: "dev"
 
   bottle do
-    cellar :any
-    sha256 "cc1d097045f464b4953015edb57235fe48cb8dc887ec1d21e29599c95c8de178" => :mojave
-    sha256 "47a2cde8ba8a738e085c5be33ead12e00eb3ddf71f8017cd6023e3ad3434faf0" => :high_sierra
-    sha256 "05a81230aee7d4128d96bc090b4c0c9914aeb3cdf668621a7d257577876c2ab7" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "e8962c7923904213f312c86372b670b6b5a7ac7103ee63254ab3d1c349913246"
+    sha256 cellar: :any,                 big_sur:       "eae17621cfc664d6e527a6d6aa6a000343eced0f60c81b4e2dd9a9aed7b79c3f"
+    sha256 cellar: :any,                 catalina:      "571d031a8fe1b96f68c4c50c2e72532adbad273c565420cb0825cf4745f512bc"
+    sha256 cellar: :any,                 mojave:        "8089b1b5c398c95af5eaacea6033829dd8d255c9f32d6fa2f0c436821c902087"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "0fcd15f865d47d9140af51b05c99a3bab12fdfa10f78b47e296eb82f53f685ba"
   end
 
   depends_on "cmake" => :build
 
-  def install
-    system "make", "install", "PREFIX=#{prefix}/"
+  uses_from_macos "zlib"
 
-    # Build parallel version
-    system "make", "-C", "contrib/pzstd", "googletest"
-    system "make", "-C", "contrib/pzstd", "PREFIX=#{prefix}"
-    bin.install "contrib/pzstd/pzstd"
+  def install
+    cd "build/cmake" do
+      system "cmake", "-S", ".", "-B", "builddir",
+                      "-DZSTD_BUILD_CONTRIB=ON",
+                      "-DCMAKE_INSTALL_RPATH=#{rpath}",
+                      *std_cmake_args
+      system "cmake", "--build", "builddir"
+      system "cmake", "--install", "builddir"
+    end
   end
 
   test do

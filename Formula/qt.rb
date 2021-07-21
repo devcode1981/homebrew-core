@@ -1,98 +1,106 @@
-# Patches for Qt must be at the very least submitted to Qt's Gerrit codereview
-# rather than their bug-report Jira. The latter is rarely reviewed by Qt.
 class Qt < Formula
   desc "Cross-platform application and UI framework"
   homepage "https://www.qt.io/"
-  revision 1
-  head "https://code.qt.io/qt/qt5.git", :branch => "5.12", :shallow => false
+  url "https://download.qt.io/official_releases/qt/6.1/6.1.2/single/qt-everywhere-src-6.1.2.tar.xz"
+  sha256 "4b40f10eb188506656f13dbf067b714145047f41d7bf83f03b727fa1c7c4cdcb"
+  license all_of: ["GFDL-1.3-only", "GPL-2.0-only", "GPL-3.0-only", "LGPL-2.1-only", "LGPL-3.0-only"]
+  head "https://code.qt.io/qt/qt5.git", branch: "dev"
 
-  stable do
-    url "https://download.qt.io/official_releases/qt/5.11/5.11.2/single/qt-everywhere-src-5.11.2.tar.xz"
-    mirror "https://qt.mirror.constant.com/archive/qt/5.11/5.11.2/single/qt-everywhere-src-5.11.2.tar.xz"
-    mirror "https://ftp.osuosl.org/pub/blfs/conglomeration/qt5/qt-everywhere-src-5.11.2.tar.xz"
-    sha256 "c6104b840b6caee596fa9a35bc5f57f67ed5a99d6a36497b6fe66f990a53ca81"
-
-    # Restore `.pc` files for framework-based build of Qt 5 on macOS, partially
-    # reverting <https://codereview.qt-project.org/#/c/140954/>
-    # Core formulae known to fail without this patch (as of 2016-10-15):
-    #   * gnuplot (with `--with-qt` option)
-    #   * mkvtoolnix (with `--with-qt` option, silent build failure)
-    #   * poppler (with `--with-qt` option)
-    patch do
-      url "https://raw.githubusercontent.com/Homebrew/formula-patches/e8fe6567/qt5/restore-pc-files.patch"
-      sha256 "48ff18be2f4050de7288bddbae7f47e949512ac4bcd126c2f504be2ac701158b"
-    end
-
-    # Chromium build failures with Xcode 10, fixed upstream:
-    # https://bugs.chromium.org/p/chromium/issues/detail?id=840251
-    # https://bugs.chromium.org/p/chromium/issues/detail?id=849689
-    patch do
-      url "https://raw.githubusercontent.com/Homebrew/formula-patches/962f0f/qt/xcode10.diff"
-      sha256 "c064398411c69f2e1c516c0cd49fcd0755bc29bb19e65c5694c6d726c43389a6"
-    end
+  # The first-party website doesn't make version information readily available,
+  # so we check the `head` repository tags instead.
+  livecheck do
+    url :head
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
   bottle do
-    sha256 "84a1a758d7881f9a446fd76fe4360ce7c5508c48761a74032a361996df1f79ec" => :mojave
-    sha256 "ad85f42e73648dc47c8c903e0045e6b8cf62c99888144c73893a0226f2a5b51e" => :high_sierra
-    sha256 "cd58fa592235c48ae050861eb3fca82ecfe54ddf103e5962b2bf9621f815f640" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "edc0c35866cff4ab9a8b73c9babfd5fc7fe264a57e825e82437c04323a37bd62"
+    sha256 cellar: :any, big_sur:       "34272d69b54b7edc6141d58cfc40a9504c6870a2d1b7be1681d4e620dfe29cf9"
+    sha256 cellar: :any, catalina:      "2389536d2e27288a46c8b8fc54169bd8b74fc3dd3382cee7443a37e17ba3f970"
+    sha256 cellar: :any, mojave:        "bd093238a6a8e2024751fa17e5a8cfb4b5aaef553dbe2b3336653a5eb09aab19"
   end
 
-  keg_only "Qt 5 has CMake issues when linked"
-
-  option "with-examples", "Build examples"
-  option "without-proprietary-codecs", "Don't build with proprietary codecs (e.g. mp3)"
-
-  deprecated_option "with-mysql" => "with-mysql-client"
-
+  depends_on "cmake"      => [:build, :test]
+  depends_on "ninja"      => :build
   depends_on "pkg-config" => :build
-  depends_on :xcode => :build
-  depends_on "mysql-client" => :optional
-  depends_on "postgresql" => :optional
+  depends_on xcode: [:build, :test] if MacOS.version <= :mojave
+
+  depends_on "assimp"
+  depends_on "brotli"
+  depends_on "dbus"
+  depends_on "double-conversion"
+  depends_on "freetype"
+  depends_on "glib"
+  depends_on "icu4c"
+  depends_on "jasper"
+  depends_on "jpeg"
+  depends_on "libb2"
+  depends_on "libpng"
+  depends_on "libproxy"
+  depends_on "libtiff"
+  depends_on "pcre2"
+  depends_on "python@3.9"
+  depends_on "sqlite"
+  depends_on "webp"
+  depends_on "zstd"
+
+  uses_from_macos "cups"
+  uses_from_macos "krb5"
+  uses_from_macos "perl"
+  uses_from_macos "zlib"
 
   def install
-    args = %W[
-      -verbose
-      -prefix #{prefix}
+    # FIXME: See https://bugreports.qt.io/browse/QTBUG-89559
+    # and https://codereview.qt-project.org/c/qt/qtbase/+/327393
+    # It is not friendly to Homebrew or macOS
+    # because on macOS `/tmp` -> `/private/tmp`
+    inreplace "qtbase/CMakeLists.txt", "FATAL_ERROR", ""
+
+    config_args = %W[
       -release
-      -opensource -confirm-license
-      -system-zlib
-      -qt-libpng
-      -qt-libjpeg
-      -qt-freetype
-      -qt-pcre
-      -nomake tests
-      -no-rpath
-      -pkg-config
-      -dbus-runtime
+
+      -prefix #{HOMEBREW_PREFIX}
+      -extprefix #{prefix}
+      -sysroot #{MacOS.sdk_path}
+
+      -archdatadir share/qt
+      -datadir share/qt
+      -examplesdir share/qt/examples
+      -testsdir share/qt/tests
+
+      -libproxy
+      -no-feature-relocatable
+      -system-sqlite
+
+      -no-sql-mysql
+      -no-sql-odbc
+      -no-sql-psql
     ]
 
-    args << "-nomake" << "examples" if build.without? "examples"
+    # TODO: remove `-DFEATURE_qt3d_system_assimp=ON`
+    # and `-DTEST_assimp=ON` when Qt 6.2 is released.
+    # See https://bugreports.qt.io/browse/QTBUG-91537
+    cmake_args = std_cmake_args.reject { |s| s["CMAKE_INSTALL_PREFIX"]||s["CMAKE_FIND_FRAMEWORK"] } + %W[
+      -DCMAKE_OSX_DEPLOYMENT_TARGET=#{MacOS.version}
+      -DCMAKE_FIND_FRAMEWORK=FIRST
 
-    if build.with? "mysql-client"
-      args << "-plugin-sql-mysql"
-      (buildpath/"brew_shim/mysql_config").write <<~EOS
-        #!/bin/sh
-        if [ x"$1" = x"--libs" ]; then
-          mysql_config --libs | sed "s/-lssl -lcrypto//"
-        else
-          exec mysql_config "$@"
-        fi
-      EOS
-      chmod 0755, "brew_shim/mysql_config"
-      args << "-mysql_config" << buildpath/"brew_shim/mysql_config"
-    end
+      -DINSTALL_MKSPECSDIR=share/qt/mkspecs
 
-    args << "-plugin-sql-psql" if build.with? "postgresql"
-    args << "-proprietary-codecs" if build.with? "proprietary-codecs"
+      -DFEATURE_pkg_config=ON
+      -DFEATURE_qt3d_system_assimp=ON
+      -DTEST_assimp=ON
+    ]
 
-    system "./configure", *args
-    system "make"
-    ENV.deparallelize
-    system "make", "install"
+    system "./configure", *config_args, "--", *cmake_args
+    system "cmake", "--build", "."
+    system "cmake", "--install", "."
+
+    rm bin/"qt-cmake-private-install.cmake"
 
     # Some config scripts will only find Qt in a "Frameworks" folder
     frameworks.install_symlink Dir["#{lib}/*.framework"]
+
+    inreplace lib/"cmake/Qt6/qt.toolchain.cmake", HOMEBREW_SHIMS_PATH/"mac/super", "/usr/bin"
 
     # The pkg-config files installed suggest that headers can be found in the
     # `include` directory. Make this so by creating symlinks from `include` to
@@ -101,25 +109,43 @@ class Qt < Formula
       include.install_symlink path => path.parent.basename(".framework")
     end
 
-    # Move `*.app` bundles into `libexec` to expose them to `brew linkapps` and
-    # because we don't like having them in `bin`.
-    # (Note: This move breaks invocation of Assistant via the Help menu
-    # of both Designer and Linguist as that relies on Assistant being in `bin`.)
-    libexec.mkpath
-    Pathname.glob("#{bin}/*.app") { |app| mv app, libexec }
-  end
-
-  def caveats; <<~EOS
-    We agreed to the Qt open source license for you.
-    If this is unacceptable you should uninstall.
-  EOS
+    mkdir libexec
+    Pathname.glob("#{bin}/*.app") do |app|
+      mv app, libexec
+      bin.write_exec_script "#{libexec/app.stem}.app/Contents/MacOS/#{app.stem}"
+    end
   end
 
   test do
-    (testpath/"hello.pro").write <<~EOS
-      QT       += core
-      QT       -= gui
-      TARGET = hello
+    (testpath/"CMakeLists.txt").write <<~EOS
+      cmake_minimum_required(VERSION #{Formula["cmake"].version})
+
+      project(test VERSION 1.0.0 LANGUAGES CXX)
+
+      set(CMAKE_CXX_STANDARD 17)
+      set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+      set(CMAKE_AUTOMOC ON)
+      set(CMAKE_AUTORCC ON)
+      set(CMAKE_AUTOUIC ON)
+
+      find_package(Qt6 COMPONENTS Core Widgets Sql Concurrent
+        3DCore Svg Quick3D Network NetworkAuth REQUIRED)
+
+      add_executable(test
+          main.cpp
+      )
+
+      target_link_libraries(test PRIVATE Qt6::Core Qt6::Widgets
+        Qt6::Sql Qt6::Concurrent Qt6::3DCore Qt6::Svg Qt6::Quick3D
+        Qt6::Network Qt6::NetworkAuth
+      )
+    EOS
+
+    (testpath/"test.pro").write <<~EOS
+      QT       += core svg 3dcore network networkauth quick3d \
+        sql
+      TARGET = test
       CONFIG   += console
       CONFIG   -= app_bundle
       TEMPLATE = app
@@ -127,21 +153,44 @@ class Qt < Formula
     EOS
 
     (testpath/"main.cpp").write <<~EOS
+      #undef QT_NO_DEBUG
       #include <QCoreApplication>
+      #include <Qt3DCore>
+      #include <QtQuick3D>
+      #include <QImageReader>
+      #include <QtNetworkAuth>
+      #include <QtSql>
+      #include <QtSvg>
       #include <QDebug>
+      #include <iostream>
 
       int main(int argc, char *argv[])
       {
         QCoreApplication a(argc, argv);
-        qDebug() << "Hello World!";
+        QSvgGenerator generator;
+        auto *handler = new QOAuthHttpServerReplyHandler();
+        delete handler; handler = nullptr;
+        auto *root = new Qt3DCore::QEntity();
+        delete root; root = nullptr;
+        Q_ASSERT(QSqlDatabase::isDriverAvailable("QSQLITE"));
+        const auto &list = QImageReader::supportedImageFormats();
+        for(const char* fmt:{"bmp", "cur", "gif", "heic", "heif",
+          "icns", "ico", "jp2", "jpeg", "jpg", "pbm", "pgm", "png",
+          "ppm", "svg", "svgz", "tga", "tif", "tiff", "wbmp", "webp",
+          "xbm", "xpm"}) {
+          Q_ASSERT(list.contains(fmt));
+        }
         return 0;
       }
     EOS
 
-    system bin/"qmake", testpath/"hello.pro"
+    system "cmake", testpath
     system "make"
-    assert_predicate testpath/"hello", :exist?
-    assert_predicate testpath/"main.o", :exist?
-    system "./hello"
+    system "./test"
+
+    ENV.delete "CPATH" unless MacOS.version <= :mojave
+    system bin/"qmake", testpath/"test.pro"
+    system "make"
+    system "./test"
   end
 end

@@ -1,19 +1,26 @@
 class Py2cairo < Formula
   desc "Python 2 bindings for the Cairo graphics library"
   homepage "https://cairographics.org/pycairo/"
-  url "https://github.com/pygobject/pycairo/releases/download/v1.18.0/pycairo-1.18.0.tar.gz"
-  sha256 "abd42a4c9c2069febb4c38fe74bfc4b4a9d3a89fea3bc2e4ba7baff7a20f783f"
+  url "https://github.com/pygobject/pycairo/releases/download/v1.18.2/pycairo-1.18.2.tar.gz"
+  sha256 "dcb853fd020729516e8828ad364084e752327d4cff8505d20b13504b32b16531"
+  license "LGPL-2.1"
+  revision 1
 
   bottle do
-    cellar :any
-    sha256 "46599e5f1abc91308b81ff7c8dea1df675ffc7349f0953aae40742f450e54932" => :mojave
-    sha256 "a20fd135bf7242a1978cda0d4dfdba2529875bc476ed3322f407832a9ce04445" => :high_sierra
-    sha256 "1ff1752697e067f46f10923d234e7352b6f68254faaa630a173ce3a6b50ca8c0" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "de68fca224353b7e7b8426e24324fdb6fd0cc5a6180db4ad0ccd02b43919b0bc"
+    sha256 cellar: :any, big_sur:       "80feea24d8039acef848c76075f8911493762d75b883b56bf4d87f14d5a3bbac"
+    sha256 cellar: :any, catalina:      "78ab70984d612ac9feba4d673615e3918110aebc4aa0b360a854e81fc7ac0ea7"
+    sha256 cellar: :any, mojave:        "f01c39e8f71339cdec156309fb7358f5bb3e292fb0a84a071c3a935b58234120"
+    sha256 cellar: :any, high_sierra:   "76dbdbbd42c2a59cae7e9ddc05ad26d331194c8a132e24e7316ceb551a40272b"
   end
+
+  # Python 2 support was dropped in version 1.19.0 and this formula is pinned
+  # to the last preceding version.
+  deprecate! date: "2021-03-15", because: :versioned_formula
 
   depends_on "pkg-config" => :build
   depends_on "cairo"
-  depends_on "python@2"
+  depends_on :macos # Due to Python 2
 
   def install
     system "python", *Language::Python.setup_install_args(prefix)

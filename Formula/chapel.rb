@@ -1,15 +1,18 @@
 class Chapel < Formula
-  desc "Emerging programming language designed for parallel computing"
+  desc "Programming language for productive parallel computing at scale"
   homepage "https://chapel-lang.org/"
-  url "https://github.com/chapel-lang/chapel/releases/download/1.18.0/chapel-1.18.0.tar.gz"
-  sha256 "68471e1f398b074edcc28cae0be26a481078adc3edea4df663f01c6bd3b6ae0d"
+  url "https://github.com/chapel-lang/chapel/releases/download/1.24.1/chapel-1.24.1.tar.gz"
+  sha256 "f898f266fccaa34d937b38730a361d42efb20753ba43a95e5682816e008ce5e4"
+  license "Apache-2.0"
 
   bottle do
-    sha256 "ec5a061a5bbb87ab2ae8914575754c21ff517438c87f34246f5407b03c05277b" => :mojave
-    sha256 "a661717fffa4d53c89956e241fd830956a0b34c9ad6869a9fc0698918d0c1718" => :high_sierra
-    sha256 "b884c781ec6b7feef055421be8518e43ce917cb0aada966a2a6e993df4eec162" => :sierra
-    sha256 "703fd9c9a452a7d71bfe71d2c3ce5978ff1a95260e412857172ffbd91e5d829e" => :el_capitan
+    sha256 big_sur:      "e792266fb772218ca4acfc90910d4d26836e2c1fe1faa60ffc104bd7baf31046"
+    sha256 catalina:     "7a06d32c992460337aa0af964803ace53465ecd90727c6ca57392017d5fb1890"
+    sha256 mojave:       "c048b2189f4900731fbbfb76efc70bc8e4d85809759ac80b2de7bdeb6db76acf"
+    sha256 x86_64_linux: "ca34ea32e25b7c9fea13bf25a09ac8b3151f45f8b8ac2dfeebfc0d18773783ba"
   end
+
+  depends_on "python@3.9"
 
   def install
     libexec.install Dir["*"]
@@ -23,23 +26,29 @@ class Chapel < Formula
     cd libexec do
       system "make"
       system "make", "chpldoc"
-      system "make", "test-venv"
       system "make", "mason"
       system "make", "cleanall"
+      rm_rf("third-party/llvm/llvm-src/")
     end
 
     prefix.install_metafiles
 
     # Install chpl and other binaries (e.g. chpldoc) into bin/ as exec scripts.
-    bin.install Dir[libexec/"bin/darwin/*"]
-    bin.env_script_all_files libexec/"bin/darwin/", :CHPL_HOME => libexec
+    platform = "darwin-x86_64"
+
+    on_linux do
+      platform = Hardware::CPU.is_64_bit? ? "linux64-x86_64" : "linux-x86_64"
+    end
+
+    bin.install Dir[libexec/"bin/#{platform}/*"]
+    bin.env_script_all_files libexec/"bin/#{platform}/", CHPL_HOME: libexec
     man1.install_symlink Dir["#{libexec}/man/man1/*.1"]
   end
 
   test do
     ENV["CHPL_HOME"] = libexec
     cd libexec do
-      system "make", "check"
+      system "util/test/checkChplInstall"
     end
   end
 end

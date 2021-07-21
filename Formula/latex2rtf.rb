@@ -1,18 +1,26 @@
 class Latex2rtf < Formula
   desc "Translate LaTeX to RTF"
   homepage "https://latex2rtf.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/latex2rtf/latex2rtf-unix/2.3.17/latex2rtf-2.3.17.tar.gz"
-  sha256 "19f3763177d8ea7735511438de269b78c24ccbfafcd71d7a47aabc20b9ea05a8"
+  url "https://downloads.sourceforge.net/project/latex2rtf/latex2rtf-unix/2.3.18/latex2rtf-2.3.18a.tar.gz"
+  sha256 "338ba2e83360f41ded96a0ceb132db9beaaf15018b36101be2bae8bb239017d9"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/latex2rtf/files/latex2rtf-unix/[^/]+/latex2rtf[._-](\d+(?:[.-]\d+)+[a-z]?)\.t}i)
+  end
 
   bottle do
-    sha256 "774648348334e79b63d29040f1b97af185a7a888abe30097f1fa239ca105f3a2" => :mojave
-    sha256 "e6b76e602030f83a900b57ce5f05f52dfcc3ecac8e8c988780ddfee350cd7979" => :high_sierra
-    sha256 "04c09c3d1a6feb91ae3127b7e8391870ad9d9a9bda322dd14ebf9be4896aa1f1" => :sierra
-    sha256 "15571803586d7a3465a9b6c73bb0879861afe3824650a85b5c15869622128e2f" => :el_capitan
+    sha256 arm64_big_sur: "29b2cd9987d2362995534aed209cf84ff93cb307de474bbe2ff16c5e94bfc9cb"
+    sha256 big_sur:       "fedf28c8cd7113f639a32776b9b55bbbae3ccfa7aa15e142d08004d39cf56d23"
+    sha256 catalina:      "a4f536a8f9a6001fe955727e7d9473b5294daf416b422dab70b489067dad35f3"
+    sha256 mojave:        "e57496652dd135bddb2d28f88d96e6207b69551f040ac4436cb6d043557e90c3"
+    sha256 x86_64_linux:  "4614b529d342e3e532c2c36fc3b6090dd889261c05ba3ea21847a276a063e4c5"
   end
 
   def install
-    inreplace "Makefile", "cp -p doc/latex2rtf.html $(DESTDIR)$(SUPPORTDIR)", "cp -p doc/web/* $(DESTDIR)$(SUPPORTDIR)"
+    inreplace "Makefile", "cp -p doc/latex2rtf.html $(DESTDIR)$(SUPPORTDIR)",
+                          "cp -p doc/web/* $(DESTDIR)$(SUPPORTDIR)"
     system "make", "DESTDIR=",
                    "BINDIR=#{bin}",
                    "MANDIR=#{man1}",
@@ -20,5 +28,18 @@ class Latex2rtf < Formula
                    "SUPPORTDIR=#{pkgshare}",
                    "CFGDIR=#{pkgshare}/cfg",
                    "install"
+  end
+
+  test do
+    (testpath/"test.tex").write <<~EOS
+      \\documentclass{article}
+      \\title{LaTeX to RTF}
+      \\begin{document}
+      \\maketitle
+      \\end{document}
+    EOS
+    system bin/"latex2rtf", "test.tex"
+    assert_predicate testpath/"test.rtf", :exist?
+    assert_match "LaTeX to RTF", File.read(testpath/"test.rtf")
   end
 end

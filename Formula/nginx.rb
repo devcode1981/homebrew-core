@@ -3,30 +3,41 @@ class Nginx < Formula
   homepage "https://nginx.org/"
   # Use "mainline" releases only (odd minor version number), not "stable"
   # See https://www.nginx.com/blog/nginx-1-12-1-13-released/ for why
-  url "https://nginx.org/download/nginx-1.15.7.tar.gz"
-  sha256 "8f22ea2f6c0e0a221b6ddc02b6428a3ff708e2ad55f9361102b1c9f4142bdf93"
-  head "https://hg.nginx.org/nginx/", :using => :hg
+  url "https://nginx.org/download/nginx-1.21.1.tar.gz"
+  sha256 "68ba0311342115163a0354cad34f90c05a7e8bf689dc498abf07899eda155560"
+  license "BSD-2-Clause"
+  head "https://hg.nginx.org/nginx/", using: :hg
 
-  bottle do
-    sha256 "4b1fbbd533d58e2c755bc419612eada94ffb094694dfd226dc68d84f8d9cc383" => :mojave
-    sha256 "4818e2fd38d7dd1587d0a9eb8532e43015593a1afb29ad16f784e2792ea9311f" => :high_sierra
-    sha256 "eb7fefcf9073857048275449a1e148f7a69d862b107278e7005361762c383701" => :sierra
+  livecheck do
+    url :homepage
+    regex(%r{nginx[._-]v?(\d+(?:\.\d+)+)</a>\nmainline version}i)
   end
 
-  option "with-passenger", "Compile with support for Phusion Passenger module"
+  bottle do
+    sha256 arm64_big_sur: "7cff8e877fabd919993d99e6a429b60c742231b6946251c3c2673c5eadba53d7"
+    sha256 big_sur:       "8ba34676e573272aa1f73d4dcf6bfddbaa69746a92bf812f6760baf13ddf93dc"
+    sha256 catalina:      "15ca8ac75b077c587ae84fbb78f3bbed5b44307de37485beab9d1813ae22b350"
+    sha256 mojave:        "51c2b45dce74a294f53a04eb51be7e1aa63101b72018bb38648b5161e6b8d0ea"
+    sha256 x86_64_linux:  "3c321881a4fbfc3f475a382ba499b8d581b4b6ce96484ad0ccb2653c9ecfa34b"
+  end
 
-  depends_on "openssl" # don't switch to 1.1 until passenger is switched, too
+  depends_on "openssl@1.1"
   depends_on "pcre"
-  depends_on "passenger" => :optional
+
+  uses_from_macos "xz" => :build
 
   def install
+    # keep clean copy of source for compiling dynamic modules e.g. passenger
+    (pkgshare/"src").mkpath
+    system "tar", "-cJf", (pkgshare/"src/src.tar.xz"), "."
+
     # Changes default port to 8080
     inreplace "conf/nginx.conf" do |s|
       s.gsub! "listen       80;", "listen       8080;"
       s.gsub! "    #}\n\n}", "    #}\n    include servers/*;\n}"
     end
 
-    openssl = Formula["openssl"]
+    openssl = Formula["openssl@1.1"]
     pcre = Formula["pcre"]
 
     cc_opt = "-I#{pcre.opt_include} -I#{openssl.opt_include}"
@@ -47,6 +58,7 @@ class Nginx < Formula
       --http-scgi-temp-path=#{var}/run/nginx/scgi_temp
       --http-log-path=#{var}/log/nginx/access.log
       --error-log-path=#{var}/log/nginx/error.log
+      --with-compat
       --with-debug
       --with-http_addition_module
       --with-http_auth_request_module
@@ -75,10 +87,7 @@ class Nginx < Formula
       --with-stream_ssl_preread_module
     ]
 
-    if build.with? "passenger"
-      nginx_ext = `#{Formula["passenger"].opt_bin}/passenger-config --nginx-addon-dir`.chomp
-      args << "--add-module=#{nginx_ext}"
-    end
+    (pkgshare/"src/configure_args.txt").write args.join("\n")
 
     if build.head?
       system "./auto/configure", *args
@@ -118,20 +127,11 @@ class Nginx < Formula
     # and Homebrew used to suggest the user copy the plist for nginx to their
     # ~/Library/LaunchAgents directory. So we need to have a symlink there
     # for such cases
-    if rack.subdirs.any? { |d| d.join("sbin").directory? }
-      sbin.install_symlink bin/"nginx"
-    end
-  end
-
-  def passenger_caveats; <<~EOS
-    To activate Phusion Passenger, add this to #{etc}/nginx/nginx.conf, inside the 'http' context:
-      passenger_root #{Formula["passenger"].opt_libexec}/src/ruby_supportlib/phusion_passenger/locations.ini;
-      passenger_ruby /usr/bin/ruby;
-  EOS
+    sbin.install_symlink bin/"nginx" if rack.subdirs.any? { |d| d.join("sbin").directory? }
   end
 
   def caveats
-    s = <<~EOS
+    <<~EOS
       Docroot is: #{var}/www
 
       The default port has been set in #{etc}/nginx/nginx.conf to 8080 so that
@@ -139,34 +139,33 @@ class Nginx < Formula
 
       nginx will load all files in #{etc}/nginx/servers/.
     EOS
-    s << "\n" << passenger_caveats if build.with? "passenger"
-    s
   end
 
-  plist_options :manual => "nginx"
+  plist_options manual: "nginx"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>KeepAlive</key>
-        <false/>
-        <key>ProgramArguments</key>
-        <array>
-            <string>#{opt_bin}/nginx</string>
-            <string>-g</string>
-            <string>daemon off;</string>
-        </array>
-        <key>WorkingDirectory</key>
-        <string>#{HOMEBREW_PREFIX}</string>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>KeepAlive</key>
+          <false/>
+          <key>ProgramArguments</key>
+          <array>
+              <string>#{opt_bin}/nginx</string>
+              <string>-g</string>
+              <string>daemon off;</string>
+          </array>
+          <key>WorkingDirectory</key>
+          <string>#{HOMEBREW_PREFIX}</string>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do

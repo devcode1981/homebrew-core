@@ -1,25 +1,42 @@
 class PcscLite < Formula
   desc "Middleware to access a smart card using SCard API"
   homepage "https://pcsclite.apdu.fr/"
-  url "https://pcsclite.apdu.fr/files/pcsc-lite-1.8.23.tar.bz2"
-  sha256 "5a27262586eff39cfd5c19aadc8891dd71c0818d3d629539bd631b958be689c9"
+  url "https://pcsclite.apdu.fr/files/pcsc-lite-1.9.1.tar.bz2"
+  sha256 "73c4789b7876a833a70f493cda21655dfe85689d9b7e29701c243276e55e683a"
+  license all_of: ["BSD-3-Clause", "GPL-3.0-or-later", "ISC"]
 
-  bottle do
-    sha256 "be4068d6d357c142d4978b1325cb1c534fcc369cba2bbbe44fb3eaceb8fdd501" => :mojave
-    sha256 "0ed981ad7244d50d3084cef08991c5662658cd321d24784b2a6c2f8586f8f205" => :high_sierra
-    sha256 "16167530e755c8c59a43b72433e9e1aba53b14f4f7364e85fc3159ecdc8ce75b" => :sierra
-    sha256 "9a2816b3aaa1717d6c5d2c59495681915b62de67e496bb3edfecf1e5b6d537c0" => :el_capitan
+  livecheck do
+    url "https://pcsclite.apdu.fr/files/"
+    regex(/href=.*?pcsc-lite[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  keg_only :provided_by_macos,
-    "pcsc-lite interferes with detection of macOS's PCSC.framework"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "41493aaf4724a8d9dcdc0d201adfb0ff106f0fda64cd0c61cb2a7a6cadfda542"
+    sha256 cellar: :any,                 big_sur:       "738ed819f64c346f2761678b8ca2e39eb9043d92d6d4fd365f6b0650097e225a"
+    sha256 cellar: :any,                 catalina:      "a4da98096949c1944ed1754fb4d34eb65573c88b86c0d24401f783459e1240e9"
+    sha256 cellar: :any,                 mojave:        "46aee062069037df86dc1064a2cdced328a21dce899bc15429ffe2b6151dacf3"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "ffa94bf5004b06e2ea0ab9e239d9feee0ce83e1443e415b9a317f5f51e7394c4"
+  end
+
+  keg_only :shadowed_by_macos, "macOS provides PCSC.framework"
+
+  on_linux do
+    depends_on "pkg-config" => :build
+    depends_on "libusb"
+  end
 
   def install
-    system "./configure", "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--prefix=#{prefix}",
-                          "--sysconfdir=#{etc}",
-                          "--disable-libsystemd"
+    args = %W[--disable-dependency-tracking
+              --disable-silent-rules
+              --prefix=#{prefix}
+              --sysconfdir=#{etc}
+              --disable-libsystemd]
+
+    on_linux do
+      args << "--disable-udev"
+    end
+
+    system "./configure", *args
     system "make", "install"
   end
 

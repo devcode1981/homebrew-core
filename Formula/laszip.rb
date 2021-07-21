@@ -1,14 +1,18 @@
 class Laszip < Formula
   desc "Lossless LiDAR compression"
   homepage "https://laszip.org/"
-  url "https://github.com/LASzip/LASzip/releases/download/3.2.8/laszip-src-3.2.8.tar.gz"
-  sha256 "b2dece1ce8a9764981aab43ee49ae9798c86a23a737dc9e982c60dbf510f886e"
+  url "https://github.com/LASzip/LASzip/releases/download/3.4.3/laszip-src-3.4.3.tar.gz"
+  sha256 "53f546a7f06fc969b38d1d71cceb1862b4fc2c4a0965191a0eee81a57c7b373d"
+  license "LGPL-2.1-or-later"
   head "https://github.com/LASzip/LASzip.git"
 
   bottle do
-    sha256 "fad706b5e3c6a0d7cc414d7add0d9397da97c18c05e1852f8fb5fea7e432691d" => :mojave
-    sha256 "4e0eede32c34aa0298318235e79cdae555fbb901eaaae91ddd813f33a9b025f3" => :high_sierra
-    sha256 "d840cd999b4de36df15ffae98d21397172acbfd9c3d1796762eec304a6a94cbd" => :sierra
+    sha256                               arm64_big_sur: "6849693f9166120961fcada7af8d222c1e7580bc191d75a3fdef7ca685f22566"
+    sha256                               big_sur:       "3b8bf75cb5a0c7f2ac6b02c59726b9b2d126ac754dc24a45ffff3adb18bc1a15"
+    sha256                               catalina:      "df73f3c2c8be13bc0fab13f28cbb22262a24c283f4da85cf6b21c55531516e7f"
+    sha256                               mojave:        "3a9bc6d5931145800cb5792740a3cae118d27c4879144f3c74a44c2aee75ce64"
+    sha256                               high_sierra:   "a32459a4896bdc365fae55b70744bb7ae2a05b552e3bb0b0097345e0ea423014"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "ead7c79d5802c0c0c60e8d07cd70d62d634efe3447ff0bc69b576e29f05c82e9"
   end
 
   depends_on "cmake" => :build
@@ -21,7 +25,7 @@ class Laszip < Formula
 
   test do
     system ENV.cxx, pkgshare/"example/laszipdllexample.cpp", "-L#{lib}",
-                    "-llaszip", "-llaszip_api", "-Wno-format", "-o", "test"
+                    "-llaszip", "-llaszip_api", "-Wno-format", "-ldl", "-o", "test"
     assert_match "LASzip DLL", shell_output("./test -h 2>&1", 1)
   end
 end

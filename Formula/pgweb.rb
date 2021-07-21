@@ -1,47 +1,41 @@
 class Pgweb < Formula
   desc "Web-based PostgreSQL database browser"
   homepage "https://sosedoff.github.io/pgweb/"
-  url "https://github.com/sosedoff/pgweb/archive/v0.9.12.tar.gz"
-  sha256 "4c625bad8312dacf9bc9d64d40c2dea1e840175db9c60667a641c62289f9f174"
+  url "https://github.com/sosedoff/pgweb/archive/v0.11.8.tar.gz"
+  sha256 "b391dee6e88c534db82d71515d7efa642e6a34bcded93250fd3f8c2150e75cd9"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a71e56d151da1f158c24f669cfb44f03a7f2b80d8171e67e03e12bd8d1ddfa3e" => :mojave
-    sha256 "31ef10e4430148ed0b70f32d1f6edf7c8741e02f4f2fbe21fd7c49783b3e0594" => :high_sierra
-    sha256 "1f85f4bdf34399632b1a64a79ef39810909ba5faa3022def736caed9a898ff9a" => :sierra
-    sha256 "640b9e3819d9915f00f39bb4319326a5d2f04ed75df4907f9a79db5231015812" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "6f12b6b5957c31af8f22c5ab8df4fa094ce594aa15207f0d29f2a390499ee96d"
+    sha256 cellar: :any_skip_relocation, big_sur:       "a02d31f0e35883aa3bf87d2644f8d2388bb93c5009c91c59bfc04382bd4282c3"
+    sha256 cellar: :any_skip_relocation, catalina:      "4f8da0cec857035c52cb0d867f11dfeb9b25713079f4d5b1837e6123ea741f47"
+    sha256 cellar: :any_skip_relocation, mojave:        "ca983073d0229389be16276d51550a2d2a52cc9fa80dbddeca1a0821d790e989"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f712d2198798bca0e0788f6aa65a9d95bb2b609f34d53983685b7153341a21e3"
   end
 
   depends_on "go" => :build
-  depends_on "go-bindata" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/sosedoff/pgweb").install buildpath.children
+    ldflags = %W[
+      -s -w
+      -X github.com/sosedoff/pgweb/pkg/command.BuildTime=#{time.iso8601}
+      -X github.com/sosedoff/pgweb/pkg/command.GoVersion=#{Formula["go"].version}
+    ].join(" ")
 
-    cd "src/github.com/sosedoff/pgweb" do
-      # Avoid running `go get`
-      inreplace "Makefile", "go get", ""
-
-      system "make", "build"
-      bin.install "pgweb"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args(ldflags: ldflags)
   end
 
   test do
-    require "socket"
-
-    server = TCPServer.new(0)
-    port = server.addr[1]
-    server.close
+    port = free_port
 
     begin
       pid = fork do
-        exec bin/"pgweb", "--listen=#{port}", "--skip-open"
+        exec bin/"pgweb", "--listen=#{port}",
+                          "--skip-open",
+                          "--sessions"
       end
       sleep 2
-      assert_match "pgweb", shell_output("curl http://localhost:#{port}")
+      assert_match "\"version\":\"#{version}\"", shell_output("curl http://localhost:#{port}/api/info")
     ensure
       Process.kill("TERM", pid)
     end

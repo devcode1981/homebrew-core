@@ -2,44 +2,34 @@ class Mas < Formula
   desc "Mac App Store command-line interface"
   homepage "https://github.com/mas-cli/mas"
   url "https://github.com/mas-cli/mas.git",
-      :tag      => "v1.4.3",
-      :revision => "11a0e3e14e5a83aaaba193dfb6d18aa49a82b881"
+      tag:      "v1.8.2",
+      revision: "2f2a43b425498f3cee50974116b8c9d27adbb7cb"
+  license "MIT"
   head "https://github.com/mas-cli/mas.git"
 
   bottle do
-    cellar :any
-    sha256 "d3668e4d128dfc8e062adc30c543ded35e7726dd9e021696e32a97d484e465fd" => :mojave
-    sha256 "fc6658113d785a660e3f4d2e4e134ad02fe003ffa7d69271a2c53f503aaae726" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1be3820e630aa31911100619f299b7d6b56349cc7298555ad3a7198c8846d79d"
+    sha256 cellar: :any_skip_relocation, big_sur:       "7c0d556cbae91f5770e1fb04fead95922e0931c4c897a1b940aae0347ff0e680"
+    sha256 cellar: :any_skip_relocation, catalina:      "4fe1a0f7fb506a65578b4f25cb6e9b9c40cebb13ed61941f6d41e69a04b97a7a"
   end
 
-  depends_on "carthage" => :build
-  depends_on :xcode => ["10.0", :build]
+  depends_on :macos
+  if Hardware::CPU.arm?
+    depends_on xcode: ["12.2", :build]
+  else
+    depends_on xcode: ["12.0", :build]
+  end
 
   def install
-    # Prevent warnings from causing build failures
-    # Prevent linker errors by telling all lib builds to use max size install names
-    xcconfig = buildpath/"Overrides.xcconfig"
-    xcconfig.write <<~EOS
-      GCC_TREAT_WARNINGS_AS_ERRORS = NO
-      OTHER_LDFLAGS = -headerpad_max_install_names
-    EOS
-    ENV["XCODE_XCCONFIG_FILE"] = xcconfig
-
-    system "carthage", "bootstrap", "--platform", "macOS"
-
-    xcodebuild "install",
-               "-project", "mas-cli.xcodeproj",
-               "-scheme", "mas-cli Release",
-               "-configuration", "Release",
-               "OBJROOT=build",
-               "SYMROOT=build"
-
+    system "script/build"
     system "script/install", prefix
 
     bash_completion.install "contrib/completion/mas-completion.bash" => "mas"
+    fish_completion.install "contrib/completion/mas.fish"
   end
 
   test do
     assert_equal version.to_s, shell_output("#{bin}/mas version").chomp
+    assert_includes shell_output("#{bin}/mas info 497799835"), "Xcode"
   end
 end

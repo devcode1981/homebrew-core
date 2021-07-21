@@ -1,21 +1,32 @@
 class Libxmlsec1 < Formula
   desc "XML security library"
   homepage "https://www.aleksey.com/xmlsec/"
-  url "https://www.aleksey.com/xmlsec/download/xmlsec1-1.2.26.tar.gz"
-  sha256 "8d8276c9c720ca42a3b0023df8b7ae41a2d6c5f9aa8d20ed1672d84cc8982d50"
+  url "https://www.aleksey.com/xmlsec/download/xmlsec1-1.2.32.tar.gz"
+  sha256 "e383702853236004e5b08e424b8afe9b53fe9f31aaa7a5382f39d9533eb7c043"
+  license "MIT"
+
+  livecheck do
+    url "https://www.aleksey.com/xmlsec/download/"
+    regex(/href=.*?xmlsec1[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "e424d792f7aef55c782280a3ec0424e741dacec4cd06cae87d7d3cfdc9593201" => :mojave
-    sha256 "dbdc3bb085b68e2c59924dba4193bdacbf305d8b91bada24a45b4ed1462febba" => :high_sierra
-    sha256 "79f41292bc1d6e890b8840119ffc3be5170690d17faa20e9bca18100e66aecfa" => :sierra
-    sha256 "698f1c0e00b8e4d1d98894e0d383f8e7cf9644b03e092213100a76f6e0d5e443" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "1471e1d159d1da7189d24955c1857446e44dfcb16a076f0317191c1b2370daf2"
+    sha256 cellar: :any,                 big_sur:       "5aed153ff3381f68d125b08d102bd37e089d117d0c0fb68abde374b7282fa29e"
+    sha256 cellar: :any,                 catalina:      "f98ab26235b1d1ea25ad8ca472eb4dce6f81642129c14b95c545fe26f66f666a"
+    sha256 cellar: :any,                 mojave:        "56239f6e8cd3205ae408d35b85d1446cdb346310e8c1c662e79bcd3a47c5e4ac"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "61cf0321a530d6aa3f8aa8417b4b18b2a2ac13e82a6f130c60f0c3c6b6c65bfc"
   end
 
   depends_on "pkg-config" => :build
   depends_on "gnutls" # Yes, it wants both ssl/tls variations
   depends_on "libgcrypt"
-  depends_on "libxml2" if MacOS.version <= :lion
-  depends_on "openssl"
+  depends_on "libxml2"
+  depends_on "openssl@1.1"
+
+  on_macos do
+    depends_on xcode: :build
+  end
 
   # Add HOMEBREW_PREFIX/lib to dl load path
   patch :DATA
@@ -25,9 +36,7 @@ class Libxmlsec1 < Formula
             "--prefix=#{prefix}",
             "--disable-crypto-dl",
             "--disable-apps-crypto-dl",
-            "--with-openssl=#{Formula["openssl"].opt_prefix}"]
-
-    args << "--with-libxml=#{Formula["libxml2"].opt_prefix}" if build.with? "libxml2"
+            "--with-openssl=#{Formula["openssl@1.1"].opt_prefix}"]
 
     system "./configure", *args
     system "make", "install"

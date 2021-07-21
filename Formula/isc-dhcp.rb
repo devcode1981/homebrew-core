@@ -1,14 +1,22 @@
 class IscDhcp < Formula
   desc "Production-grade DHCP solution"
-  homepage "https://www.isc.org/software/dhcp"
-  url "https://ftp.isc.org/isc/dhcp/4.4.1/dhcp-4.4.1.tar.gz"
-  sha256 "2a22508922ab367b4af4664a0472dc220cc9603482cf3c16d9aff14f3a76b608"
+  homepage "https://www.isc.org/dhcp"
+  url "https://ftp.isc.org/isc/dhcp/4.4.2-P1/dhcp-4.4.2-P1.tar.gz"
+  version "4.4.2-P1"
+  sha256 "b05e04337539545a8faa0d6ac518defc61a07e5aec66a857f455e7f218c85a1a"
+  license "MPL-2.0"
+
+  livecheck do
+    url "https://www.isc.org/download/"
+    regex(%r{href=.*?/dhcp[._-]v?(\d+(?:\.\d+)+(?:-P\d+)?)\.t}i)
+  end
 
   bottle do
-    sha256 "d9961821503dd2dbd1e81001cdc58125e92d1c33ecd1d46d834a64ebc59e27d2" => :mojave
-    sha256 "eea8d134e6003550ee99f8e7d81d2869fa0eb73f1986e06073561c630ed2966c" => :high_sierra
-    sha256 "461dd0ba33e5d16684db8a65f757cd3e0a1c6e9a5d5ba657a20819ab6acc3ff4" => :sierra
-    sha256 "ae9ef8eb1f904486ec7267b381d9703608fb7d7420b5e9c05bbae1c9e725085f" => :el_capitan
+    sha256 arm64_big_sur: "e994c20125e327516a98e9e7ea2f335dea02475c5b0307fb5b0a4ba172db0de6"
+    sha256 big_sur:       "5a7fa9501471abcbcfa6b16fdea099147b7c4540d3e75a91deba3c4385d4a897"
+    sha256 catalina:      "e2e473a84b9aa792d7f69be63c53cd32977fd9382346c4065edc60fafecef2cc"
+    sha256 mojave:        "1f4db32d6c086309ec633241b3106bfcf3cb13902eb529318b7f7b881258024a"
+    sha256 x86_64_linux:  "71ee54c56a1e20e9a7c3b745fd5abb2987dfe09ab5ef6f8759dd8ab7ade01df2"
   end
 
   def install
@@ -38,7 +46,7 @@ class IscDhcp < Formula
     end
 
     # See discussion at: https://gist.github.com/1157223
-    ENV.append "CFLAGS", "-D__APPLE_USE_RFC_3542" if MacOS.version >= :lion
+    ENV.append "CFLAGS", "-D__APPLE_USE_RFC_3542"
 
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
@@ -72,25 +80,26 @@ class IscDhcp < Formula
     (prefix+"homebrew.mxcl.dhcpd6.plist").chmod 0644
   end
 
-  def caveats; <<~EOS
-    This install of dhcpd expects config files to be in #{etc}.
-    All state files (leases and pids) are stored in #{var}/dhcpd.
+  def caveats
+    <<~EOS
+      This install of dhcpd expects config files to be in #{etc}.
+      All state files (leases and pids) are stored in #{var}/dhcpd.
 
-    Dhcpd needs to run as root since it listens on privileged ports.
+      Dhcpd needs to run as root since it listens on privileged ports.
 
-    There are two plists because a single dhcpd process may do either
-    DHCPv4 or DHCPv6 but not both. Use one or both as needed.
+      There are two plists because a single dhcpd process may do either
+      DHCPv4 or DHCPv6 but not both. Use one or both as needed.
 
-    Note that you must create the appropriate config files before starting
-    the services or dhcpd will refuse to run.
-      DHCPv4: #{etc}/dhcpd.conf
-      DHCPv6: #{etc}/dhcpd6.conf
+      Note that you must create the appropriate config files before starting
+      the services or dhcpd will refuse to run.
+        DHCPv4: #{etc}/dhcpd.conf
+        DHCPv6: #{etc}/dhcpd6.conf
 
-    Sample config files may be found in #{etc}.
-  EOS
+      Sample config files may be found in #{etc}.
+    EOS
   end
 
-  plist_options :startup => true
+  plist_options startup: true
 
   def plist
     <<~EOS
@@ -137,5 +146,10 @@ class IscDhcp < Formula
       </dict>
       </plist>
     EOS
+  end
+
+  test do
+    cp etc/"dhcpd.conf.example.sample", testpath/"dhcpd.conf"
+    system sbin/"dhcpd", "-cf", "#{testpath}/dhcpd.conf", "-t"
   end
 end

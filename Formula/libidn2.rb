@@ -1,15 +1,22 @@
 class Libidn2 < Formula
   desc "International domain name library (IDNA2008, Punycode and TR46)"
   homepage "https://www.gnu.org/software/libidn/#libidn2"
-  url "https://ftp.gnu.org/gnu/libidn/libidn2-2.0.5.tar.gz"
-  mirror "https://ftpmirror.gnu.org/libidn/libidn2-2.0.5.tar.gz"
-  sha256 "53f69170886f1fa6fa5b332439c7a77a7d22626a82ef17e2c1224858bb4ca2b8"
+  url "https://ftp.gnu.org/gnu/libidn/libidn2-2.3.2.tar.gz"
+  mirror "https://ftpmirror.gnu.org/libidn/libidn2-2.3.2.tar.gz"
+  sha256 "76940cd4e778e8093579a9d195b25fff5e936e9dc6242068528b437a76764f91"
+  license any_of: ["GPL-2.0-or-later", "LGPL-3.0-or-later"]
+
+  livecheck do
+    url :stable
+    regex(/href=.*?libidn2[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "bed41502a268a78e11ee1ae8fd055703445970304dc918c0ef91acdf88128fc2" => :mojave
-    sha256 "5a772d41138cf7d83e338011ae9e6c943206a6feef0f7ce6f4eb31527c96e991" => :high_sierra
-    sha256 "ac2891ed72664c65c95398d51b8350e76f41236899e3d6d346ffa0fad4ff00c1" => :sierra
-    sha256 "3a5558ab5f48f68b8d3f855343146a879b1b1a02811e6a6d5792e7da96bcd56b" => :el_capitan
+    sha256 arm64_big_sur: "dbaac7e6e29ffa8c7c2b5e152fd6ee0118e547f90dc4b180c7f168c2f681c5f4"
+    sha256 big_sur:       "d21350f576f9b9cd0512149164622671b71854da69947183bc84e09a3a257b89"
+    sha256 catalina:      "71c5f183ae570f9a77eb759ab2bd04d84eb5cb9cf9c9a3b7cd8879aad5966bcd"
+    sha256 mojave:        "9402e3774f00c5485dd341cf34c35c24de0dc9bb90b2d4057c22e432848e0f1f"
+    sha256 x86_64_linux:  "57a2bf8955bcc8c2661aec2b26acfb90ec50402d78afebb000a1f6b0c27421e4"
   end
 
   head do
@@ -19,6 +26,7 @@ class Libidn2 < Formula
     depends_on "automake" => :build
     depends_on "gengetopt" => :build
     depends_on "libtool" => :build
+    depends_on "ronn" => :build
   end
 
   depends_on "pkg-config" => :build
@@ -26,12 +34,7 @@ class Libidn2 < Formula
   depends_on "libunistring"
 
   def install
-    if build.head?
-      ENV["GEM_HOME"] = buildpath/"gem_home"
-      system "gem", "install", "ronn"
-      ENV.prepend_path "PATH", buildpath/"gem_home/bin"
-      system "./bootstrap"
-    end
+    system "./bootstrap" if build.head?
 
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",

@@ -3,22 +3,21 @@ class Gstreamermm < Formula
   homepage "https://gstreamer.freedesktop.org/bindings/cplusplus.html"
   url "https://download.gnome.org/sources/gstreamermm/1.10/gstreamermm-1.10.0.tar.xz"
   sha256 "be58fe9ef7d7e392568ec85e80a84f4730adbf91fb0355ff7d7c616675ea8d60"
-  revision 1
+  revision 6
 
   bottle do
-    cellar :any
-    sha256 "2d2eeee457fd5200f94197268f5afd93912997392837fd468756dc897f57b380" => :mojave
-    sha256 "9ad4843f35113436c3249f986482a26d9f0ed5d0f9c7f76e18e3a68255ba14f2" => :high_sierra
-    sha256 "0c8aaffbad1c3b96d22295789372169d31b8aa0f995a440d30bf2c379df9b85a" => :sierra
-    sha256 "81fa941e71fd8cd6fe63e89a594bfac17d88e82ce8d588041205d67c04de2806" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "ccfdabeca639a0c10260c232dc8f4a24af5fc7b4b8c9e5befee65be29314dbb1"
+    sha256 cellar: :any, big_sur:       "2b46f0bc113d6125e1823d24365a8c4c664576de16db5ad3ce2e2a0157b1f99a"
+    sha256 cellar: :any, catalina:      "f65023da1c10400540a04a1bb422f42342406d013e89a1344a04778283824eb8"
+    sha256 cellar: :any, mojave:        "d5cbb27b618ded15a4b8dd132195307927a03358a88575e4934d7b0da0148e75"
   end
 
+  disable! date: "2021-03-18", because: "is unmaintained upstream and does not build with glib 2.68.0+"
+
   depends_on "pkg-config" => :build
-  depends_on "glibmm"
+  depends_on "glibmm@2.66"
   depends_on "gst-plugins-base"
   depends_on "gstreamer"
-
-  needs :cxx11
 
   def install
     ENV.cxx11
@@ -40,10 +39,10 @@ class Gstreamermm < Formula
     EOS
     gettext = Formula["gettext"]
     glib = Formula["glib"]
-    glibmm = Formula["glibmm"]
+    glibmm = Formula["glibmm@2.66"]
     gst_plugins_base = Formula["gst-plugins-base"]
     gstreamer = Formula["gstreamer"]
-    libsigcxx = Formula["libsigc++"]
+    libsigcxx = Formula["libsigc++@2"]
     flags = %W[
       -I#{gettext.opt_include}
       -I#{glib.opt_include}/glib-2.0
@@ -87,9 +86,11 @@ class Gstreamermm < Formula
       -lgstsdp-1.0
       -lgsttag-1.0
       -lgstvideo-1.0
-      -lintl
       -lsigc-2.0
     ]
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cxx, "-std=c++11", "test.cpp", "-o", "test", *flags
     system "./test"
   end

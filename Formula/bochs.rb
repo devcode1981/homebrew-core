@@ -1,22 +1,27 @@
 class Bochs < Formula
   desc "Open source IA-32 (x86) PC emulator written in C++"
   homepage "https://bochs.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/bochs/bochs/2.6.9/bochs-2.6.9.tar.gz"
-  sha256 "ee5b677fd9b1b9f484b5aeb4614f43df21993088c0c0571187f93acb0866e98c"
-  revision 2
+  url "https://downloads.sourceforge.net/project/bochs/bochs/2.6.11/bochs-2.6.11.tar.gz"
+  sha256 "63897b41fbbbdfb1c492d3c4dee1edb4224282a07bbdf442a4a68c19bcc18862"
 
-  bottle do
-    sha256 "92cfa3291e3e8733d0902aaf5f2bcd3bb08c2649e2d305545eaa325e75c40755" => :mojave
-    sha256 "6704008062d55a66ca8a8ab359db801f806f5e40b18a2ae2af18ac76353ea187" => :high_sierra
-    sha256 "f866b444fc8dd6c31a5104d8f6115720bd0e0ee46775d92a4258f68ccea214ce" => :sierra
-    sha256 "d7c0d5ee817ba9f3c596ab6364c62b0160c74aefce2db1033438cb17978a8291" => :el_capitan
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/bochs[._-]v?(\d+(?:\.\d+)+)\.t}i)
   end
 
-  option "with-gdb-stub", "Enable GDB Stub"
-  option "without-sdl2", "Disable graphical support"
+  bottle do
+    sha256 arm64_big_sur: "6d5a614bcdfd6fd732e1d970a20cf41ef138544c2fc83c01e40fa76d182d4e7c"
+    sha256 big_sur:       "9fc8197b7d04be3b5eafcc970ea167d3a91997ad5e4b30a7d56c0725f61190d4"
+    sha256 catalina:      "b6d43a6a60360e0d84ebd2ad9ae7724c413a1f2332c59065fb09c2004d76b723"
+    sha256 mojave:        "74fb37178645c4d2b52eec5684931ca215dc2f75794e1cf45b3f6e2b85263819"
+    sha256 high_sierra:   "f8c79923292849eebece21d9c5ed1028db729d4d25dc1e045a7c8e0f0dcf450b"
+  end
 
   depends_on "pkg-config" => :build
-  depends_on "sdl2" => :recommended
+  depends_on "libtool"
+  depends_on "sdl2"
+
+  uses_from_macos "ncurses"
 
   # Fix pointer cast issue
   # https://sourceforge.net/p/bochs/patches/537/
@@ -30,40 +35,34 @@ class Bochs < Formula
   def install
     args = %W[
       --prefix=#{prefix}
-      --with-nogui
-      --enable-disasm
       --disable-docbook
-      --enable-x86-64
-      --enable-pci
-      --enable-all-optimizations
-      --enable-plugins
-      --enable-cdrom
       --enable-a20-pin
-      --enable-fpu
       --enable-alignment-check
-      --enable-large-ramfile
-      --enable-debugger-gui
-      --enable-readline
-      --enable-iodebug
-      --enable-show-ips
-      --enable-logging
-      --enable-usb
-      --enable-cpu-level=6
-      --enable-clgd54xx
+      --enable-all-optimizations
       --enable-avx
-      --enable-vmx=2
+      --enable-evex
+      --enable-cdrom
+      --enable-clgd54xx
+      --enable-cpu-level=6
+      --enable-debugger
+      --enable-debugger-gui
+      --enable-disasm
+      --enable-fpu
+      --enable-iodebug
+      --enable-large-ramfile
+      --enable-logging
       --enable-long-phy-address
+      --enable-pci
+      --enable-plugins
+      --enable-readline
+      --enable-show-ips
+      --enable-usb
+      --enable-vmx=2
+      --enable-x86-64
+      --with-nogui
+      --with-sdl2
       --with-term
     ]
-
-    args << "--with-sdl2" if build.with? "sdl2"
-
-    if build.with? "gdb-stub"
-      args << "--enable-gdb-stub"
-    else
-      args << "--enable-debugger"
-      args << "--enable-smp"
-    end
 
     system "./configure", *args
 
@@ -88,12 +87,11 @@ class Bochs < Formula
     EOS
 
     command = "#{bin}/bochs -qf bochsrc.txt"
-    if build.without? "gdb-stub"
-      # When the debugger is enabled, bochs will stop on a breakpoint early
-      # during boot. We can pass in a command file to continue when it is hit.
-      (testpath/"debugger.txt").write("c\n")
-      command << " -rc debugger.txt"
-    end
+
+    # When the debugger is enabled, bochs will stop on a breakpoint early
+    # during boot. We can pass in a command file to continue when it is hit.
+    (testpath/"debugger.txt").write("c\n")
+    command << " -rc debugger.txt"
 
     _, stderr, = Open3.capture3(command)
     assert_match(expected, stderr)

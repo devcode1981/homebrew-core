@@ -1,28 +1,23 @@
 class Gifski < Formula
   desc "Highest-quality GIF encoder based on pngquant"
   homepage "https://gif.ski/"
-  url "https://github.com/ImageOptim/gifski/archive/0.8.5.tar.gz"
-  sha256 "0c4f946e873e26777423e1bab37392220aec9382ae818866d2e3a52b3c976cf1"
+  url "https://github.com/ImageOptim/gifski/archive/1.2.6.tar.gz"
+  sha256 "60af3329dfb8e86626e3251f57e13b4cfc0db79c4324ffbdbae3a9d7462cd1ed"
+  license "AGPL-3.0-only"
 
   bottle do
-    sha256 "acf76ee232c73d8682814ef3eaebd143314d8406d972e5f93042ac579d263a12" => :mojave
-    sha256 "ba26d7e59f381268f03c80539710060b6be978a214d1b0d7fda441c7e1aadd98" => :high_sierra
-    sha256 "b4c232f074255a72f3886e2372f62d668d17b106392ed5c4a5fda1b57aa57275" => :sierra
-    sha256 "b93399bf691af7d49c3f84930435c6bc516dc43aeebee1381615b9f032ffad78" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "5a4a8e2702fda194cfb372519d7740f2d82ccb5c1d165672210ed2c21fbeef80"
+    sha256 cellar: :any, big_sur:       "b0269f2aa746e8a4dcdeb5f27a7b91c0e894d73c2b5d8b3a4df1b1bf8aaa115f"
+    sha256 cellar: :any, catalina:      "ac9547281d15c75a5725aa21fa3d8b974c7b8b08e580d00c72e5d8058d1b696d"
+    sha256 cellar: :any, mojave:        "e06d9be5f774a40f746b99046ac7e7c8c517c9a84a9b15ca2b1231fbe6287e09"
   end
-
-  option "with-openmp", "Enable OpenMP multithreading"
 
   depends_on "pkg-config" => :build
   depends_on "rust" => :build
-  depends_on "gcc" if build.with? "openmp"
-
-  fails_with :clang if build.with? "openmp"
+  depends_on "ffmpeg"
 
   def install
-    args = []
-    args << "--features=openmp" if build.with? "openmp"
-    system "cargo", "install", "--root", prefix, "--path", ".", *args
+    system "cargo", "install", "--features=video", *std_cargo_args
   end
 
   test do

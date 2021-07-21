@@ -1,16 +1,16 @@
 class Tenyr < Formula
   desc "32-bit computing environment (including simulated CPU)"
-  homepage "http://tenyr.info/"
-  url "https://github.com/kulp/tenyr/archive/v0.9.6.tar.gz"
-  sha256 "04b92514927abfb5b7814a203bd296e8b528ae759c755402427db4cbc3ddbc47"
-  head "https://github.com/kulp/tenyr.git", :branch => "develop"
+  homepage "https://tenyr.info/"
+  url "https://github.com/kulp/tenyr/archive/v0.9.8.tar.gz"
+  sha256 "08dd2e5380de5ba23703f92621a0bc249d0f1fac8e581158572ed039dca72309"
+  license "MIT"
+  head "https://github.com/kulp/tenyr.git", branch: "develop"
 
   bottle do
-    cellar :any
-    sha256 "79f1f08181a4a3563a95e002068cde55db5dd83f1e67e4baa10937659d72bb97" => :mojave
-    sha256 "7ed5a7f7573c9970216c21dc1586fef1107ea97e20f143dd11ee41c6627d13b3" => :high_sierra
-    sha256 "0b734e40019ad537072b648526d08c6d34c669251ca5bb8b4c22a3c2bd3ea745" => :sierra
-    sha256 "1b09019bb0131b4ce6599612e55a828d22390757473c22dceab47aa30671fd1f" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "d7534b8f75f3e9a6ceac1f1558b9446ad49af76e510075c989f37af79578f3b7"
+    sha256 cellar: :any, big_sur:       "da43ae225d840b6b9848228b32cbd6bf57788ddf496d6caab2657b9da2134bf7"
+    sha256 cellar: :any, catalina:      "0991aa650dda340466acc2a425ee4f8e87c29ae937eed4edae3c44c4680985c6"
+    sha256 cellar: :any, mojave:        "5fecaf3174f726e8387635af1c7607206f5a66a60bb7f1964dc5281a2473b9f3"
   end
 
   depends_on "bison" => :build # tenyr requires bison >= 2.5

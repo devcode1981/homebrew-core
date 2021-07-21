@@ -1,50 +1,69 @@
 class Gjs < Formula
   desc "JavaScript Bindings for GNOME"
   homepage "https://gitlab.gnome.org/GNOME/gjs/wikis/Home"
-  url "https://download.gnome.org/sources/gjs/1.54/gjs-1.54.3.tar.xz"
-  sha256 "76b30dcc3ce9836c053aee531aa9f1d9d3f94b8503adf0a5a7bd176c492ba6b1"
-  revision 1
+  url "https://download.gnome.org/sources/gjs/1.68/gjs-1.68.1.tar.xz"
+  sha256 "2ffa3ec2041104fcf9ab5dcc8f7cd9caa062278590318ffef9541956af5b4c70"
+  license all_of: ["LGPL-2.0-or-later", "MIT"]
 
   bottle do
-    sha256 "24aa07e4f1b1cb95a484900443d84e67a0658ac0b7a26ddb57423bfc7e230c21" => :mojave
-    sha256 "df28572c8f948665c8db1e7f56a9ebdf5ff543c45ccabd4af452a976f4bb9d86" => :high_sierra
-    sha256 "2d11f2ea7d0b1009c50865d71d8c66e2a6489ddbe165df1a1c9066c6f4c521dd" => :sierra
+    sha256 big_sur:  "09de9508a973b368bf81cd451429b27214e8ee97b3c098416aabb06076497bbc"
+    sha256 catalina: "bb5690af272dbed13331beeca7bcd2976b3b106362eead30a62db7cb2f5298a9"
+    sha256 mojave:   "6fce786edaf8c678fd3b56298991a01da89dee0b3bb41281f378fe7178ab067b"
   end
 
   depends_on "autoconf@2.13" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
+  depends_on "python@3.8" => :build
+  depends_on "rust" => :build
   depends_on "gobject-introspection"
   depends_on "gtk+3"
+  depends_on "llvm"
   depends_on "nspr"
   depends_on "readline"
 
-  resource "mozjs60" do
-    url "https://archive.mozilla.org/pub/firefox/releases/60.1.0esr/source/firefox-60.1.0esr.source.tar.xz"
-    sha256 "a4e7bb80e7ebab19769b2b8940966349136a99aabd497034662cffa54ea30e40"
+  resource "six" do
+    url "https://files.pythonhosted.org/packages/6b/34/415834bfdafca3c5f451532e8a8d9ba89a21c9743a0c59fbd0205c7f9426/six-1.15.0.tar.gz"
+    sha256 "30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"
   end
 
-  needs :cxx11
+  resource "mozjs78" do
+    url "https://archive.mozilla.org/pub/firefox/releases/78.10.1esr/source/firefox-78.10.1esr.source.tar.xz"
+    sha256 "c41f45072b0eb84b9c5dcb381298f91d49249db97784c7e173b5f210cd15cf3f"
+  end
 
   def install
     ENV.cxx11
-    ENV["_MACOSX_DEPLOYMENT_TARGET"] = ENV["MACOSX_DEPLOYMENT_TARGET"]
 
-    resource("mozjs60").stage do
+    resource("six").stage do
+      system Formula["python@3.8"].opt_bin/"python3", *Language::Python.setup_install_args(buildpath/"vendor")
+    end
+
+    resource("mozjs78").stage do
+      inreplace "build/moz.configure/toolchain.configure",
+                "sdk_max_version = Version('10.15.4')",
+                "sdk_max_version = Version('11.99')"
       inreplace "config/rules.mk",
                 "-install_name $(_LOADER_PATH)/$(SHARED_LIBRARY) ",
                 "-install_name #{lib}/$(SHARED_LIBRARY) "
       inreplace "old-configure", "-Wl,-executable_path,${DIST}/bin", ""
+
       mkdir("build") do
-        ENV["PYTHON"] = "python"
+        xy = Language::Python.major_minor_version "python3"
+        ENV.prepend_create_path "PYTHONPATH", buildpath/"vendor/lib/python#{xy}/site-packages"
+        ENV["PYTHON"] = Formula["python@3.8"].opt_bin/"python3"
+        ENV["_MACOSX_DEPLOYMENT_TARGET"] = ENV["MACOSX_DEPLOYMENT_TARGET"]
+        ENV["CC"] = Formula["llvm"].opt_bin/"clang"
+        ENV["CXX"] = Formula["llvm"].opt_bin/"clang++"
+        ENV.prepend_path "PATH", buildpath/"autoconf/bin"
         system "../js/src/configure", "--prefix=#{prefix}",
                               "--with-system-nspr",
                               "--with-system-zlib",
                               "--with-system-icu",
                               "--enable-readline",
                               "--enable-shared-js",
-                              "--with-pthreads",
                               "--enable-optimize",
-                              "--enable-pie",
                               "--enable-release",
                               "--with-intl-api",
                               "--disable-jemalloc"
@@ -64,19 +83,34 @@ class Gjs < Formula
       rm "#{lib}/libjs_static.ajs"
     end
 
-    system "./configure", "--disable-debug",
-                          "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--without-dbus-tests",
-                          "--disable-profiler",
-                          "--prefix=#{prefix}"
-    system "make", "install"
+    # ensure that we don't run the meson post install script
+    ENV["DESTDIR"] = "/"
+
+    args = std_meson_args + %w[
+      -Dprofiler=disabled
+      -Dinstalled_tests=false
+      -Dbsymbolic_functions=false
+      -Dskip_dbus_tests=true
+      -Dskip_gtk_tests=true
+    ]
+
+    mkdir "build" do
+      system "meson", *args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
+  end
+
+  def post_install
+    system "#{Formula["glib"].opt_bin}/glib-compile-schemas", "#{HOMEBREW_PREFIX}/share/glib-2.0/schemas"
   end
 
   test do
     (testpath/"test.js").write <<~EOS
       #!/usr/bin/env gjs
       const GLib = imports.gi.GLib;
+      if (31 != GLib.Date.get_days_in_month(GLib.DateMonth.JANUARY, 2000))
+        imports.system.exit(1)
     EOS
     system "#{bin}/gjs", "test.js"
   end

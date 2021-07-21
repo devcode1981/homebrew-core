@@ -1,42 +1,47 @@
 class Boost < Formula
   desc "Collection of portable C++ source libraries"
   homepage "https://www.boost.org/"
-  url "https://dl.bintray.com/boostorg/release/1.68.0/source/boost_1_68_0.tar.bz2"
-  sha256 "7f6130bc3cf65f56a618888ce9d5ea704fa10b462be126ad053e80e553d6d8b7"
+  url "https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2"
+  sha256 "f0397ba6e982c4450f27bf32a2a83292aba035b827a5623a14636ea583318c41"
+  license "BSL-1.0"
   head "https://github.com/boostorg/boost.git"
 
-  bottle do
-    cellar :any
-    sha256 "d447d437cd81b059b61fef235e8f2099434a587fff3af319b8f32971096da6ad" => :mojave
-    sha256 "07dbc64ae90c2d1a5d496621b47bcf4e8a660392a02d64fa5fe780dba5e47f88" => :high_sierra
-    sha256 "40f3b92d543b9ffe437f1724c26ab55f9873e59fdc7afd46d82c83239a03fa9b" => :sierra
+  livecheck do
+    url "https://www.boost.org/feed/downloads.rss"
+    regex(/>Version v?(\d+(?:\.\d+)+)</i)
   end
 
-  option "with-icu4c", "Build regexp engine with icu support"
-  option "without-single", "Disable building single-threading variant"
-  option "without-static", "Disable building static library variant"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "3a336c8b1a917f7d9c55abba2905be99dade914bf9b829aab9d5fb6069b6ffcc"
+    sha256 cellar: :any,                 big_sur:       "35c726d8bea731d85af3d6ba173e95b1726cdfac04e020e259937c8e99c3d4e7"
+    sha256 cellar: :any,                 catalina:      "758658d7f1f8cf6c6790609f2a0b0f8349993653c8afce66869ea91d57b1f26f"
+    sha256 cellar: :any,                 mojave:        "1b45c1009cef2b67b2ec21f86e0ff743f2efdbcb5af510067cba3587d44967cb"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6203e3d6ae16a3e71d79ad67763a59733e84457253c1d44b01a15a72623b8a95"
+  end
 
-  deprecated_option "with-icu" => "with-icu4c"
+  depends_on "icu4c"
 
-  depends_on "icu4c" => :optional
-
-  needs :cxx14
+  uses_from_macos "bzip2"
+  uses_from_macos "zlib"
 
   def install
     # Force boost to compile with the desired compiler
     open("user-config.jam", "a") do |file|
-      file.write "using darwin : : #{ENV.cxx} ;\n"
+      on_macos do
+        file.write "using darwin : : #{ENV.cxx} ;\n"
+      end
+      on_linux do
+        file.write "using gcc : : #{ENV.cxx} ;\n"
+      end
     end
 
     # libdir should be set by --prefix but isn't
-    bootstrap_args = ["--prefix=#{prefix}", "--libdir=#{lib}"]
-
-    if build.with? "icu4c"
-      icu4c_prefix = Formula["icu4c"].opt_prefix
-      bootstrap_args << "--with-icu=#{icu4c_prefix}"
-    else
-      bootstrap_args << "--without-icu"
-    end
+    icu4c_prefix = Formula["icu4c"].opt_prefix
+    bootstrap_args = %W[
+      --prefix=#{prefix}
+      --libdir=#{lib}
+      --with-icu=#{icu4c_prefix}
+    ]
 
     # Handle libraries that will not be built.
     without_libraries = ["python", "mpi"]
@@ -48,50 +53,28 @@ class Boost < Formula
     bootstrap_args << "--without-libraries=#{without_libraries.join(",")}"
 
     # layout should be synchronized with boost-python and boost-mpi
-    args = ["--prefix=#{prefix}",
-            "--libdir=#{lib}",
-            "-d2",
-            "-j#{ENV.make_jobs}",
-            "--layout=tagged",
-            "--user-config=user-config.jam",
-            "-sNO_LZMA=1",
-            "install"]
-
-    if build.with? "single"
-      args << "threading=multi,single"
-    else
-      args << "threading=multi"
-    end
-
-    if build.with? "static"
-      args << "link=shared,static"
-    else
-      args << "link=shared"
-    end
+    args = %W[
+      --prefix=#{prefix}
+      --libdir=#{lib}
+      -d2
+      -j#{ENV.make_jobs}
+      --layout=tagged-1.66
+      --user-config=user-config.jam
+      -sNO_LZMA=1
+      -sNO_ZSTD=1
+      install
+      threading=multi,single
+      link=shared,static
+    ]
 
     # Boost is using "clang++ -x c" to select C compiler which breaks C++14
     # handling using ENV.cxx14. Using "cxxflags" and "linkflags" still works.
     args << "cxxflags=-std=c++14"
-    if ENV.compiler == :clang
-      args << "cxxflags=-stdlib=libc++" << "linkflags=-stdlib=libc++"
-    end
+    args << "cxxflags=-stdlib=libc++" << "linkflags=-stdlib=libc++" if ENV.compiler == :clang
 
     system "./bootstrap.sh", *bootstrap_args
     system "./b2", "headers"
     system "./b2", *args
-  end
-
-  def caveats
-    s = ""
-    # ENV.compiler doesn't exist in caveats. Check library availability
-    # instead.
-    if Dir["#{lib}/libboost_log*"].empty?
-      s += <<~EOS
-        Building of Boost.Log is disabled because it requires newer GCC or Clang.
-      EOS
-    end
-
-    s
   end
 
   test do
@@ -114,7 +97,7 @@ class Boost < Formula
         return 0;
       }
     EOS
-    system ENV.cxx, "test.cpp", "-std=c++1y", "-L#{lib}", "-lboost_system", "-o", "test"
+    system ENV.cxx, "test.cpp", "-std=c++14", "-o", "test"
     system "./test"
   end
 end

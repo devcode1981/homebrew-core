@@ -1,57 +1,59 @@
 class Openttd < Formula
   desc "Simulation game based upon Transport Tycoon Deluxe"
   homepage "https://www.openttd.org/"
-  url "https://binaries.openttd.org/releases/1.8.0/openttd-1.8.0-source.tar.xz"
-  sha256 "c2d32d9d736d27202a020027a3729ae763f5432ae6f424891e57a4095eeb087f"
-  head "https://git.openttd.org/openttd/trunk.git"
+  url "https://cdn.openttd.org/openttd-releases/1.11.2/openttd-1.11.2-source.tar.xz"
+  sha256 "0fba935a2a815f4fe8cd6dc2e2ae33f72769538731228f848a63b3a6e9482e6d"
+  license "GPL-2.0-only"
+  head "https://github.com/OpenTTD/OpenTTD.git"
 
-  bottle do
-    sha256 "5525bc99e1a325df855a27cc443b2a7ac92e618ae713be9392f52903d92530e0" => :mojave
-    sha256 "e5d194e126ec516ca84a4f9187e8415953cf64e319dfe31dedd1bdaa2a4e2339" => :high_sierra
-    sha256 "5d74a4c682236213f06a7cdeae2f62f462d59f445a66719fe86e82a872ff112e" => :sierra
-    sha256 "b2b8d6cf06c840acbf425d4b89daf146541d46f19cd3aa7f09a622d7897b3a9f" => :el_capitan
+  livecheck do
+    url :homepage
+    regex(/Download stable \((\d+(\.\d+)+)\)/i)
   end
 
-  depends_on "pkg-config" => :build
+  bottle do
+    sha256 cellar: :any, big_sur:  "b6622b443f75f7e3a1ffe8934126abb27015ee411760d8da877915e7510ba87f"
+    sha256 cellar: :any, catalina: "8fcdb977e1c8cccd09f58e76ed7f5d8da68ae4920a1663942eb7254f96acfe7b"
+    sha256 cellar: :any, mojave:   "e319820fb6a08d4d1f7a3ed255c3ba11285aeca31c15d6a9743c0c24830900e1"
+  end
+
+  depends_on "cmake" => :build
+  depends_on "libpng"
   depends_on "lzo"
+  depends_on macos: :high_sierra # needs C++17
   depends_on "xz"
 
   resource "opengfx" do
-    url "https://bundles.openttdcoop.org/opengfx/releases/0.5.4/opengfx-0.5.4.zip"
-    sha256 "3d136d776906dbe8b5df1434cb9a68d1249511a3c4cfaca55cc24cc0028ae078"
-  end
-
-  resource "opensfx" do
-    url "https://bundles.openttdcoop.org/opensfx/releases/0.2.3/opensfx-0.2.3.zip"
-    sha256 "3574745ac0c138bae53b56972591db8d778ad9faffd51deae37a48a563e71662"
+    url "https://cdn.openttd.org/opengfx-releases/0.6.1/opengfx-0.6.1-all.zip"
+    sha256 "c694a112cd508d9c8fdad1b92bde05e7c48b14d66bad0c3999e443367437e37e"
   end
 
   resource "openmsx" do
-    url "https://bundles.openttdcoop.org/openmsx/releases/0.3.1/openmsx-0.3.1.zip"
-    sha256 "92e293ae89f13ad679f43185e83fb81fb8cad47fe63f4af3d3d9f955130460f5"
+    url "https://cdn.openttd.org/openmsx-releases/0.4.0/openmsx-0.4.0-all.zip"
+    sha256 "7698cadf06c44fb5e847a5773a22a4a1ea4fc0cf45664181254656f9e1b27ee2"
+  end
+
+  resource "opensfx" do
+    url "https://cdn.openttd.org/opensfx-releases/1.0.1/opensfx-1.0.1-all.zip"
+    sha256 "37b825426f1d690960313414423342733520d08916f512f30f7aaf30910a36c5"
   end
 
   def install
-    system "./configure", "--prefix-dir=#{prefix}"
-    system "make", "bundle"
+    mkdir "build" do
+      system "cmake", "..", *std_cmake_args
+      system "make"
+      system "cpack || :"
+    end
 
-    (buildpath/"bundle/OpenTTD.app/Contents/Resources/data/opengfx").install resource("opengfx")
-    (buildpath/"bundle/OpenTTD.app/Contents/Resources/data/opensfx").install resource("opensfx")
-    (buildpath/"bundle/OpenTTD.app/Contents/Resources/gm/openmsx").install resource("openmsx")
-
-    prefix.install "bundle/OpenTTD.app"
+    app = "build/_CPack_Packages/amd64/Bundle/openttd-#{version}-macos-amd64/OpenTTD.app"
+    resources.each do |r|
+      (buildpath/"#{app}/Contents/Resources/baseset/#{r.name}").install r
+    end
+    prefix.install app
     bin.write_exec_script "#{prefix}/OpenTTD.app/Contents/MacOS/openttd"
   end
 
-  def caveats
-    <<~EOS
-      If you have access to the sound and graphics files from the original
-      Transport Tycoon Deluxe, you can install them by following the
-      instructions in section 4.1 of #{prefix}/readme.txt
-    EOS
-  end
-
   test do
-    assert_match /OpenTTD #{version}\n/, shell_output("#{bin}/openttd -h")
+    assert_match "OpenTTD #{version}\n", shell_output("#{bin}/openttd -h")
   end
 end

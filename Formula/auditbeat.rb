@@ -1,58 +1,43 @@
 class Auditbeat < Formula
   desc "Lightweight Shipper for Audit Data"
   homepage "https://www.elastic.co/products/beats/auditbeat"
-  # Pinned at 6.2.x because of a licencing issue
-  # See: https://github.com/Homebrew/homebrew-core/pull/28995
-  url "https://github.com/elastic/beats/archive/v6.2.4.tar.gz"
-  sha256 "87d863cf55863329ca80e76c3d813af2960492f4834d4fea919f1d4b49aaf699"
+  url "https://github.com/elastic/beats.git",
+      tag:      "v7.13.3",
+      revision: "3ddad4cee7394d1643023604f246cd5ab6d8cfbb"
+  license "Apache-2.0"
   head "https://github.com/elastic/beats.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "ebd8f45921dbdd3089084bca6b48f3c91553007a2d42eb222e0b9cf15b1b6873" => :high_sierra
-    sha256 "26a317fa93b70509f8885b63981cf3dd7332b825f975f6ceb151b49baf26fe7f" => :sierra
-    sha256 "3d639a62737631ec77a87d4f9853f9d653982c39f05dad964cf94de04f9444b2" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "6b0939195c32886f717f464246f9eb6fd5d1ec2153881004a95b51b996485bb9"
+    sha256 cellar: :any_skip_relocation, big_sur:       "6a11de67523e4f6abd2d746245621d08e010cc60b1b46318449151892934e8cc"
+    sha256 cellar: :any_skip_relocation, catalina:      "7ab18e392772281ac141437a51ee2ea57feef124b1e293be45ed5800682b9db1"
+    sha256 cellar: :any_skip_relocation, mojave:        "dc93a121037a7bb93b961ee4c7cd00b3eac86e48e88b3fce31a775ad984b9c74"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d95e4b228724a43dbe6916519a2c562156baa2354008036d66893e681a09919c"
   end
 
   depends_on "go" => :build
-  depends_on "python@2" => :build
-
-  resource "virtualenv" do
-    url "https://files.pythonhosted.org/packages/b1/72/2d70c5a1de409ceb3a27ff2ec007ecdd5cc52239e7c74990e32af57affe9/virtualenv-15.2.0.tar.gz"
-    sha256 "1d7e241b431e7afce47e77f8843a276f652699d1fa4f93b9d8ce0076fd7b0b54"
-  end
-
-  # Patch required to build against go 1.10.
-  # May be removed once upstream beats project fully supports go 1.10.
-  patch do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/1ddc0e6/auditbeat/go1.10.diff"
-    sha256 "cf0988ba5ff5cc8bd7502671f08ea282b19720be42bea2aaf5c236b29a01a24f"
-  end
+  depends_on "mage" => :build
+  depends_on "python@3.9" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/elastic/beats").install buildpath.children
+    # remove non open source files
+    rm_rf "x-pack"
 
-    ENV.prepend_create_path "PYTHONPATH", buildpath/"vendor/lib/python2.7/site-packages"
+    cd "auditbeat" do
+      # don't build docs because it would fail creating the combined OSS/x-pack
+      # docs and we aren't installing them anyway
+      inreplace "magefile.go", "devtools.GenerateModuleIncludeListGo, Docs)",
+                               "devtools.GenerateModuleIncludeListGo)"
 
-    resource("virtualenv").stage do
-      system "python", *Language::Python.setup_install_args(buildpath/"vendor")
-    end
-
-    ENV.prepend_path "PATH", buildpath/"vendor/bin"
-
-    cd "src/github.com/elastic/beats/auditbeat" do
-      system "make"
       # prevent downloading binary wheels during python setup
-      system "make", "PIP_INSTALL_COMMANDS=--no-binary :all", "python-env"
-      system "make", "DEV_OS=darwin", "update"
+      system "make", "PIP_INSTALL_PARAMS=--no-binary :all", "python-env"
+      system "mage", "-v", "build"
+      system "mage", "-v", "update"
 
       (etc/"auditbeat").install Dir["auditbeat.*", "fields.yml"]
       (libexec/"bin").install "auditbeat"
-      prefix.install "_meta/kibana"
+      prefix.install "build/kibana"
     end
-
-    prefix.install_metafiles buildpath/"src/github.com/elastic/beats"
 
     (bin/"auditbeat").write <<~EOS
       #!/bin/sh
@@ -70,23 +55,8 @@ class Auditbeat < Formula
     (var/"log/auditbeat").mkpath
   end
 
-  plist_options :manual => "auditbeat"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN"
-    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>Program</key>
-        <string>#{opt_bin}/auditbeat</string>
-        <key>RunAtLoad</key>
-        <true/>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run opt_bin/"auditbeat"
   end
 
   test do
@@ -100,21 +70,15 @@ class Auditbeat < Formula
         path: "#{testpath}/auditbeat"
         filename: auditbeat
     EOS
-    pid = fork do
+    fork do
       exec "#{bin}/auditbeat", "-path.config", testpath/"config", "-path.data", testpath/"data"
     end
     sleep 5
-
-    begin
-      touch testpath/"files/touch"
-      sleep 30
-      s = IO.readlines(testpath/"auditbeat/auditbeat").last(1)[0]
-      assert_match "\"action\":\[\"created\"\]", s
-      realdirpath = File.realdirpath(testpath)
-      assert_match "\"path\":\"#{realdirpath}/files/touch\"", s
-    ensure
-      Process.kill "SIGINT", pid
-      Process.wait pid
-    end
+    touch testpath/"files/touch"
+    sleep 30
+    s = File.readlines(testpath/"auditbeat/auditbeat").last(1)[0]
+    assert_match(/"action":\["(initial_scan|created)"\]/, s)
+    realdirpath = File.realdirpath(testpath)
+    assert_match "\"path\":\"#{realdirpath}/files/touch\"", s
   end
 end

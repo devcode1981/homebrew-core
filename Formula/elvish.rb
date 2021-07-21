@@ -1,29 +1,24 @@
 class Elvish < Formula
   desc "Friendly and expressive shell"
   homepage "https://github.com/elves/elvish"
-  url "https://github.com/elves/elvish/archive/0.12.tar.gz"
-  sha256 "edd03f4acf50beb03a663804e4da8b9d13805d471245c47c1b71f24c125cb9a2"
+  url "https://github.com/elves/elvish/archive/v0.15.0.tar.gz"
+  sha256 "761739307c68fcbc51fd46c052c0a20ae848a30dba1ce3fbb6d27f99672f58e0"
+  license "BSD-2-Clause"
   head "https://github.com/elves/elvish.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a5b8320c45af0fd83e8ce937ec25d697e796e7fc89a4fddc9c0c5b1aff57da72" => :mojave
-    sha256 "a747baee9d6fdb09d9593a9afcb3a5dc0ed5a6a2d34eda0d4dded49cc4da6895" => :high_sierra
-    sha256 "387f1854614fc77af4321aab808a09df3c978a1364a233cdc0ff57c0d25485e1" => :sierra
-    sha256 "6f5b6d0c3a5b05a876f278b73c44efcaccb2b02a2b2f23ca4936992fd22555f2" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "79c48f95ff206c058f77401f776ca9696d68528eab1e1df26023eeab986646f5"
+    sha256 cellar: :any_skip_relocation, big_sur:       "4f94ee1690a4e64a5d8d6e3bac2494f8a1936ca9d9e3dece173ffc1e870e9a19"
+    sha256 cellar: :any_skip_relocation, catalina:      "5699b736a32e20ce52ad1ec440af26cb409be9bcb09512d82939d3ae743a51f1"
+    sha256 cellar: :any_skip_relocation, mojave:        "f39264950f60b3c7aeac77f179818d111ceebaea86f1e07cf914ff035d524d17"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "06e8b256ecc5a841eea28db7a7e76acb5c66d83af4473bdff931cf507c8b60f3"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/elves/elvish").install buildpath.children
-    cd "src/github.com/elves/elvish" do
-      system "go", "build", "-ldflags",
-             "-X github.com/elves/elvish/buildinfo.Version=#{version}", "-o",
-             bin/"elvish"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args, "-ldflags",
+           "-X github.com/elves/elvish/pkg/buildinfo.Version=#{version}"
   end
 
   test do

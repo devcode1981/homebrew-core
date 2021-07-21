@@ -1,16 +1,17 @@
 class MathComp < Formula
   desc "Mathematical Components for the Coq proof assistant"
   homepage "https://math-comp.github.io/math-comp/"
-  url "https://github.com/math-comp/math-comp/archive/mathcomp-1.7.0.tar.gz"
-  sha256 "69c01e99aad618fa9a0bb4a19af00827c505b8205816eb590e51abca49f4ef17"
-  revision 3
+  url "https://github.com/math-comp/math-comp/archive/mathcomp-1.12.0.tar.gz"
+  sha256 "a57b79a280e7e8527bf0d8710c1f65cde00032746b52b87be1ab12e6213c9783"
+  license "CECILL-B"
+  revision 5
   head "https://github.com/math-comp/math-comp.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "4b767eb03faffb0318d2757b1cb5ecd74ce630081dfd3fadf546c9378b5c8736" => :mojave
-    sha256 "b59397f2aa9112bcebac0fa50c0a5e78c7f80a21b99875065e09aa0c3879db50" => :high_sierra
-    sha256 "6870a4cbcf0d55293b9bf8f8c00376204184ffaa15d1c920b06eafc450686ec7" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "fba9e5fff8717ec206afc69fae6ee4af285625e381974e56367dd2f3a9d4fc1c"
+    sha256 cellar: :any_skip_relocation, big_sur:       "3e2692620ca6d753e7fe6f9122435cebdcf84f925fd227e058794195d8d80e61"
+    sha256 cellar: :any_skip_relocation, catalina:      "b750bc8c02d530d9ff1648f58e8c517e9c28117ca3834f14d78cf703785dc75c"
+    sha256 cellar: :any_skip_relocation, mojave:        "ea939ecf266cef2f643b2ecd72592a9c75b5baa943f44a75e30c5aa961a1b751"
   end
 
   depends_on "ocaml" => :build
@@ -47,6 +48,6 @@ class MathComp < Formula
 
     coqc = Formula["coq"].opt_bin/"coqc"
     cmd = "#{coqc} -R #{lib}/coq/user-contrib/mathcomp mathcomp testing.v"
-    assert_match /\Atest\s+: forall/, shell_output(cmd)
+    assert_match(/\Atest\s+: forall/, shell_output(cmd))
   end
 end

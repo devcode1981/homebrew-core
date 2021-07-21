@@ -1,34 +1,34 @@
 class Groovy < Formula
   desc "Java-based scripting language"
-  homepage "http://www.groovy-lang.org"
-  url "https://dl.bintray.com/groovy/maven/apache-groovy-binary-2.5.4.zip"
-  sha256 "b2c936069831861d89cb8cf771bfa8a739b1d03c4be01b62d94e453e4b0bc6e8"
+  homepage "https://www.groovy-lang.org/"
+  url "https://groovy.jfrog.io/artifactory/dist-release-local/groovy-zips/apache-groovy-binary-3.0.8.zip"
+  sha256 "87cf2a61b77f6378ae1081cfda9d14bc651271b25ffac57fc936cd17662e3240"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  livecheck do
+    url "https://groovy.jfrog.io/artifactory/dist-release-local/groovy-zips/"
+    regex(/href=.*?apache-groovy-binary[._-]v?(\d+(?:\.\d+)+)\.zip/i)
+  end
 
-  option "with-invokedynamic", "Install the InvokeDynamic version of Groovy"
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a662b91af3884d93c8bc7a9d318eb82c749ab76750100ba2ff2c4e1be87852f3"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b6e30d0087bd573350b73cef007f45dcf7f0652dbfab3b976150c7b9f5ff53ad"
+    sha256 cellar: :any_skip_relocation, catalina:      "b6e30d0087bd573350b73cef007f45dcf7f0652dbfab3b976150c7b9f5ff53ad"
+    sha256 cellar: :any_skip_relocation, mojave:        "b6e30d0087bd573350b73cef007f45dcf7f0652dbfab3b976150c7b9f5ff53ad"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "9e1e8ad43c0d8ec852bfd44f2b35ee54c98cf80aa84afe6e828b699fa737b930"
+  end
 
-  deprecated_option "invokedynamic" => "with-invokedynamic"
+  depends_on "openjdk"
 
-  # Groovy 2.5 requires JDK8+ to build and JDK7 is the minimum version of the JRE that we support.
-  depends_on :java => "1.7+"
-
-  conflicts_with "groovysdk", :because => "both install the same binaries"
+  conflicts_with "groovysdk", because: "both install the same binaries"
 
   def install
     # Don't need Windows files.
     rm_f Dir["bin/*.bat"]
 
-    if build.with? "invokedynamic"
-      Dir.glob("indy/*.jar") do |src_path|
-        dst_file = File.basename(src_path, "-indy.jar") + ".jar"
-        dst_path = File.join("lib", dst_file)
-        mv src_path, dst_path
-      end
-    end
-
     libexec.install "bin", "conf", "lib"
-    bin.install_symlink Dir["#{libexec}/bin/*"] - ["#{libexec}/bin/groovy.ico"]
+    bin.install Dir["#{libexec}/bin/*"] - ["#{libexec}/bin/groovy.ico"]
+    bin.env_script_all_files libexec/"bin", Language::Java.overridable_java_home_env
   end
 
   def caveats

@@ -3,26 +3,34 @@
 class Mercurial < Formula
   desc "Scalable distributed version control system"
   homepage "https://mercurial-scm.org/"
-  url "https://mercurial-scm.org/release/mercurial-4.8.1.tar.gz"
-  sha256 "48a45f5cde9104fbc2daf310d710d4ebf286d879b89fa327d24b005434b0fa21"
+  url "https://www.mercurial-scm.org/release/mercurial-5.8.1.tar.gz"
+  sha256 "81baa3fe2087bdda2dd119d7ea948f6badebaeb7b528a7d18b277e2ceb22b19b"
+  license "GPL-2.0-or-later"
 
-  bottle do
-    sha256 "a6a68bd355532a0684bc489bb873371cda8960f22a662330f28613b3419fc555" => :mojave
-    sha256 "45f5bf54d3c0ca324a3ae5cc8718e9d0de67410df767cb0ead5e586a951587b1" => :high_sierra
-    sha256 "f2f8e6ab878eb250f784cdacbece8b2d8a6f1a9639fa7ad3fd956750636dca89" => :sierra
+  livecheck do
+    url "https://www.mercurial-scm.org/release/"
+    regex(/href=.*?mercurial[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  depends_on "python@2" # does not support Python 3
+  bottle do
+    sha256 arm64_big_sur: "d0659402f0c17724e5010a285cf381b8d018e39dd0c28d552274e31f34de302d"
+    sha256 big_sur:       "e051ca9a45ca99ff0871a3e9f0ac27061ab4e8e2cb8326019d5b7e2a6e064f6f"
+    sha256 catalina:      "8f194726598cf4457bf06d3806ebc88175a1bf7e1cc81ff8769661e6f7b64398"
+    sha256 mojave:        "082c55f177e2bd56909d7b34d20bfe73b27182a23a9dda18d2ba63d5561e4ce5"
+    sha256 x86_64_linux:  "309e0c1be449148424271dbf9169577c72b669ab8ab4cee59cb611d9ca55b8fc"
+  end
+
+  depends_on "python@3.9"
 
   def install
-    ENV.prepend_path "PATH", Formula["python@2"].opt_libexec/"bin"
+    ENV["HGPYTHON3"] = "1"
 
-    system "make", "PREFIX=#{prefix}", "install-bin"
+    system "make", "PREFIX=#{prefix}", "PYTHON=python3", "install-bin"
 
     # Install chg (see https://www.mercurial-scm.org/wiki/CHg)
     cd "contrib/chg" do
-      system "make", "PREFIX=#{prefix}", "HGPATH=#{bin}/hg", \
-             "HG=#{bin}/hg"
+      system "make", "PREFIX=#{prefix}", "PYTHON=python3", "HGPATH=#{bin}/hg",
+                     "HG=#{bin}/hg"
       bin.install "chg"
     end
 
@@ -45,8 +53,10 @@ class Mercurial < Formula
 
   def caveats
     return unless (opt_bin/"hg").exist?
+
     cacerts_configured = `#{opt_bin}/hg config web.cacerts`.strip
     return if cacerts_configured.empty?
+
     <<~EOS
       Homebrew has detected that Mercurial is configured to use a certificate
       bundle file as its trust store for TLS connections instead of using the

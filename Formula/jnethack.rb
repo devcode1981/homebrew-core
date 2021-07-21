@@ -1,85 +1,80 @@
-require "etc"
-
-# Nethack the way God intended it to be played: from a terminal.
-# This formula is based on Nethack formula.
+# NetHack the way God intended it to be played: from a terminal.
+# This formula is based on the NetHack formula.
 
 class Jnethack < Formula
-  desc "Japanese localization of Nethack"
+  desc "Japanese localization of NetHack"
   homepage "https://jnethack.osdn.jp/"
-  url "https://downloads.sourceforge.net/project/nethack/nethack/3.4.3/nethack-343-src.tgz"
-  version "3.4.3-0.11"
-  sha256 "bb39c3d2a9ee2df4a0c8fdde708fbc63740853a7608d2f4c560b488124866fe4"
+  # We use a git checkout to avoid patching the upstream NetHack tarball.
+  url "https://scm.osdn.net/gitroot/jnethack/source.git",
+      tag:      "v3.6.6-0.2",
+      revision: "1dff0026832d47d3c93ff263afad233cced3a387"
+  license "NGPL"
+  head "https://github.com/jnethack/jnethack-alpha.git", branch: "develop"
 
   bottle do
-    sha256 "54890df9ae6c932ed1ec36deb7892e5ddd28857e3740dd0c36f9d20f231caf3d" => :mojave
-    sha256 "7422717258f234810d99d330df0a0e99b90da7328db9324a92d39a63869e008b" => :high_sierra
-    sha256 "89c2fed343614d39084a8c59908032fe929e78c1572e92f50b9eafa4aca3860d" => :sierra
-    sha256 "c11837932635f89762360ad449e189c44e8213cb74f981ccb7908671a0e3ad4b" => :el_capitan
-    sha256 "f0c7c0c5bbf5c7d5b2d733fd76d49f31039b15c982a7ef7530444f734a41ec7c" => :yosemite
+    sha256 arm64_big_sur: "e47fb14c7fe6a0d6beb2ed26c0ff638a9ed01923ff52f128ae87403096f0e0c6"
+    sha256 big_sur:       "133ff48b209c6d3a4552a503bc494bec664757374047db3764998e4662e9aaef"
+    sha256 catalina:      "12fd8e36187747ecc39f95d51db36903890a57d21c04e46fee201b1d6d464331"
+    sha256 mojave:        "f142fc64a2a42b4b6d42a14b9c8afbdaa70c65d22e0a0bc3e8d2c63b503aeab0"
   end
 
-  # needs X11 locale for i18n
-  depends_on :x11
+  depends_on "nkf" => :build
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
 
   # Don't remove save folder
   skip_clean "libexec/save"
 
-  patch do
-    # Canonical: https://osdn.net/dl/jnethack/jnethack-3.4.3-0.11.diff.gz
-    url "https://dotsrc.dl.osdn.net/osdn/jnethack/58545/jnethack-3.4.3-0.11.diff.gz"
-    sha256 "fbc071f6b33c53d89e8f13319ced952e605499a21d2086077296c631caff7389"
-  end
-
-  # Patch from MacPorts' jnethack portfile
-  patch do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/e9653f1/jnethack/3.4.3-0.11.patch"
-    sha256 "6340de3784ee7b4d35fcf715ebbf08ec8e20214b0c2ae53f9c717afdae467c46"
-  end
-
   def install
     # Build everything in-order; no multi builds.
     ENV.deparallelize
+    ENV.O0
 
-    ENV["HOMEBREW_CFLAGS"] = ENV.cflags
+    # Enable wizard mode for all users
+    inreplace "sys/unix/sysconf", /^WIZARDS=.*/, "WIZARDS=*"
 
-    # Symlink makefiles
-    system "sh", "sys/unix/setup.sh"
+    # Only this file is touched by jNetHack, so don't switch on macOS versions
+    inreplace "sys/unix/hints/macosx10.10" do |s|
+      # macOS clang doesn't support code page 932
+      s.gsub! "-fexec-charset=cp932", ""
+      s.change_make_var! "HACKDIR", libexec
+      s.change_make_var! "CHOWN", "true"
+      s.change_make_var! "CHGRP", "true"
+      # Setting VAR_PLAYGROUND preserves saves across upgrades. With a bit of
+      # work this could share leaderboards with English NetHack, however bones
+      # and save files are much tricker. We could set those separately but
+      # it's probably not worth the extra trouble. New curses backend is not
+      # supported by jNetHack.
+      s.gsub! "#WANT_WIN_CURSES=1", "CFLAGS+=-DVAR_PLAYGROUND='\"#{HOMEBREW_PREFIX}/share/jnethack\"'"
+    end
 
-    inreplace "include/config.h",
-      /^#\s*define HACKDIR.*$/,
-      "#define HACKDIR \"#{libexec}\""
+    # We use the Linux version due to code page 932 issues, but point the
+    # hints file to macOS
+    inreplace "japanese/set_lnx.sh", "linux", "macosx10.10"
+    system "sh", "japanese/set_lnx.sh"
+    system "make", "install"
+    bin.install_symlink libexec/"jnethack"
+  end
 
-    # Enable wizard mode for the current user
-    wizard = Etc.getpwuid.name
-
-    inreplace "include/config.h",
-      /^#\s*define\s+WIZARD\s+"wizard"/,
-      "#define WIZARD \"#{wizard}\""
-
-    inreplace "include/config.h",
-      /^#\s*define\s+WIZARD_NAME\s+"wizard"/,
-      "#define WIZARD_NAME \"#{wizard}\""
-
-    cd "dat" do
-      system "make"
-
-      %w[perm logfile].each do |f|
+  def post_install
+    # These need to exist (even if empty) otherwise NetHack won't start
+    savedir = HOMEBREW_PREFIX/"share/jnethack"
+    mkdir_p savedir
+    cd savedir do
+      %w[xlogfile logfile perm record].each do |f|
         touch f
-        libexec.install f
       end
-
-      # Stage the data
-      libexec.install %w[jhelp jhh jcmdhelp jhistory jopthelp jwizhelp dungeon license data jdata.base joracles options jrumors.tru jrumors.fal quest.dat jquest.txt]
-      libexec.install Dir["*.lev"]
+      mkdir_p "save"
+      touch "save/.keepme" # preserve on `brew cleanup`
     end
+    # Set group-writeable for multiuser installs
+    chmod "g+w", savedir
+    chmod "g+w", savedir/"save"
+  end
 
-    # Make the game
-    ENV.append_to_cflags "-I../include"
-    cd "src" do
-      system "make"
-    end
-
-    bin.install "src/jnethack"
-    (libexec+"save").mkpath
+  test do
+    system "#{bin}/jnethack", "-s"
+    assert_match (HOMEBREW_PREFIX/"share/jnethack").to_s,
+      shell_output("#{bin}/jnethack --showpaths")
   end
 end

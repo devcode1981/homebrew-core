@@ -1,16 +1,16 @@
 class StellarCore < Formula
-  desc "The backbone of the Stellar (XLM) network"
+  desc "Backbone of the Stellar (XLM) network"
   homepage "https://www.stellar.org/"
   url "https://github.com/stellar/stellar-core.git",
-      :tag      => "v10.0.0",
-      :revision => "1fc018b4f52e8c7e716b023ccf30600af5b4f66d"
+      tag:      "v17.2.0",
+      revision: "e47d483433ce4f7eaf0a0512e2556beb482c8851"
+  license "Apache-2.0"
   head "https://github.com/stellar/stellar-core.git"
 
   bottle do
-    cellar :any
-    sha256 "713ae3fcf00a522fa02c4086ca31139848278580587fa3658f10452476d7ac6d" => :mojave
-    sha256 "103de6a0ae5ef42cd2b8a91cdd681541d9458bde9932a00a6631ca72eaad8905" => :high_sierra
-    sha256 "daad2ec61b924be34738b0bb48cabbb2001d490f912f949d7576780ec6e1b004" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "ae0e82196cc5dc7cc18df23908047a4518c2552be2a581da28a971323e8a19eb"
+    sha256 cellar: :any, big_sur:       "beb829af51d6968cb1e882066b53d6afc1b34dbc8070946ef599ecb1e585a5d5"
+    sha256 cellar: :any, catalina:      "80d262fcf4e6d4063595d8a471410358995cab712897f8c859fed03825ff12db"
   end
 
   depends_on "autoconf" => :build
@@ -18,8 +18,23 @@ class StellarCore < Formula
   depends_on "libtool" => :build
   depends_on "pandoc" => :build
   depends_on "pkg-config" => :build
+  depends_on "parallel" => :test
+  depends_on "libpq"
+  depends_on "libpqxx"
   depends_on "libsodium"
-  depends_on "postgresql"
+  depends_on macos: :catalina # Requires C++17 filesystem
+
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
+
+  on_linux do
+    depends_on "gcc"
+  end
+
+  # Needs libraries at runtime:
+  # /usr/lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.22' not found
+  # Upstream has explicitly stated gcc-5 is too old: https://github.com/stellar/stellar-core/issues/1903
+  fails_with gcc: "5"
 
   def install
     system "./autogen.sh"
@@ -32,6 +47,8 @@ class StellarCore < Formula
   end
 
   test do
-    system "#{bin}/stellar-core", "--test", "'[bucket],[crypto],[herder],[upgrades],[accountsubentriescount],[bucketlistconsistent],[cacheisconsistent],[fs]'"
+    system "#{bin}/stellar-core", "test",
+      "'[bucket],[crypto],[herder],[upgrades],[accountsubentriescount]," \
+      "[bucketlistconsistent],[cacheisconsistent],[fs]'"
   end
 end

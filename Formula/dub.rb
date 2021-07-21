@@ -1,24 +1,38 @@
 class Dub < Formula
   desc "Build tool for D projects"
   homepage "https://code.dlang.org/getting_started"
-  url "https://github.com/dlang/dub/archive/v1.12.0.tar.gz"
-  sha256 "0c087eb98c9f251c36e54144a9258d53c6b9abf8b7481cecbf7461b7759627b9"
+  url "https://github.com/dlang/dub/archive/v1.26.0.tar.gz"
+  sha256 "53f32a2d4c933bf5743778b710c424f8f0bd0393bb32dc73b9756cf10750ae43"
+  license "MIT"
+  revision 1
   version_scheme 1
   head "https://github.com/dlang/dub.git"
 
-  bottle do
-    sha256 "82636980a98589818a65a844f5549fdb8114f74f792ce08c1fe39bf3d3b489b4" => :mojave
-    sha256 "c3acb05edca5afae5722aea2b07d8c7645f54d8b87e8edb419ef8da411008fd2" => :high_sierra
-    sha256 "7759e0daa3f929cfbbe892c3f07bfd25f5fe2a85a8f14e5875e309b79e223ceb" => :sierra
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
-  depends_on "dmd" => :build
-  depends_on "pkg-config" => :recommended
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "aed89a4331626f769cf82f04953ccd11a56e1cb10b7ab4d9df9ff1cc838cb3ee"
+    sha256 cellar: :any_skip_relocation, big_sur:       "f891c71fe183f54096242a21e2447cdf5220a29f354a09afd7bf2d1dfdc0a10c"
+    sha256 cellar: :any_skip_relocation, catalina:      "928e99e3ae98d0e02dc83ae1027feb31522fc0e0174a3d1e3a6870fad40f90fa"
+    sha256 cellar: :any_skip_relocation, mojave:        "e3443a9460e2e4e580e5545507bb808fc28d22707844142273e0a1bc74d7f24b"
+  end
+
+  depends_on "ldc" => :build
+  depends_on "pkg-config"
+
+  uses_from_macos "curl"
 
   def install
     ENV["GITVER"] = version.to_s
-    system "./build.sh"
+    system "ldc2", "-run", "./build.d"
+    system "bin/dub", "scripts/man/gen_man.d"
     bin.install "bin/dub"
+    man1.install Dir["scripts/man/*.1"]
+    zsh_completion.install "scripts/zsh-completion/_dub"
+    fish_completion.install "scripts/fish-completion/dub.fish"
   end
 
   test do

@@ -1,27 +1,28 @@
 class Ant < Formula
   desc "Java build tool"
   homepage "https://ant.apache.org/"
-  url "https://www.apache.org/dyn/closer.cgi?path=ant/binaries/apache-ant-1.10.5-bin.tar.xz"
-  sha256 "cebb705dbbe26a41d359b8be08ec066caba4e8686670070ce44bbf2b57ae113f"
+  url "https://www.apache.org/dyn/closer.lua?path=ant/binaries/apache-ant-1.10.11-bin.tar.xz"
+  mirror "https://archive.apache.org/dist/ant/binaries/apache-ant-1.10.11-bin.tar.xz"
+  sha256 "baa049855cdecbefa62539555824058e52412e5ebe8f102e1db944cb762e06d9"
+  license "Apache-2.0"
   head "https://git-wip-us.apache.org/repos/asf/ant.git"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "46a14d89d209b9f1442199a73c18f88c3f2d6a1ed9c68fb170cf3b4beb161b89"
+  end
 
-  keg_only :provided_by_macos if MacOS.version < :mavericks
-
-  option "with-ivy", "Install ivy dependency manager"
-  option "with-bcel", "Install Byte Code Engineering Library"
-
-  depends_on :java => "1.8+"
+  depends_on "openjdk"
 
   resource "ivy" do
-    url "https://www.apache.org/dyn/closer.cgi?path=ant/ivy/2.4.0/apache-ivy-2.4.0-bin.tar.gz"
-    sha256 "7a3d13a80b69d71608191463dfc2a74fff8ef638ce0208e70d54d28ba9785ee9"
+    url "https://www.apache.org/dyn/closer.lua?path=ant/ivy/2.5.0/apache-ivy-2.5.0-bin.tar.gz"
+    mirror "https://archive.apache.org/dist/ant/ivy/2.5.0/apache-ivy-2.5.0-bin.tar.gz"
+    sha256 "3855a5769b5dbeafa9fb6a00f130467fd0f89da684a0b33a91e3dc5dae2715c7"
   end
 
   resource "bcel" do
-    url "https://www.apache.org/dyn/closer.cgi?path=commons/bcel/binaries/bcel-6.2-bin.tar.gz"
-    sha256 "e5963ed50ef1f243f852a27efaf898c050a3b39721d147ccda8418c0b7255955"
+    url "https://www.apache.org/dyn/closer.lua?path=commons/bcel/binaries/bcel-6.5.0-bin.tar.gz"
+    mirror "https://archive.apache.org/dist/commons/bcel/binaries/bcel-6.5.0-bin.tar.gz"
+    sha256 "023114972b8a2c267f832eab9349b6b475e8c6df559f207e33324877cf17fa30"
   end
 
   def install
@@ -30,18 +31,16 @@ class Ant < Formula
     bin.install_symlink Dir["#{libexec}/bin/*"]
     rm bin/"ant"
     (bin/"ant").write <<~EOS
-      #!/bin/sh
-      #{libexec}/bin/ant -lib #{HOMEBREW_PREFIX}/share/ant "$@"
+      #!/bin/bash
+      JAVA_HOME="${JAVA_HOME:-#{Formula["openjdk"].opt_prefix}}" exec "#{libexec}/bin/ant" -lib #{HOMEBREW_PREFIX}/share/ant "$@"
     EOS
-    if build.with? "ivy"
-      resource("ivy").stage do
-        (libexec/"lib").install Dir["ivy-*.jar"]
-      end
+
+    resource("ivy").stage do
+      (libexec/"lib").install Dir["ivy-*.jar"]
     end
-    if build.with? "bcel"
-      resource("bcel").stage do
-        (libexec/"lib").install "bcel-#{resource("bcel").version}.jar"
-      end
+
+    resource("bcel").stage do
+      (libexec/"lib").install "bcel-#{resource("bcel").version}.jar"
     end
   end
 

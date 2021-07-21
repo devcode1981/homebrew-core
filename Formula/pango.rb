@@ -1,26 +1,22 @@
 class Pango < Formula
   desc "Framework for layout and rendering of i18n text"
   homepage "https://www.pango.org/"
-  url "https://download.gnome.org/sources/pango/1.42/pango-1.42.4.tar.xz"
-  sha256 "1d2b74cd63e8bd41961f2f8d952355aa0f9be6002b52c8aa7699d9f5da597c9d"
+  url "https://download.gnome.org/sources/pango/1.48/pango-1.48.7.tar.xz"
+  sha256 "28a82f6a6cab60aa3b75a90f04197ead2d311fa8fe8b7bfdf8666e2781d506dc"
+  license "LGPL-2.0-or-later"
+  head "https://gitlab.gnome.org/GNOME/pango.git"
 
   bottle do
-    sha256 "2e0b04d458fc0c856d41d14642af4cde2da7e98c241c40ed5188a803710d3921" => :mojave
-    sha256 "724efe4176988ca7dd3d5668929064d0a1ec9ed95de56cea5050c4b349a509b8" => :high_sierra
-    sha256 "707e4f73f2cb17cf3584312a7f768de4b2b7b1868b1620826f0ed93072b0a321" => :sierra
-    sha256 "63181347fdcedd1a797121b93126ed3e4a45907c39efa693b2803da112487f73" => :el_capitan
-  end
-
-  head do
-    url "https://gitlab.gnome.org/GNOME/pango.git"
-
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "gtk-doc" => :build
-    depends_on "libtool" => :build
+    sha256 cellar: :any, arm64_big_sur: "6c024689dda7c81c9b9820f47039439dbf6fb76b07019b193bfcfcb870a61347"
+    sha256 cellar: :any, big_sur:       "6e4ea6548bec96afff90a000459c7d7a817b575195535aa48f3b6d604b6c9a18"
+    sha256 cellar: :any, catalina:      "3cf7b0eaf5145497eb746304087d411be901f02ee0b746b697371e58ff9c9c48"
+    sha256 cellar: :any, mojave:        "5d5d81f5f8c07bc84b94dcf0578f1020c7a06fb4abd53dea467509a8bb016906"
+    sha256               x86_64_linux:  "571a0fea5d5c17ef0f011129a95ff5558a4d105cc5e51ca9067ce289b71c3390"
   end
 
   depends_on "gobject-introspection" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "cairo"
   depends_on "fontconfig"
@@ -28,25 +24,16 @@ class Pango < Formula
   depends_on "glib"
   depends_on "harfbuzz"
 
-  # This fixes a font-size problem in gtk
-  # For discussion, see https://bugzilla.gnome.org/show_bug.cgi?id=787867
-  patch do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/e0aa10/pango/pango_font_size.patch"
-    sha256 "d5ece753cf393ef507dd2b0415721b4381159da5e2f40793c6d85741b1b163bc"
-  end
-
   def install
-    system "./autogen.sh" if build.head?
-    system "./configure", "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--prefix=#{prefix}",
-                          "--with-html-dir=#{share}/doc",
-                          "--enable-introspection=yes",
-                          "--enable-static",
-                          "--without-xft"
-
-    system "make"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args,
+                      "-Ddefault_library=both",
+                      "-Dintrospection=enabled",
+                      "-Duse_fontconfig=true",
+                      ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
   end
 
   test do
@@ -69,6 +56,7 @@ class Pango < Formula
     freetype = Formula["freetype"]
     gettext = Formula["gettext"]
     glib = Formula["glib"]
+    harfbuzz = Formula["harfbuzz"]
     libpng = Formula["libpng"]
     pixman = Formula["pixman"]
     flags = %W[
@@ -78,6 +66,7 @@ class Pango < Formula
       -I#{gettext.opt_include}
       -I#{glib.opt_include}/glib-2.0
       -I#{glib.opt_lib}/glib-2.0/include
+      -I#{harfbuzz.opt_include}/harfbuzz
       -I#{include}/pango-1.0
       -I#{libpng.opt_include}/libpng16
       -I#{pixman.opt_include}/pixman-1
@@ -89,10 +78,12 @@ class Pango < Formula
       -lcairo
       -lglib-2.0
       -lgobject-2.0
-      -lintl
       -lpango-1.0
       -lpangocairo-1.0
     ]
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end

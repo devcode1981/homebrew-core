@@ -1,29 +1,28 @@
 class Modd < Formula
   desc "Flexible tool for responding to filesystem changes"
   homepage "https://github.com/cortesi/modd"
-  url "https://github.com/cortesi/modd/archive/v0.7.tar.gz"
-  sha256 "3619c9b8dd4f8ef5bf03f50b5841de114383dde9bc0bef866d0a8dc977bf3005"
+  url "https://github.com/cortesi/modd/archive/v0.8.tar.gz"
+  sha256 "04e9bacf5a73cddea9455f591700f452d2465001ccc0c8e6f37d27b8b376b6e0"
+  license "MIT"
   head "https://github.com/cortesi/modd.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "33b9f69c73faa25b4bfec3ae6103cca7cd41862a693292fbe934c244b89e3aac" => :mojave
-    sha256 "52d2eb11b69f8c6a3eec06e2d60864fd6bb32263f4f47f78d8ccd94f2f595759" => :high_sierra
-    sha256 "68214544aa3797bdc878ba397bbb1ca5e100a5159c3b90640f27f5d7ea7215b3" => :sierra
-    sha256 "300e0802cff775ae987e3036691b0474aececfb7f83819fdccd7fd1cce88df0e" => :el_capitan
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "dc3e926bb7282bd2019350646a48ec7fe88f1fb65e41156d250f3c969e7245ed"
+    sha256 cellar: :any_skip_relocation, big_sur:       "87423ac35521b65b0d45d6d7a1b0589bbfa57a14b62e3b9dcbb4e1e2a6e2f874"
+    sha256 cellar: :any_skip_relocation, catalina:      "0657ac604def86ff2bfac4797944290d0fc4afabee8855506901437d2870ce61"
+    sha256 cellar: :any_skip_relocation, mojave:        "c7a4a376466ad627e747c4054e6398fa4a8637e5542c2cf496740ea2b0db79ff"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "4ecbbb67e695368d3830b5c273f6abf7f659b73bcfe47c3f18332cf76fedf997"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOOS"] = "darwin"
-    ENV["GOARCH"] = MacOS.prefer_64_bit? ? "amd64" : "386"
     ENV["GOPATH"] = buildpath
-    ENV["GOBIN"] = bin
+    ENV["GO111MODULE"] = "auto"
     (buildpath/"src/github.com/cortesi/modd").install buildpath.children
     cd "src/github.com/cortesi/modd" do
-      system "go", "install", ".../cmd/modd"
-      prefix.install_metafiles
+      system "go", "build", *std_go_args, "./cmd/modd"
     end
   end
 

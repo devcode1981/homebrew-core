@@ -4,28 +4,38 @@ class GoAT19 < Formula
   url "https://dl.google.com/go/go1.9.7.src.tar.gz"
   mirror "https://fossies.org/linux/misc/go1.9.7.src.tar.gz"
   sha256 "582814fa45e8ecb0859a208e517b48aa0ad951e3b36c7fff203d834e0ef27722"
+  license "BSD-3-Clause"
 
   bottle do
-    sha256 "1a334f11789d867af6974b0b8c2c53444cbdaaf0422ea1f2bf5f3b25bd8d39df" => :mojave
-    sha256 "097a7bde112c08b746f167b1f10603cf714369fb90da1c4fe3ead6980ca319fb" => :high_sierra
-    sha256 "85b2bb9a42d7b414c31a98ab0fbdfcb3aa540ee663b157f1726f0d85abcb333b" => :sierra
-    sha256 "e87155e00891f02aa430d1cc2eee45448a836f044f40baaae6c58192269abe72" => :el_capitan
+    rebuild 2
+    sha256 big_sur:     "f62ef79df0624c9329edb96c40e65a3dbae0519885a7a6069059234e46999a2c"
+    sha256 catalina:    "c34c669ba94287eb0485513ad03416d531f0d4fb58908df4984ed85fd2c41b1e"
+    sha256 mojave:      "358e06f98931f9f9f2238e59c9ec40a4cc8526e518b8828c8b72543f6d40d9b0"
+    sha256 high_sierra: "be1bd13af09e6bf2ee698f98d80fbd99ac86858337d90fce6e2e86ecfd67b19f"
   end
 
   keg_only :versioned_formula
 
-  depends_on :macos => :mountain_lion
+  disable! date: "2021-02-16", because: :unsupported
+
+  depends_on arch: :x86_64
 
   resource "gotools" do
     url "https://go.googlesource.com/tools.git",
-        :branch => "release-branch.go1.9"
+        branch: "release-branch.go1.9"
   end
 
   # Don't update this unless this version cannot bootstrap the new version.
   resource "gobootstrap" do
-    url "https://storage.googleapis.com/golang/go1.7.darwin-amd64.tar.gz"
-    version "1.7"
-    sha256 "51d905e0b43b3d0ed41aaf23e19001ab4bc3f96c3ca134b48f7892485fc52961"
+    on_macos do
+      url "https://storage.googleapis.com/golang/go1.7.darwin-amd64.tar.gz"
+      sha256 "51d905e0b43b3d0ed41aaf23e19001ab4bc3f96c3ca134b48f7892485fc52961"
+    end
+
+    on_linux do
+      url "https://storage.googleapis.com/golang/go1.7.linux-amd64.tar.gz"
+      sha256 "702ad90f705365227e902b42d91dd1a40e48ca7f67a2f4b2fd052aaa4295cd95"
+    end
   end
 
   # Backports the following commit from 1.10/1.11:
@@ -35,13 +45,20 @@ class GoAT19 < Formula
     sha256 "771b67df44e3d5d5d7c01ea4a0d1693032bc880ea4f16cf82c1bacb42bfd9b10"
   end
 
+  # Prevents Go from building malformed binaries. Fixed upstream, should
+  # be in a future release.
+  # https://github.com/golang/go/issues/32673
+  patch do
+    url "https://github.com/golang/go/commit/26954bde4443c4bfbfe7608f35584b6b810f3f2c.patch?full_index=1"
+    sha256 "25a361bd4aa1155be06e2239c1974aa9c59f971210f19e16a3b7b576b9d4f677"
+  end
+
   def install
     (buildpath/"gobootstrap").install resource("gobootstrap")
     ENV["GOROOT_BOOTSTRAP"] = buildpath/"gobootstrap"
 
     cd "src" do
       ENV["GOROOT_FINAL"] = libexec
-      ENV["GOOS"]         = "darwin"
       system "./make.bash", "--no-clean"
     end
 
@@ -61,16 +78,6 @@ class GoAT19 < Formula
       (libexec/"bin").install "godoc"
     end
     bin.install_symlink libexec/"bin/godoc"
-  end
-
-  def caveats; <<~EOS
-    A valid GOPATH is required to use the `go get` command.
-    If $GOPATH is not specified, $HOME/go will be used by default:
-      https://golang.org/doc/code.html#GOPATH
-
-    You may wish to add the GOROOT-based install location to your PATH:
-      export PATH=$PATH:#{opt_libexec}/bin
-  EOS
   end
 
   test do

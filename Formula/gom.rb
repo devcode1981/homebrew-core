@@ -1,40 +1,33 @@
 class Gom < Formula
   desc "GObject wrapper around SQLite"
   homepage "https://wiki.gnome.org/Projects/Gom"
-  url "https://download.gnome.org/sources/gom/0.3/gom-0.3.3.tar.xz"
-  sha256 "ac57e34b5fe273ed306efaeabb346712c264e341502913044a782cdf8c1036d8"
-  revision 5
+  url "https://download.gnome.org/sources/gom/0.4/gom-0.4.tar.xz"
+  sha256 "68d08006aaa3b58169ce7cf1839498f45686fba8115f09acecb89d77e1018a9d"
+  revision 2
 
   bottle do
-    sha256 "20f9cc7aff0bce649e242e58c9b02938101c5fee37a4dde0941c76b7beded683" => :mojave
-    sha256 "90cc6ffc759414df0b846d26adf400ffc512c408854923e9aa34da0506351883" => :high_sierra
-    sha256 "e74c3a447e1732a170689526644c6d1f208ce4d48ba3c7f82de491f6c4620ca5" => :sierra
-    sha256 "7b08fdd3e5744b3bfa8e72333dde59a9a258692e680d67e191d09b0460008dc0" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "ff2ac0dfef03bd08c7f03f13595af2e1476c396163e57066726c92e06cbe4fba"
+    sha256 cellar: :any, big_sur:       "b8c298e1d442d15dd630bfe6b1edfeb11b77326b730237ffc4c6b3c607c48192"
+    sha256 cellar: :any, catalina:      "c86f525462ffd97cb6bd469b5a26d1db56281d725916d5eb524f31a4750b1892"
+    sha256 cellar: :any, mojave:        "afda0dc772004cee3b8148719a078f6ac2871480260f310a5d06e367dcd68412"
+    sha256 cellar: :any, high_sierra:   "cccd9551ffced0a1648ff2f420eb3e5666ff102b4c81d96806cd7d25068ef7d7"
+    sha256               x86_64_linux:  "f57d27a0f540e80aa766a48cfea50ab195cc904a31f56728172102c8233c4aed"
   end
 
   depends_on "gobject-introspection" => :build
-  depends_on "meson-internal" => :build
+  depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
+  depends_on "python@3.9" => :build
   depends_on "gdk-pixbuf"
   depends_on "gettext"
   depends_on "glib"
 
-  patch :DATA
-
   def install
-    ENV.refurbish_args
-
-    pyver = Language::Python.major_minor_version "python3"
-
-    # prevent sandbox violation
-    inreplace "bindings/python/meson.build",
-              "install_dir: pygobject_override_dir",
-              "install_dir: '#{lib}/python#{pyver}/site-packages'"
+    pyver = Language::Python.major_minor_version Formula["python@3.9"].opt_bin/"python3"
 
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", ".."
+      system "meson", *std_meson_args, "-Dpygobject-override-dir=#{lib}/python#{pyver}/site-packages", ".."
       system "ninja"
       system "ninja", "install"
     end
@@ -62,50 +55,11 @@ class Gom < Formula
       -lglib-2.0
       -lgobject-2.0
       -lgom-1.0
-      -lintl
     ]
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end
 end
-
-__END__
-diff --git a/bindings/python/meson.build b/bindings/python/meson.build
-index feb4a9c..2fda8c1 100644
---- a/bindings/python/meson.build
-+++ b/bindings/python/meson.build
-@@ -1,33 +1 @@
--python3 = import('python3').find_python()
--
--get_overridedir = '''
--import os
--import sysconfig
--
--libdir = sysconfig.get_config_var('LIBDIR')
--
--if not libdir:
--  libdir = '/usr/lib'
--
--try:
--  import gi
--  overridedir = gi._overridesdir
--except ImportError:
--  purelibdir = sysconfig.get_path('purelib')
--  overridedir = os.path.join(purelibdir, 'gi', 'overrides')
--
--if overridedir.startswith(libdir): # Should always be True..
--  overridedir = overridedir[len(libdir) + 1:]
--
--print(overridedir)
--'''
--
--ret = run_command([python3, '-c', get_overridedir])
--
--if ret.returncode() != 0
--  error('Failed to determine pygobject overridedir')
--else
--  pygobject_override_dir = join_paths(get_option('libdir'), ret.stdout().strip())
--endif
--
- install_data('gi/overrides/Gom.py', install_dir: pygobject_override_dir)
-

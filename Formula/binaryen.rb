@@ -1,21 +1,27 @@
 class Binaryen < Formula
   desc "Compiler infrastructure and toolchain library for WebAssembly"
   homepage "https://webassembly.org/"
-  url "https://github.com/WebAssembly/binaryen/archive/version_58.tar.gz"
-  sha256 "faab2ee97a4adc2607ae058bc880a5c9b99fb613c9b8397c68adefe82436812b"
-  head "https://github.com/WebAssembly/binaryen.git"
+  url "https://github.com/WebAssembly/binaryen/archive/version_101.tar.gz"
+  sha256 "5d7cdec89957549f01b7c93f080d08827c87bbd4789a34694c740d15d077c041"
+  license "Apache-2.0"
+  head "https://github.com/WebAssembly/binaryen.git", branch: "main"
 
   bottle do
-    cellar :any
-    sha256 "4c957d81936142d9b1b26015d775dd0ff35eb53f75f6b9fc2dfab7501d5ad6fb" => :mojave
-    sha256 "6c96d4a4470c9dd828aa190fe04e3f9fd97d679b883d1c04d0ce96565f661318" => :high_sierra
-    sha256 "49a761699f2c17dd8c6008b33f9c423670715b5b4adbffec5a54e22c992043b1" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "7c9f6e7464dd612d8fd5ecf97eb28be3a0e785807656971760355dbaee2ab308"
+    sha256 cellar: :any,                 big_sur:       "b5b7f3d6275bcbb2497135dbaa92856172def96355c2e1c4dd3f6d11cbdd4f77"
+    sha256 cellar: :any,                 catalina:      "3c1ec0bef52f4113e4898aec902fb3a631aa36b4ee82c4cbd9732357c5f6f79d"
+    sha256 cellar: :any,                 mojave:        "d69a70807fee88c855c53594d135d358e9b51a4a7d9b50518c7ea09b0df76dc6"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "8f95c9ed168f39f4e5bea1ba2316257b42025ba80ffe9fb8208177e7a83b1e29"
   end
 
   depends_on "cmake" => :build
-  depends_on :macos => :el_capitan # needs thread-local storage
+  depends_on "python@3.9" => :build
 
-  needs :cxx11
+  on_linux do
+    depends_on "gcc"
+  end
+
+  fails_with gcc: "5"
 
   def install
     ENV.cxx11
@@ -27,7 +33,6 @@ class Binaryen < Formula
   end
 
   test do
-    system "#{bin}/wasm-opt", "#{pkgshare}/test/passes/O.wast"
-    system "#{bin}/asm2wasm", "#{pkgshare}/test/hello_world.asm.js"
+    system "#{bin}/wasm-opt", "-O", "#{pkgshare}/test/passes/O.wast", "-o", "1.wast"
   end
 end

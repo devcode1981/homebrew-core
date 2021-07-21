@@ -1,19 +1,21 @@
 class Ncmpcpp < Formula
   desc "Ncurses-based client for the Music Player Daemon"
   homepage "https://rybczak.net/ncmpcpp/"
-  url "https://rybczak.net/ncmpcpp/stable/ncmpcpp-0.8.2.tar.bz2"
-  sha256 "650ba3e8089624b7ad9e4cc19bc1ac6028edb7523cc111fa1686ea44c0921554"
-  revision 2
+  url "https://rybczak.net/ncmpcpp/stable/ncmpcpp-0.9.2.tar.bz2"
+  sha256 "faabf6157c8cb1b24a059af276e162fa9f9a3b9cd3810c43b9128860c9383a1b"
+  license "GPL-2.0-or-later"
+  revision 3
 
   bottle do
-    cellar :any
-    sha256 "e4d08914a6a702889887350dc4a69bedb21dc3b5791a052bb9fd45264c4642b9" => :mojave
-    sha256 "9295452e597f8596e06cb4a82b070c060efa018a144dd1c9dd2687adb01889d7" => :high_sierra
-    sha256 "b5c1a6f409183d5345c2946977de4a6927894ef4e86fa4a05fee5d978c8a0699" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "589a36dfb83da7b7093605e58cdf6a9ae6f58e8bc915fc84a937742b17aafad6"
+    sha256 cellar: :any,                 big_sur:       "94f81334cde20719c43ff2e31cd89b89fe05b79e072f91e9ad5a9e8b104e7453"
+    sha256 cellar: :any,                 catalina:      "491b03399a3f52b0ae8bd5ffd4ccbe34bff8565f1a5898d60c0a6c04e1bc43db"
+    sha256 cellar: :any,                 mojave:        "228570b600da1e6001294be6761a84cf93f373a6d32aadbe38c7f239158835cd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "566109600ff2e4cf3988ba0031501c0f917ee9b9dd2d69f30a100f3016fc3c98"
   end
 
   head do
-    url "https://github.com/arybczak/ncmpcpp.git"
+    url "https://github.com/ncmpcpp/ncmpcpp.git"
 
     depends_on "autoconf" => :build
     depends_on "automake" => :build
@@ -28,11 +30,15 @@ class Ncmpcpp < Formula
   depends_on "readline"
   depends_on "taglib"
 
-  needs :cxx11
+  uses_from_macos "curl"
 
   def install
     ENV.cxx11
-    ENV.append "LDFLAGS", "-liconv"
+
+    on_macos do
+      ENV.append "LDFLAGS", "-liconv"
+    end
+
     ENV.append "BOOST_LIB_SUFFIX", "-mt"
     ENV.append "CXXFLAGS", "-D_XOPEN_SOURCE_EXTENDED"
 

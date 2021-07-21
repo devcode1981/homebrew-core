@@ -1,21 +1,25 @@
 class Zig < Formula
   desc "Programming language designed for robustness, optimality, and clarity"
   homepage "https://ziglang.org/"
-  url "https://github.com/ziglang/zig/archive/0.3.0.tar.gz"
-  sha256 "23ebb962823b2c78fd7bb16dd033b189c3050eee9991070debbd79c9b8648772"
+  # Re-enable C compilation test at 0.8.1
+  url "https://ziglang.org/download/0.8.0/zig-0.8.0.tar.xz"
+  sha256 "03a828d00c06b2e3bb8b7ff706997fd76bf32503b08d759756155b6e8c981e77"
+  license "MIT"
   head "https://github.com/ziglang/zig.git"
 
   bottle do
-    sha256 "93c95a500ebf3a57025a980aabeb47a9ffd93606ef7f67461b457a29f80663cb" => :mojave
-    sha256 "2debc5e9a4d567b8412aa38645f2bfe485eac79c4e953710d5c05e006b56ff4d" => :high_sierra
-    sha256 "2d57cb9516cc3d2d5f4c83c33beece104166c348808751d6195054f05858fcb2" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "cbfe30a9fc41655c96d04c98a00d4dd451823ee8f55afaa9387c9cf367f66c62"
+    sha256 cellar: :any,                 big_sur:       "740bcf88640b02fa8b21a6719c62c21afe3dd59ea60bb2a8d5efd4a3826fd5c7"
+    sha256 cellar: :any,                 catalina:      "be1c5cab5438eede09322ff1e896202f0cbfaafb0641a596fdd04f0f4f6c6d48"
+    sha256 cellar: :any,                 mojave:        "207446cc593dd0b1c63716d26bbb552a2242bc94fe19033df177186f610872df"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "4027f4cb54c30309dee5a697d39d8598e696e8f0c9760bccf47874db57c9d1a0"
   end
 
   depends_on "cmake" => :build
   depends_on "llvm"
 
   def install
-    system "cmake", ".", *std_cmake_args
+    system "cmake", ".", *std_cmake_args, "-DZIG_STATIC_LLVM=ON"
     system "make", "install"
   end
 
@@ -23,11 +27,25 @@ class Zig < Formula
     (testpath/"hello.zig").write <<~EOS
       const std = @import("std");
       pub fn main() !void {
-          var stdout_file = try std.io.getStdOut();
-          try stdout_file.write("Hello, world!");
+          const stdout = std.io.getStdOut().writer();
+          try stdout.print("Hello, world!", .{});
       }
     EOS
     system "#{bin}/zig", "build-exe", "hello.zig"
     assert_equal "Hello, world!", shell_output("./hello")
+
+    (testpath/"hello.c").write <<~EOS
+      #include <stdio.h>
+      int main() {
+        fprintf(stdout, "Hello, world!");
+        return 0;
+      }
+    EOS
+    # Compiling C is broken on Mojave. Re-enable at 0.8.1.
+    # https://github.com/ziglang/zig/issues/8999
+    if MacOS.version > :mojave
+      system "#{bin}/zig", "cc", "hello.c", "-o", "hello"
+      assert_equal "Hello, world!", shell_output("./hello")
+    end
   end
 end

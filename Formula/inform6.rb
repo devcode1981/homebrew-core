@@ -1,20 +1,17 @@
 class Inform6 < Formula
   desc "Design system for interactive fiction"
   homepage "https://inform-fiction.org/inform6.html"
-  head "https://github.com/DavidGriffith/inform6unix.git"
-
-  stable do
-    url "https://ifarchive.org/if-archive/infocom/compilers/inform6/source/old/inform-6.33-6.12.1.tar.gz"
-    version "6.33-6.12.1"
-    sha256 "9170d6a0283aa65e1205621e89f78d674c8df978ee9c0b1c67f8b1aea4722a77"
-  end
+  url "https://ifarchive.org/if-archive/infocom/compilers/inform6/source/inform-6.34-6.12.4-1.tar.gz"
+  version "6.34-6.12.4-1"
+  sha256 "8cc1983c7bbed7f23fcf3cd549fe8dc10b1a506b95129c35e9f61d2e79b85295"
+  license "Artistic-2.0"
+  head "https://gitlab.com/DavidGriffith/inform6unix.git"
 
   bottle do
-    sha256 "30308254bda21b87550ffb0701e8264d58c8474ad8845d1767264bf7104c0dc0" => :mojave
-    sha256 "99fbc0e56d7a8eb8b5dad3c7604332a04286908cbfe51c385c52b958a058ff37" => :high_sierra
-    sha256 "9ba31815431daff2d34c193bc48acaeb7d97cf312162efd809a28ea53c0e3e04" => :sierra
-    sha256 "7907b51b7c5b95d258a0418e6c8a455b814266ca72498d28573b9021761a57e2" => :el_capitan
-    sha256 "517cb99fc16eb03a54deb203c90c891982d6bbcaa1a135dfec4f8b4bb79029ab" => :yosemite
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "c596c279a29befbca82053e12594b6ab3524c205f969b4747bc9e8ae6a8f1cf4"
+    sha256 cellar: :any_skip_relocation, big_sur:       "a4b3d047e0686c3104ce51b8780b12202c6c3b9486ce3e386e1ac5e7acbe8944"
+    sha256 cellar: :any_skip_relocation, catalina:      "4fa26f001f5e273bca4b561f2e7c3783d55fb7ab69f3bb098f109f72a789cc95"
+    sha256 cellar: :any_skip_relocation, mojave:        "0c0de1e012507b4450e610d93e25497f13fef4c11f5d47dfdcd76cf7755f2c46"
   end
 
   resource "Adventureland.inf" do
@@ -23,6 +20,9 @@ class Inform6 < Formula
   end
 
   def install
+    # Disable parallel build until release with https://gitlab.com/DavidGriffith/inform6unix/-/commit/dab07d5c83a42e1c52e4058d6a31a8137f54b59c
+    # ships; see https://gitlab.com/DavidGriffith/inform6unix/-/issues/26
+    ENV.deparallelize
     system "make", "PREFIX=#{prefix}", "MAN_PREFIX=#{man}", "install"
   end
 

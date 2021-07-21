@@ -1,55 +1,37 @@
-require "language/haskell"
-
 class HaskellStack < Formula
-  include Language::Haskell::Cabal
-
-  desc "The Haskell Tool Stack"
+  desc "Cross-platform program for developing Haskell projects"
   homepage "https://haskellstack.org/"
-  url "https://github.com/commercialhaskell/stack/releases/download/v1.9.3/stack-1.9.3-sdist-1.tar.gz"
-  version "1.9.3"
-  sha256 "14e06a71bf6fafbb2d468f83c70fd4e9490395207d6530ab7b9fc056f8972a46"
+  url "https://github.com/commercialhaskell/stack/archive/v2.7.3.tar.gz"
+  sha256 "37f4bc0177534782609ec3a67ec413548d3f2cabff7c4c0bc8a92a36e49c6877"
+  license "BSD-3-Clause"
   head "https://github.com/commercialhaskell/stack.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "e77734678c0a9bb402373a53e1c67663cfd5160f8dd2be3e3a16a569ae5a9a48" => :mojave
-    sha256 "ce65fc3575740104c9a99bd8797ac10e8724d8d36c80326251343ed68ab965c0" => :high_sierra
-    sha256 "3c278a54d4e0d829ab89f018e49d1e69721034a51b56af1435738a5b20e9f5b8" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1febdf95d90161093914f0b130a2e560e3e536316b414ab4d894195f2ffbec61"
+    sha256 cellar: :any_skip_relocation, big_sur:       "5e9185c5fb43ee4aa892bd5e9460fba19874c741df8cb0791af25ec7dab40575"
+    sha256 cellar: :any_skip_relocation, catalina:      "eff4da14356490588c31bbdf4d327605c5209957956d2964eb42e65bb9f687ba"
+    sha256 cellar: :any_skip_relocation, mojave:        "f57fdcf4118acc46b507b6e091f8898f9f1200f5041d20460ac97cc57fe21364"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "1c0e6d39df1e8c28c0ed815df4a2f02a3e302a758fb9dade1aaf3d13212ce5ad"
   end
 
   depends_on "cabal-install" => :build
   depends_on "ghc" => :build
 
-  # Build using a stack config that matches the default Homebrew version of GHC
-  resource "stack_lts_12_yaml" do
-    url "https://raw.githubusercontent.com/commercialhaskell/stack/v1.9.3/stack-lts-12.yaml"
-    version "1.9.3"
-    sha256 "0b4fb72f7c08c96ca853e865036e743cbdc84265dd5d5c4cf5154d305cd680de"
-  end
+  uses_from_macos "zlib"
 
   def install
-    buildpath.install resource("stack_lts_12_yaml")
-
-    cabal_sandbox do
-      cabal_install "happy"
-
-      # The flag works around https://github.com/commercialhaskell/stack/issues/4363
-      cabal_install "--flags=disable-git-info"
-
-      # Let `stack` handle its own parallelization
-      # Prevents "install: mkdir ... ghc-7.10.3/lib: File exists"
-      jobs = ENV.make_jobs
-      ENV.deparallelize
-
-      system "stack", "-j#{jobs}", "--stack-yaml=stack-lts-12.yaml",
-             "--system-ghc", "--no-install-ghc", "setup"
-      system "stack", "-j#{jobs}", "--stack-yaml=stack-lts-12.yaml",
-             "--system-ghc", "--no-install-ghc", "--local-bin-path=#{bin}",
-             "install", "--flag", "stack:disable-git-info"
-    end
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args
   end
 
   test do
     system bin/"stack", "new", "test"
+    assert_predicate testpath/"test", :exist?
+    assert_match "# test", File.read(testpath/"test/README.md")
   end
 end

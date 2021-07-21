@@ -1,13 +1,21 @@
 class Mpc < Formula
   desc "Command-line music player client for mpd"
   homepage "https://www.musicpd.org/clients/mpc/"
-  url "https://www.musicpd.org/download/mpc/0/mpc-0.31.tar.xz"
-  sha256 "62373e83a8a165b2ed43967975efecd3feee530f4557d6b861dd08aa89d52b2d"
+  url "https://www.musicpd.org/download/mpc/0/mpc-0.33.tar.xz"
+  sha256 "4f40ccbe18f5095437283cfc525a97815e983cbfd3a29e48ff610fa4f1bf1296"
+  license "GPL-2.0"
+
+  livecheck do
+    url "https://www.musicpd.org/download/mpc/0/"
+    regex(/href=.*?mpc[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "a0978aee21d1d4326cac85904ad4dc381ffd0fae96c66b98912ecd5260b548a4" => :mojave
-    sha256 "70bf0925e52814689cc58579288dafbefcd512caf3e4bcaa48f78d6c84fd7f36" => :high_sierra
-    sha256 "34dc577f9ac9551204d7c36448468da5a69c152b2de21622fc5e649c051a98de" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "8062f7af33fe3603b4c625509f4c80570d790b15922287025ef7333748dae279"
+    sha256 cellar: :any, big_sur:       "cc01508026db65016ee6e2ec1f6663921a5c5ace5c76ea51ffbd1b0b7ade5e63"
+    sha256 cellar: :any, catalina:      "341a4c3cef23004a47f37fa299047e63baedceb07405813d6fc112c9ad7d4ff2"
+    sha256 cellar: :any, mojave:        "29742180fafe0fffeba3fc09c3d355395084ef3d063004347a96bc37c72682db"
+    sha256 cellar: :any, high_sierra:   "84bd2c475a7880bf1f36c560a5696c12c27ff6cdb5cd907082d14ffd094b1081"
   end
 
   depends_on "meson" => :build
@@ -16,7 +24,7 @@ class Mpc < Formula
   depends_on "libmpdclient"
 
   def install
-    system "meson", "--prefix=#{prefix}", ".", "output"
+    system "meson", *std_meson_args, ".", "output"
     system "ninja", "-C", "output"
     system "ninja", "-C", "output", "install"
 

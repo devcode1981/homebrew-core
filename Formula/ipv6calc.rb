@@ -1,14 +1,16 @@
 class Ipv6calc < Formula
   desc "Small utility for manipulating IPv6 addresses"
   homepage "https://www.deepspace6.net/projects/ipv6calc.html"
-  url "https://github.com/pbiering/ipv6calc/archive/1.1.0.tar.gz"
-  sha256 "782d8f9b61520598316530907898038e8adcb76b1c01bc2885650374de8ce4e0"
+  url "https://github.com/pbiering/ipv6calc/archive/3.2.0.tar.gz"
+  sha256 "c73e1488a344d5ce3acdd009fb48068eec1bdf7562698011bdbbc7aaf33aa8f7"
+  license "GPL-2.0-only"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "3e0d6c64f9821f4a34fca5b146e971f8e382ef05de62f1e4ae3fa9ddcbdbef3e" => :mojave
-    sha256 "1e64e269dbaf3ca47ed4af72a8bfc11a7bc01c4b9207862207194e024eac2f19" => :high_sierra
-    sha256 "fa6ff54f91251f67f00a1786f3f83280fcdc735daf6bd4386f0f836067a5922b" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "8532274ecc261d17d7390821b9e8b432f56cdafe97ba34c583437b1fadfa7f27"
+    sha256 cellar: :any_skip_relocation, big_sur:       "ee4ad9470fc4e89698937c724f1124d393289f6c3022a397cb3525562843fc53"
+    sha256 cellar: :any_skip_relocation, catalina:      "032973accb1642b43fcf7320e8dd76e621c8024f3b6b0caf2fb24e69d90429d7"
+    sha256 cellar: :any_skip_relocation, mojave:        "4a83aadc45974b755d94b59f2fd4e8fb4637139d527e4474122983a229731cb5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "748772297ce211e30da123ccab4c9204738703e62cfe1ab90238dac434d9fb70"
   end
 
   def install
@@ -19,6 +21,7 @@ class Ipv6calc < Formula
   end
 
   test do
-    assert_equal "192.168.251.97", shell_output("#{bin}/ipv6calc -q --action conv6to4 --in ipv6 2002:c0a8:fb61::1 --out ipv4").strip
+    assert_equal "192.168.251.97",
+      shell_output("#{bin}/ipv6calc -q --action conv6to4 --in ipv6 2002:c0a8:fb61::1 --out ipv4").strip
   end
 end

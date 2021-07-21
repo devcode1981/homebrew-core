@@ -1,14 +1,17 @@
 class LibbitcoinDatabase < Formula
   desc "Bitcoin High Performance Blockchain Database"
   homepage "https://github.com/libbitcoin/libbitcoin-database"
-  url "https://github.com/libbitcoin/libbitcoin-database/archive/v3.5.0.tar.gz"
-  sha256 "376ab5abd8d7734a8b678030b9e997c4b1922e422f6e0a185d7daa3eb251db93"
+  url "https://github.com/libbitcoin/libbitcoin-database/archive/v3.6.0.tar.gz"
+  sha256 "d65b35745091b93feed61c5665b5a07b404b578e2582640e93c1a01f6b746f5a"
+  license "AGPL-3.0"
   revision 1
 
   bottle do
-    sha256 "221d9c819ac6eb3dd57333301e671571359c27803cc50ba2404e4f609e5a908d" => :mojave
-    sha256 "850cc7da7fd8e96486cd993fe1d6cacf99ae06179d23aafb87ada62ba4a0631e" => :high_sierra
-    sha256 "b11df12ca7349bc2de7f4999a65a71ea658b38107428e8758415871717838a9d" => :sierra
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "c1d506851f55d14f591199679e0d69194e0d5f3beb33661aa1f3039f1ac53ee8"
+    sha256 cellar: :any, big_sur:       "f80eeb0824322169fb89bff9cd94dff0142380c35bd3e452fcf1e01174f955aa"
+    sha256 cellar: :any, catalina:      "1acfc0d126ed7e1be41052065e8f47df77768d80caf16a6a51cbed22b1538e28"
+    sha256 cellar: :any, mojave:        "4d4976669d9eb758689b8b5e55a31d2d9bd9b03e0422f67bcddb4fdd9a1009ac"
   end
 
   depends_on "autoconf" => :build
@@ -23,7 +26,8 @@ class LibbitcoinDatabase < Formula
     system "./autogen.sh"
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
-                          "--prefix=#{prefix}"
+                          "--prefix=#{prefix}",
+                          "--with-boost-libdir=#{Formula["boost"].opt_lib}"
     system "make", "install"
   end
 

@@ -1,21 +1,24 @@
 class Inetutils < Formula
   desc "GNU utilities for networking"
   homepage "https://www.gnu.org/software/inetutils/"
-  url "https://ftp.gnu.org/gnu/inetutils/inetutils-1.9.4.tar.xz"
-  mirror "https://ftpmirror.gnu.org/inetutils/inetutils-1.9.4.tar.xz"
-  sha256 "849d96f136effdef69548a940e3e0ec0624fc0c81265296987986a0dd36ded37"
+  url "https://ftp.gnu.org/gnu/inetutils/inetutils-2.0.tar.xz"
+  mirror "https://ftpmirror.gnu.org/inetutils/inetutils-2.0.tar.xz"
+  sha256 "e573d566e55393940099862e7f8994164a0ed12f5a86c3345380842bdc124722"
+  license "GPL-3.0-or-later"
   revision 1
 
   bottle do
-    sha256 "7516d588827d17639de90dbec68a726763880500d1423773390e55b5ef97c8d9" => :mojave
-    sha256 "83a83d549780840164b9b3da28d3aef47e41378415d6cdb6c6aee48d04623340" => :high_sierra
-    sha256 "538f028274c5afbc0d4eb397b142f724d48c68a85acc6e1c5c30e00e652d5afb" => :sierra
-    sha256 "08419e32bd90cdc6c6b4715e64b2facae634a3cd45ecc7e54da87cab7b112458" => :el_capitan
+    sha256 arm64_big_sur: "67cf68d882126411ce4f2d0dd0aba683170f1c049c01e4fdbb156ace7a6e9ab0"
+    sha256 big_sur:       "6cb6cdaeeddf24484e33d5a90c5380d1004cf34c85604a2620545ec7716bdd86"
+    sha256 catalina:      "dd6368d46eb1e7857dc301ade6377731028d30326d8e7bc010264bdf8590623a"
+    sha256 mojave:        "76c0686105882d914260ad551a78e9954bd08e9757c45c35fa606941a6d36993"
+    sha256 x86_64_linux:  "9507d853fbcd9f8897c3001f64d8d9b5afd40e3cfc6a0655dcfe9b297e1680ce"
   end
 
-  option "with-default-names", "Do not prepend 'g' to the binary"
-
   depends_on "libidn"
+
+  conflicts_with "telnet", because: "both install `telnet` binaries"
+  conflicts_with "tnftp", because: "both install `ftp` binaries"
 
   def noshadow
     # List of binaries that do not shadow macOS utils
@@ -31,12 +34,14 @@ class Inetutils < Formula
       --prefix=#{prefix}
       --with-idn
     ]
-    args << "--program-prefix=g" if build.without? "default-names"
 
+    on_macos do
+      args << "--program-prefix=g"
+    end
     system "./configure", *args
-    system "make", "install"
+    system "make", "SUIDMODE=", "install"
 
-    if build.without? "default-names"
+    on_macos do
       # Binaries not shadowing macOS utils symlinked without 'g' prefix
       noshadow.each do |cmd|
         bin.install_symlink "g#{cmd}" => cmd
@@ -46,16 +51,19 @@ class Inetutils < Formula
       # Symlink commands without 'g' prefix into libexec/gnubin and
       # man pages into libexec/gnuman
       bin.find.each do |path|
-        next unless File.executable?(path) && !File.directory?(path)
+        next if !File.executable?(path) || File.directory?(path)
+
         cmd = path.basename.to_s.sub(/^g/, "")
         (libexec/"gnubin").install_symlink bin/"g#{cmd}" => cmd
-        (libexec/"gnuman"/"man1").install_symlink man1/"g#{cmd}" => cmd
+        (libexec/"gnuman"/"man1").install_symlink man1/"g#{cmd}.1" => "#{cmd}.1"
       end
     end
+
+    libexec.install_symlink "gnuman" => "man"
   end
 
   def caveats
-    if build.without? "default-names" then <<~EOS
+    <<~EOS
       The following commands have been installed with the prefix 'g'.
 
           #{noshadow.sort.join("\n    ")}
@@ -64,18 +72,19 @@ class Inetutils < Formula
       can add a "gnubin" directory to your PATH from your bashrc like:
 
           PATH="#{opt_libexec}/gnubin:$PATH"
-
-      Additionally, you can access their man pages with normal names if you add
-      the "gnuman" directory to your MANPATH from your bashrc as well:
-
-          MANPATH="#{opt_libexec}/gnuman:$MANPATH"
     EOS
-    end
   end
 
   test do
-    output = pipe_output("#{libexec}/gnubin/ftp -v",
+    on_macos do
+      output = pipe_output("#{libexec}/gnubin/ftp -v",
                          "open ftp.gnu.org\nanonymous\nls\nquit\n")
-    assert_match "Connected to ftp.gnu.org.\n220 GNU FTP server ready", output
+      assert_match "Connected to ftp.gnu.org.\n220 GNU FTP server ready", output
+    end
+    on_linux do
+      output = pipe_output("#{bin}/ftp -v",
+                         "open ftp.gnu.org\nanonymous\nls\nquit\n")
+      assert_match "Connected to ftp.gnu.org.\n220 GNU FTP server ready", output
+    end
   end
 end

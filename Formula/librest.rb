@@ -3,13 +3,15 @@ class Librest < Formula
   homepage "https://wiki.gnome.org/Projects/Librest"
   url "https://download.gnome.org/sources/rest/0.8/rest-0.8.1.tar.xz"
   sha256 "0513aad38e5d3cedd4ae3c551634e3be1b9baaa79775e53b2dba9456f15b01c9"
-  revision 1
+  revision 3
 
   bottle do
-    sha256 "395cfe3524a16bb5f6b11501b5abaa58091498af73cf6fa44b900e16f8cfd0e4" => :mojave
-    sha256 "677a14fd8dde39e068cc8bb4fe771619a13bdde7e92903756ecb056b79ee69e7" => :high_sierra
-    sha256 "79fed6ba59358147b84ee7f793df20542e21c1537f3b7a1ff0572296d5503e20" => :sierra
-    sha256 "5333e6b41033827ec7db0fedb3510fe4ab442cd53180c5cd1ebc613b4e1b3bfc" => :el_capitan
+    sha256                               arm64_big_sur: "a565482a9685164d288df713142f23b91dda71fc9c694ea0c613c64320e4aa0a"
+    sha256                               big_sur:       "366b341df1c40a648f2847b5f1c13efccfaeb4c3c9610c30fe7e5b3087d07186"
+    sha256                               catalina:      "fb2e698cdf400c3f413a707132acd9b55139e2aa26da2f405f5eaebeace6573b"
+    sha256                               mojave:        "dbaf452ac76dbc63e161ffc086aac7f6409614ca573c20fe02bd2e87d473e5b2"
+    sha256                               high_sierra:   "5ab2748f8103ff622b6615f6427f21c7f9313b227824bd91429aa6f4c5c9c982"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "be2f31807cddc48f6979d659856ed2fe5e1d641547e0dca5b8082575bee55952"
   end
 
   depends_on "gobject-introspection" => :build

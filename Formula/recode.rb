@@ -1,39 +1,25 @@
 class Recode < Formula
   desc "Convert character set (charsets)"
-  homepage "https://github.com/pinard/Recode"
-  url "https://github.com/pinard/Recode/archive/v3.7-beta2.tar.gz"
-  sha256 "72c3c0abcfe2887b83a8f27853a9df75d7e94a9ebacb152892cc4f25108e2144"
+  homepage "https://github.com/rrthomas/recode"
+  url "https://github.com/rrthomas/recode/releases/download/v3.7.9/recode-3.7.9.tar.gz"
+  sha256 "e4320a6b0f5cd837cdb454fb5854018ddfa970911608e1f01cc2c65f633672c4"
+  license "GPL-3.0-or-later"
 
   bottle do
-    rebuild 1
-    sha256 "4deb2f8480290e89de9b611eb139b7bd93d4279b776ca53ef32f31017d023d61" => :mojave
-    sha256 "ca77219ffb6960de21caf333f31faa43de430a0e9f784624324a7c0581ce567d" => :high_sierra
-    sha256 "15572a6826a49109bd64fd9b50eace8259a7563f9e6ffdbf5112ed742a256c79" => :sierra
-    sha256 "1aaa7262ed6614a56e2bc17ac4b518903b62eb582d6aeab45f7845b38dee224e" => :el_capitan
-    sha256 "8518f350264f5cdadfb26c49487f82f9c159307f26d10230daf415d1495607f4" => :yosemite
-    sha256 "81fb3b36d647c6dd83f9fb65bf657b73b65d551a16dcd7e9552ff70f5a1394dc" => :mavericks
+    sha256 cellar: :any,                 arm64_big_sur: "9bca3845a8c324b5f9546c2c9de7881ee2a91b47513a39188fbc65d5c119b3bd"
+    sha256 cellar: :any,                 big_sur:       "322571c853f461cd7f85afde9da5895996479b8aafddaa729081c10f4b319c57"
+    sha256 cellar: :any,                 catalina:      "e049f7705d6f397a3a4bb87e31cc43eeb8ab7f0958b5efb3daccbab2a77aaa96"
+    sha256 cellar: :any,                 mojave:        "27ba44840e12f588f741d2a7477ac8e6c6d3df22b09b426c617c87b98518d5c8"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "4eaa20bd35e3d6937e2c8fa962572eda4998ef7504049b9592a62b3f133c1edd"
   end
 
   depends_on "libtool" => :build
+  depends_on "python@3.9" => :build
   depends_on "gettext"
 
   def install
-    # Missing symbol errors without these.
-    ENV.append "LDFLAGS", "-liconv"
-    ENV.append "LDFLAGS", "-lintl"
-
-    # Fixed upstream in 2008 but no releases since. Patched by Debian also.
-    # https://github.com/pinard/Recode/commit/a34dfd2257f412dff59f2ad7f714.
-    inreplace "src/recodext.h", "bool ignore : 2;", "bool ignore : 1;"
-
-    cp Dir["#{Formula["libtool"].opt_pkgshare}/*/config.{guess,sub}"], buildpath
-
-    system "./configure", "--disable-debug",
-                          "--disable-dependency-tracking",
-                          "--without-included-gettext",
-                          "--prefix=#{prefix}",
-                          "--infodir=#{info}",
-                          "--mandir=#{man}"
+    system "./configure", "--disable-dependency-tracking",
+                          "--prefix=#{prefix}"
     system "make", "install"
   end
 

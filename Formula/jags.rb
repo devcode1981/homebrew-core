@@ -5,15 +5,25 @@ class Jags < Formula
   sha256 "8ac5dd57982bfd7d5f0ee384499d62f3e0bb35b5f1660feb368545f1186371fc"
   revision 2
 
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/JAGS[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "73dd05de303d75d9a252fd9cf40242036d6227d20ff0e40bdad8a9b4fb5ac093" => :mojave
-    sha256 "6f3e40e482b03deb728487e3b9c7089d900f1aa518c74de0859a2877833b16b0" => :high_sierra
-    sha256 "0651db81905348bb0c48c20529c5bab0d4eb735da50fcc9ec26aef38672cf26f" => :sierra
-    sha256 "6c82f61d6cacec46e7863f9b9cb92f33eac63339822fd196e6a029a75dfb01f7" => :el_capitan
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "ea0be62c30efa7d985684c3295af0fa972596ed029622af0cf409740d3658c2e"
+    sha256 cellar: :any,                 big_sur:       "72c2e292449224ec4b825399233be7de57fff2b810c7d31d738386c829a53098"
+    sha256 cellar: :any,                 catalina:      "11423ce61e9c8c567179c82e03179427ee9161808ff7256ffca47f72030359b7"
+    sha256 cellar: :any,                 mojave:        "9e1448b73ba0853385cdfd2861fd273588a6a8557522f0d3073f50154130e900"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "291114d6ec1984a0942fe9f7421d481d92ef96e1a510ceaa4391ff88ac11a7e5"
   end
 
   depends_on "gcc" # for gfortran
+
+  on_linux do
+    depends_on "openblas"
+  end
 
   def install
     system "./configure", "--disable-dependency-tracking",

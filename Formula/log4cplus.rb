@@ -1,18 +1,22 @@
 class Log4cplus < Formula
   desc "Logging Framework for C++"
   homepage "https://sourceforge.net/p/log4cplus/wiki/Home/"
-  url "https://downloads.sourceforge.net/project/log4cplus/log4cplus-stable/2.0.2/log4cplus-2.0.2.tar.xz"
-  sha256 "8ff4055be749f17f3648694bd5778bfd86d33158cceaa616a50c0299d6035b41"
+  url "https://downloads.sourceforge.net/project/log4cplus/log4cplus-stable/2.0.6/log4cplus-2.0.6.tar.xz"
+  sha256 "73519a5e47c40cf375aa6cd28a703b01908b5dcd3f4cb4290db2fef237c8180c"
+  license all_of: ["Apache-2.0", "BSD-2-Clause"]
 
-  bottle do
-    cellar :any
-    sha256 "05ce5c61a86267690e5cf4944f4e9d55f1f568b44b4a4f0e6d0730c2c387b2c2" => :mojave
-    sha256 "7f166f2c75fb63279d4e41d41c81d0f4aaea13f403662e52f032af5d551d308f" => :high_sierra
-    sha256 "ce5afae2358928cb515d77e3c13288ec60c3859519253ef0d14ce792c88153a3" => :sierra
-    sha256 "3a3f4952bf0064e0cd81b0e8c538ca7f49434cfb387a4f9e8441f7dbddeb6d33" => :el_capitan
+  livecheck do
+    url :stable
+    regex(/url=.*?log4cplus-stable.*?log4cplus[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  needs :cxx11
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "6b39cf87d24dccbbcd063c7d3cc21b3392c9676f2fd5c7ea7a3b2b98a294385a"
+    sha256 cellar: :any,                 big_sur:       "3c50bcc0856327c8224074fc5f11d62e4f9033209aad12ceacd64010e1a51a80"
+    sha256 cellar: :any,                 catalina:      "462843dd835da767dd0b422bdbe2f601db45b5fd8dbe1fcc8cdf99291592a9cd"
+    sha256 cellar: :any,                 mojave:        "dffec0954dd25101569d672c5b07b454c80f3ee8ab4ab4cdb1d5c224395fb412"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "a44d978ffd4477599405214de6186ed6a7942d4aa409be968a17f058ea71f2b3"
+  end
 
   def install
     ENV.cxx11
@@ -42,7 +46,7 @@ class Log4cplus < Formula
       }
     EOS
     system ENV.cxx, "-std=c++11", "-I#{include}", "-L#{lib}",
-                    "-llog4cplus", "test.cpp", "-o", "test"
+                    "test.cpp", "-o", "test", "-llog4cplus"
     assert_match "Hello, World!", shell_output("./test")
   end
 end

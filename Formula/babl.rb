@@ -1,32 +1,39 @@
 class Babl < Formula
   desc "Dynamic, any-to-any, pixel format translation library"
-  homepage "http://www.gegl.org/babl/"
-  url "https://download.gimp.org/pub/babl/0.1/babl-0.1.56.tar.bz2"
-  sha256 "8ad26ca717ec3c74e261f454dd6bb316333a39fd1f87db4ac44706a860dc4d28"
+  homepage "https://www.gegl.org/babl/"
+  url "https://download.gimp.org/pub/babl/0.1/babl-0.1.88.tar.xz"
+  sha256 "4f0d7f4aaa0bb2e725f349adf7b351a957d9fb26d555d9895a7af816b4167039"
+  license "LGPL-3.0-or-later"
+  # Use GitHub instead of GNOME's git. The latter is unreliable.
+  head "https://github.com/GNOME/babl.git"
+
+  livecheck do
+    url "https://download.gimp.org/pub/babl/0.1/"
+    regex(/href=.*?babl[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "d4919702e5918f9f47b76cf9dbff294efbd26c909eea3084e0ca6991f212738e" => :mojave
-    sha256 "be17bcd75c569fe2b90f81c2b7dd8e051c07ead256eb8665c739b4abd1b86b40" => :high_sierra
-    sha256 "225d7ef87fe7dcfe9ba9134531b9d5420afc9354bf8fe7bde11bb7bbf4ecf2f0" => :sierra
-    sha256 "6aadd8934b96132fd208f0526a0caacb4df6e7c13f3507ea8078a070d5914ea6" => :el_capitan
+    sha256 arm64_big_sur: "a00ab8fc3289e795384974ddbfc26d43631f2e3bc5c5440031835842f6c3aa99"
+    sha256 big_sur:       "f2e800564684938cfca18fc994eebcb3a2373f7362047513ca1a24f16c1937b0"
+    sha256 catalina:      "33616239de78a0b3918cbb825913edd26ea49d2dbd0550a79ed7441052acb0a3"
+    sha256 mojave:        "54e1710cab528ac2fd32300a1aa9577e1eb71ceae931792c356d2e5e582b2eaa"
+    sha256 x86_64_linux:  "85379477d14b40b5972b729060678e5e91d2c13323c27c7f197434cc0650486d"
   end
 
-  head do
-    # Use Github instead of GNOME's git. The latter is unreliable.
-    url "https://github.com/GNOME/babl.git"
-
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "libtool" => :build
-  end
-
+  depends_on "glib" => :build # for gobject-introspection
+  depends_on "gobject-introspection" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
+  depends_on "vala" => :build
+  depends_on "little-cms2"
 
   def install
-    system "./autogen.sh" if build.head?
-    system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args, "-Dwith-docs=false", ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
   end
 
   test do
@@ -41,7 +48,7 @@ class Babl < Formula
         return 0;
       }
     EOS
-    system ENV.cc, "-I#{include}/babl-0.1", "-L#{lib}", "-lbabl-0.1", testpath/"test.c", "-o", "test"
+    system ENV.cc, "-I#{include}/babl-0.1", testpath/"test.c", "-L#{lib}", "-lbabl-0.1", "-o", "test"
     system testpath/"test"
   end
 end

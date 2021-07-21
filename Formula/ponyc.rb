@@ -1,38 +1,29 @@
 class Ponyc < Formula
   desc "Object-oriented, actor-model, capabilities-secure programming language"
   homepage "https://www.ponylang.org/"
-  url "https://github.com/ponylang/ponyc/archive/0.25.0.tar.gz"
-  sha256 "8420d84f178db325934d77dc407a7f98d6bd14b8cf8036e17b41f886f5820cb2"
-  head "https://github.com/ponylang/ponyc.git"
+  url "https://github.com/ponylang/ponyc.git",
+      tag:      "0.41.0",
+      revision: "c0dda326eb1faf0ce67fb1bcdb40430e7a8a807a"
+  license "BSD-2-Clause"
 
   bottle do
-    cellar :any
-    sha256 "2dae291b0e2aaafb6864b0cc96b04b9c1eab4187dfd55b2f720c86e9c5f2af83" => :mojave
-    sha256 "b0d92521cc7b31c809de94b392940ea3c526f21db1c18e384e3e4a1275882665" => :high_sierra
-    sha256 "f516cf4cf8d1bdf3ee8c82adf5b3d58184ad0105722b354e851c78b152b1f97d" => :sierra
+    sha256 cellar: :any_skip_relocation, big_sur:  "76e24d984ed62f6cda6e06825a44f16dd8aa983a6085fdc5fc183d55a11a8280"
+    sha256 cellar: :any_skip_relocation, catalina: "093e481ba250758aa8f9805d930783411566cca560fa14b8f40294a7fb75d87f"
+    sha256 cellar: :any_skip_relocation, mojave:   "70e5f4c0d67ba04a7f0986bc2a13e6778bf45dbf78cc831b832cde9bfe1738f3"
   end
 
-  # https://github.com/ponylang/ponyc/issues/1274
-  # https://github.com/Homebrew/homebrew-core/issues/5346
-  pour_bottle? do
-    reason <<~EOS
-      The bottle requires Xcode/CLT 8.0 or later to work properly.
-    EOS
-    satisfy { DevelopmentTools.clang_build_version >= 800 }
-  end
+  depends_on "cmake" => :build
 
-  depends_on "libressl"
-  depends_on "llvm@3.9"
-  depends_on :macos => :yosemite
-  depends_on "pcre2"
-
-  needs :cxx11
+  uses_from_macos "zlib"
 
   def install
     ENV.cxx11
-    ENV["LLVM_CONFIG"] = "#{Formula["llvm@3.9"].opt_bin}/llvm-config"
-    system "make", "install", "verbose=1", "config=release",
-           "ponydir=#{prefix}", "prefix="
+
+    ENV["MAKEFLAGS"] = "build_flags=-j#{ENV.make_jobs}"
+    system "make", "libs"
+    system "make", "configure"
+    system "make", "build"
+    system "make", "install", "DESTDIR=#{prefix}"
   end
 
   test do

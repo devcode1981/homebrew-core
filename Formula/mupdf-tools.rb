@@ -1,17 +1,27 @@
 class MupdfTools < Formula
   desc "Lightweight PDF and XPS viewer"
   homepage "https://mupdf.com/"
-  url "https://mupdf.com/downloads/archive/mupdf-1.14.0-source.tar.gz"
-  sha256 "c443483a678c3fc258fa4adc124146225d0bb443c522619faadebf6b363d7724"
-  revision 1
+  url "https://mupdf.com/downloads/archive/mupdf-1.18.0-source.tar.xz"
+  sha256 "592d4f6c0fba41bb954eb1a41616661b62b134d5b383e33bd45a081af5d4a59a"
+  license "AGPL-3.0"
   head "https://git.ghostscript.com/mupdf.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "cdef022dd6020e97503ede16d8d0f78c33bcd0290420379c848792ca92eabbcc" => :mojave
-    sha256 "8178f8da3a5d8f45678c5563cc005ea70a93439c2d68dc8daa7716ec6bb58715" => :high_sierra
-    sha256 "9327d7061bffc2f1319e124a5fb5d09921d1855249c8aca18568f5830f0db485" => :sierra
+  livecheck do
+    url "https://mupdf.com/downloads/archive/?C=M&O=D"
+    regex(/href=.*?mupdf[._-]v?(\d+(?:\.\d+)+)-source\.(?:t|zip)/i)
   end
+
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d78a3ae676e2872d42aefa36563a2cacaa2ad04203d6b8d1c8257ccdebcea847"
+    sha256 cellar: :any_skip_relocation, big_sur:       "a62ca2ae12f896d22a6fc609fadc96cf729e46206f9a1127f6f21e4846eaa2ba"
+    sha256 cellar: :any_skip_relocation, catalina:      "e985551872925ed4b66ce995c551fda59152c1e7f9cf2bdbd205ab749e867e17"
+    sha256 cellar: :any_skip_relocation, mojave:        "50f1628c7c396fdfd65eb5ce84541a5b9a695bc6fe003cc7abc732e212762bc3"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "2a7a4799ca7e75e948331ce00f5799ae8cb6ae2f23e1143955b9d03d8eccbcd9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b6b1dc0ca4d5b77bc906f991f382f2f40c57a151e963b04ce87795a1f620e235"
+  end
+
+  conflicts_with "mupdf",
+    because: "mupdf and mupdf-tools install the same binaries"
 
   def install
     system "make", "install",
@@ -28,6 +38,6 @@ class MupdfTools < Formula
   end
 
   test do
-    assert_match "Homebrew test", shell_output("#{bin}/mutool draw -F txt #{test_fixtures("test.pdf")}")
+    assert_match "Homebrew test", shell_output("#{bin}/mudraw -F txt #{test_fixtures("test.pdf")}")
   end
 end

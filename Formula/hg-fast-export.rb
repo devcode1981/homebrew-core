@@ -1,18 +1,44 @@
 class HgFastExport < Formula
+  include Language::Python::Shebang
+
   desc "Fast Mercurial to Git converter"
   homepage "https://repo.or.cz/fast-export.git"
-  url "https://github.com/frej/fast-export/archive/v180610.tar.gz"
-  sha256 "b5ee4fa5b797c4941b447fe3bff543f868b19e24c09c1dbbccf33438120dc36a"
+  url "https://github.com/frej/fast-export/archive/v201029.tar.gz"
+  sha256 "f7c374ae683e188adbe72f1c3731e69e2209323439accbf84ed27ae8207f39b4"
+  license "GPL-2.0-or-later"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "56d64846dd77c2fd96474a24d51531e52aaae557f39c4ee4ee69259f6e9a5349"
+  end
+
+  depends_on "mercurial"
+  depends_on "python@3.9"
 
   def install
-    bin.install "hg-fast-export.py", "hg-fast-export.sh",
-                "hg-reset.py", "hg-reset.sh",
-                "hg2git.py"
+    libexec.install Dir["*"]
+
+    %w[hg-fast-export.py hg-fast-export.sh hg-reset.py hg-reset.sh hg2git.py].each do |f|
+      rewrite_shebang detected_python_shebang, libexec/f
+      bin.install_symlink libexec/f
+    end
   end
 
   test do
-    system bin/"hg-fast-export.sh", "--help"
+    mkdir testpath/"hg-repo" do
+      system "hg", "init"
+      (testpath/"hg-repo/test.txt").write "Hello"
+      system "hg", "add", "test.txt"
+      system "hg", "commit", "-u", "test@test", "-m", "test"
+    end
+
+    mkdir testpath/"git-repo" do
+      system "git", "init"
+      system "git", "config", "core.ignoreCase", "false"
+      system "hg-fast-export.sh", "-r", "#{testpath}/hg-repo"
+      system "git", "checkout", "HEAD"
+    end
+
+    assert_predicate testpath/"git-repo/test.txt", :exist?
+    assert_equal "Hello", (testpath/"git-repo/test.txt").read
   end
 end

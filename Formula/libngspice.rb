@@ -1,14 +1,20 @@
 class Libngspice < Formula
   desc "Spice circuit simulator as shared library"
   homepage "https://ngspice.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/28/ngspice-28.tar.gz"
-  sha256 "94804fa78c8db2f90f088902e8c27f7b732a66767a58c70f37612bff5a16df66"
+  url "https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/34/ngspice-34.tar.gz"
+  sha256 "2263fffc6694754972af7072ef01cfe62ac790800dad651bc290bfcae79bd7b5"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/ngspice[._-]v?(\d+(?:\.\d+)*)\.t}i)
+  end
 
   bottle do
-    sha256 "62d5c4b9ee7a4126e7dfb18b3fd762c6d4b7325283702b58646d640a1c1773ec" => :mojave
-    sha256 "ad14b322a63580cbee9940bb67546cce89d654072446cbb90bd75020f359e3f6" => :high_sierra
-    sha256 "bfae0f3f17b4f5493b1c3dab4f2ad45f33d276d9da2ebe44ec68c808d5204ffb" => :sierra
-    sha256 "81fa4c4a1da3fb720f921274fde37cdd540ffce16d6bec9c35bbae8399aa728c" => :el_capitan
+    sha256 arm64_big_sur: "030028e4b85b595d98edaa642acbba72207f05d9ee7dc6f43ba2491398d128ab"
+    sha256 big_sur:       "a317cf13dd747369eb178e18f932ee4b0e3eebf8ffdb697f19cdaa1d100e20e8"
+    sha256 catalina:      "82d6d7ad4cf74d36b1f11741edc123b76bdd48279cb0af38d5eacfe155c8b7de"
+    sha256 mojave:        "908c45d65d80ad97d76a721ece430e09f8b828197999ee71152b2c12c5a4b231"
+    sha256 x86_64_linux:  "3bbac9c897c726c039900860bae496dcadfa922dfaffc7a0ccd660d5324fc598"
   end
 
   head do
@@ -23,9 +29,17 @@ class Libngspice < Formula
 
   def install
     system "./autogen.sh" if build.head?
-    system "./configure", "--prefix=#{prefix}", "--disable-debug",
-      "--disable-dependency-tracking", "--with-ngshared", "--enable-cider",
-      "--enable-xspice"
+
+    args = %W[
+      --disable-debug
+      --disable-dependency-tracking
+      --prefix=#{prefix}
+      --with-ngshared
+      --enable-cider
+      --enable-xspice
+    ]
+
+    system "./configure", *args
     system "make", "install"
   end
 

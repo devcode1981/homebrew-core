@@ -1,15 +1,18 @@
 class Coreutils < Formula
   desc "GNU File, Shell, and Text utilities"
   homepage "https://www.gnu.org/software/coreutils"
-  url "https://ftp.gnu.org/gnu/coreutils/coreutils-8.30.tar.xz"
-  mirror "https://ftpmirror.gnu.org/coreutils/coreutils-8.30.tar.xz"
-  sha256 "e831b3a86091496cdba720411f9748de81507798f6130adeaef872d206e1b057"
+  url "https://ftp.gnu.org/gnu/coreutils/coreutils-8.32.tar.xz"
+  mirror "https://ftpmirror.gnu.org/coreutils/coreutils-8.32.tar.xz"
+  sha256 "4458d8de7849df44ccab15e16b1548b285224dbba5f08fac070c1c0e0bcc4cfa"
+  license "GPL-3.0-or-later"
 
   bottle do
-    sha256 "45157fb067a46c953bdfcba90de688903b7b3c8fcb39afa1e0b2fef2819eedc5" => :mojave
-    sha256 "77b09dbe66f3d5098998da6babf953e01e828742b8a740a831cc3f3a1f713df7" => :high_sierra
-    sha256 "94844581b7e08ae2d1dc6c77acfd6e95021283cc8b7c1228fed32a423ae826cc" => :sierra
-    sha256 "a5145f88de2525d168ef998f8310d5c0abcead9efee9108fb61c30de91a4869c" => :el_capitan
+    rebuild 2
+    sha256 arm64_big_sur: "e7d88d2b7a91a57dfd37c2ea14752d1bb116f25694eab1161d6e8088f7db5921"
+    sha256 big_sur:       "371ec57703b3646e0113331308b6e03617c2a7f91e15e113380b605455daba20"
+    sha256 catalina:      "7a97ad96dfbe6abbb5c94424518a077e040af8a77d1946ca960a5f33cd237551"
+    sha256 mojave:        "10fbad2e35846c7e835cb979b5beb9edf07f3a9742ddcc3c28d9abd5fe9ccb1b"
+    sha256 x86_64_linux:  "6d0ddc3ead1b8259a9a97b7bc9cc891cbc5a236a82afd51f224de16affea0b54"
   end
 
   head do
@@ -24,35 +27,32 @@ class Coreutils < Formula
     depends_on "xz" => :build
   end
 
-  depends_on "gmp" => :optional
+  uses_from_macos "gperf" => :build
 
-  conflicts_with "ganglia", :because => "both install `gstat` binaries"
-  conflicts_with "gegl", :because => "both install `gcut` binaries"
-  conflicts_with "idutils", :because => "both install `gid` and `gid.1`"
-  conflicts_with "aardvark_shell_utils", :because => "both install `realpath` binaries"
+  on_linux do
+    depends_on "attr"
+  end
+
+  conflicts_with "aardvark_shell_utils", because: "both install `realpath` binaries"
+  conflicts_with "b2sum", because: "both install `b2sum` binaries"
+  conflicts_with "ganglia", because: "both install `gstat` binaries"
+  conflicts_with "gdu", because: "both install `gdu` binaries"
+  conflicts_with "gegl", because: "both install `gcut` binaries"
+  conflicts_with "idutils", because: "both install `gid` and `gid.1`"
+  conflicts_with "md5sha1sum", because: "both install `md5sum` and `sha1sum` binaries"
+  conflicts_with "truncate", because: "both install `truncate` binaries"
+  conflicts_with "uutils-coreutils", because: "coreutils and uutils-coreutils install the same binaries"
 
   def install
-    if MacOS.version == :el_capitan
-      # Work around unremovable, nested dirs bug that affects lots of
-      # GNU projects. See:
-      # https://github.com/Homebrew/homebrew/issues/45273
-      # https://github.com/Homebrew/homebrew/issues/44993
-      # This is thought to be an el_capitan bug:
-      # https://lists.gnu.org/archive/html/bug-tar/2015-10/msg00017.html
-      ENV["gl_cv_func_getcwd_abort_bug"] = "no"
-
-      # renameatx_np and RENAME_EXCL are available at compile time from Xcode 8
-      # (10.12 SDK), but the former is not available at runtime.
-      inreplace "lib/renameat2.c", "defined RENAME_EXCL", "defined UNDEFINED_GIBBERISH"
-    end
-
     system "./bootstrap" if build.head?
 
     args = %W[
       --prefix=#{prefix}
       --program-prefix=g
+      --without-gmp
+      --without-selinux
     ]
-    args << "--without-gmp" if build.without? "gmp"
+
     system "./configure", *args
     system "make", "install"
 
@@ -64,32 +64,40 @@ class Coreutils < Formula
     coreutils_filenames(man1).each do |cmd|
       (libexec/"gnuman"/"man1").install_symlink man1/"g#{cmd}" => cmd
     end
+    libexec.install_symlink "gnuman" => "man"
 
     # Symlink non-conflicting binaries
-    bin.install_symlink "grealpath" => "realpath"
-    man1.install_symlink "grealpath.1" => "realpath.1"
+    no_conflict = %w[
+      b2sum base32 chcon hostid md5sum nproc numfmt pinky ptx realpath runcon
+      sha1sum sha224sum sha256sum sha384sum sha512sum shred shuf stdbuf tac timeout truncate
+    ]
+    on_linux do
+      no_conflict += ["dir", "dircolors", "vdir"]
+    end
+    no_conflict.each do |cmd|
+      bin.install_symlink "g#{cmd}" => cmd
+      man1.install_symlink "g#{cmd}.1" => "#{cmd}.1"
+    end
   end
 
-  def caveats; <<~EOS
-    All commands have been installed with the prefix 'g'.
-
-    If you really need to use these commands with their normal names, you
-    can add a "gnubin" directory to your PATH from your bashrc like:
-
+  def caveats
+    msg = "Commands also provided by macOS"
+    on_linux do
+      msg = "All commands"
+    end
+    <<~EOS
+      #{msg} have been installed with the prefix "g".
+      If you need to use these commands with their normal names, you
+      can add a "gnubin" directory to your PATH from your bashrc like:
         PATH="#{opt_libexec}/gnubin:$PATH"
-
-    Additionally, you can access their man pages with normal names if you add
-    the "gnuman" directory to your MANPATH from your bashrc as well:
-
-        MANPATH="#{opt_libexec}/gnuman:$MANPATH"
-
-  EOS
+    EOS
   end
 
   def coreutils_filenames(dir)
     filenames = []
     dir.find do |path|
       next if path.directory? || path.basename.to_s == ".DS_Store"
+
       filenames << path.basename.to_s.sub(/^g/, "")
     end
     filenames.sort

@@ -1,17 +1,20 @@
 class Pspg < Formula
   desc "Unix pager optimized for psql"
   homepage "https://github.com/okbob/pspg"
-  url "https://github.com/okbob/pspg/archive/1.6.3.tar.gz"
-  sha256 "5ea8499a745a14428323419f256c4c609437e6c6c0cbd839b47137c398f5640f"
+  url "https://github.com/okbob/pspg/archive/5.1.1.tar.gz"
+  sha256 "46bef6cdae6eb056d79b9fac6ece1134730834b2efb49665270121604b8403dd"
+  license "BSD-2-Clause"
   head "https://github.com/okbob/pspg.git"
 
   bottle do
-    cellar :any
-    sha256 "78e87ef94d45c242e35278aa9a08c58e323a5b416787ef82face8152eac6d8c1" => :mojave
-    sha256 "e54f3a97bb410cb15a1dddf862a9c516568d339533317dfe3a4e3894951f41e5" => :high_sierra
-    sha256 "d38a0cd6834d50e9e9e3a3edc55866c7c3c110f4e091d93923f9290f246ff076" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "c09b384c16e0ade7d4353d1b6d06cc61ab22b06004722dfa9ab7adb8e1d583a1"
+    sha256 cellar: :any,                 big_sur:       "2e3bedf6ad2407132c8107dd3f6adeb6196434c1b9c7ca6f6234e986c8ffd433"
+    sha256 cellar: :any,                 catalina:      "5453a259da8c58a1649abe3cb76e8eb7f6e83300905df47ff0635b23538e4d85"
+    sha256 cellar: :any,                 mojave:        "3665fda66d39b6424b14b59d4d691ecbfab1595ec17b8b1cd1fa8cb18ab7efd0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b665862f542d0cacb880e34483f8709bae7689ba2832cc08f13f5b6de51d1edf"
   end
 
+  depends_on "libpq"
   depends_on "ncurses"
   depends_on "readline"
 
@@ -21,15 +24,16 @@ class Pspg < Formula
     system "make", "install"
   end
 
-  def caveats; <<~EOS
-    Add the following line to your psql profile (e.g. ~/.psqlrc)
-      \\setenv PAGER pspg
-      \\pset border 2
-      \\pset linestyle unicode
-  EOS
+  def caveats
+    <<~EOS
+      Add the following line to your psql profile (e.g. ~/.psqlrc)
+        \\setenv PAGER pspg
+        \\pset border 2
+        \\pset linestyle unicode
+    EOS
   end
 
   test do
-    assert_match "pspg-#{version.to_f}", shell_output("#{bin}/pspg --version")
+    assert_match "pspg-#{version}", shell_output("#{bin}/pspg --version")
   end
 end

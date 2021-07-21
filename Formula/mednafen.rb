@@ -1,20 +1,34 @@
 class Mednafen < Formula
   desc "Multi-system emulator"
   homepage "https://mednafen.github.io/"
-  url "https://mednafen.github.io/releases/files/mednafen-1.21.3.tar.xz"
-  sha256 "2e761e8834b098b7f1ab35dccaa6d2be715ee9106cf40af4919f6ca4b99ee3c6"
+  url "https://mednafen.github.io/releases/files/mednafen-1.27.1.tar.xz"
+  sha256 "f3a89b2f32f40c3232593808d05e0c21cbdf443688ace04c9c27e4cf4d5955fb"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url "https://mednafen.github.io/releases/"
+    regex(/href=.*?mednafen[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "1817b1b46cc5e573d9719d5619e9e78b8ea4e9bfbe7d911b808ddcefbd5a701f" => :mojave
-    sha256 "d4e4e7db27ba03192573ffd25cc1001aa6fee082c125f0aed68aebf6c84068f3" => :high_sierra
-    sha256 "ff2cdee178008a503e56b4ea5d607d4bee39360232c220eeda0f4fb572dbad92" => :sierra
+    sha256 arm64_big_sur: "89eb1006849d1d949b425d2937a7ca6e00c703a1edae563075dba88ccc817a0c"
+    sha256 big_sur:       "5d671db565de9ce937475c19880caf88d38faa2b2b8a42888230a0be27f32615"
+    sha256 catalina:      "beda51be33761b5b9e9764093e313b567d1b1bcd58aab91a64d3f7a4099d2c93"
+    sha256 mojave:        "62500c988c009c14e45f80de2f69d3b9a352946a36888adfe94b4eda14e6fc9f"
   end
 
   depends_on "pkg-config" => :build
   depends_on "gettext"
   depends_on "libsndfile"
-  depends_on :macos => :sierra # needs clock_gettime
+  depends_on macos: :sierra # needs clock_gettime
   depends_on "sdl2"
+
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "mesa"
+    depends_on "mesa-glu"
+  end
 
   def install
     system "./configure", "--prefix=#{prefix}", "--disable-dependency-tracking"
@@ -22,6 +36,11 @@ class Mednafen < Formula
   end
 
   test do
+    # Test fails on headless CI: Could not initialize SDL: No available video device
+    on_linux do
+      return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+    end
+
     cmd = "#{bin}/mednafen | head -n1 | grep -o '[0-9].*'"
     assert_equal version.to_s, shell_output(cmd).chomp
   end

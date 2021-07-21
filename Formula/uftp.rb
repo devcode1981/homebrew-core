@@ -1,50 +1,58 @@
 class Uftp < Formula
   desc "Secure, reliable, efficient multicast file transfer program"
   homepage "https://uftp-multicast.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/uftp-multicast/source-tar/uftp-4.9.8.tar.gz"
-  sha256 "e98c6318e497124d777ca71eae752d213207c35de9f782c8bcaaf82ece20e599"
+  url "https://downloads.sourceforge.net/project/uftp-multicast/source-tar/uftp-5.0.tar.gz"
+  sha256 "562f71ea5a24b615eb491f5744bad01e9c2e58244c1d6252d5ae98d320d308e0"
+  license "GPL-3.0-or-later"
 
-  bottle do
-    cellar :any
-    sha256 "1e9cf93c7cf204be2c2fa257321adc3c561e38f2232b1cb730d1b7afe246dabb" => :mojave
-    sha256 "69cc89d4b25477b115b242297b7c2ea4385a2097870d433b344e36333e874a9c" => :high_sierra
-    sha256 "8df58014e1e469d45a7f703387464a31663f0d632693b906fee835179000f95f" => :sierra
-    sha256 "b59605f65f2224aab208aaeac7867d25a05c8abe92afe8aff6a71a60a1e9e297" => :el_capitan
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/uftp[._-]v?(\d+(?:\.\d+)+)\.t}i)
   end
 
-  depends_on "openssl"
+  bottle do
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "b38ccf77d80d8b662c86abd4c11b3c94e6a1a166b011392f16261289ebb1d923"
+    sha256 cellar: :any,                 big_sur:       "8bb1c997a162785aae612d640fb4e9a69c22af980b38d82484b899041c024f1b"
+    sha256 cellar: :any,                 catalina:      "9a5f0d2a7fd5887a164733d78a5d57ded16f398284d58b258ca7221f3e5287e6"
+    sha256 cellar: :any,                 mojave:        "7193614091b37c59942a9d0cdf0cca676083b83062cc3db48c15a097734cc1d3"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "ec38c9a94075abab2dc63914921a3b045de4ab5a64639d0db99a2e84b58b9960"
+  end
+
+  depends_on "openssl@1.1"
 
   def install
-    system "make", "OPENSSL=#{Formula["openssl"].opt_prefix}", "DESTDIR=#{prefix}", "install"
+    system "make", "OPENSSL=#{Formula["openssl@1.1"].opt_prefix}", "DESTDIR=#{prefix}", "install"
     # the makefile installs into DESTDIR/usr/..., move everything up one and remove usr
     # the project maintainer was contacted via sourceforge on 12-Feb, he responded WONTFIX on 13-Feb
     prefix.install Dir["#{prefix}/usr/*"]
     (prefix/"usr").unlink
   end
 
-  plist_options :manual => "uftpd"
+  plist_options manual: "uftpd"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>KeepAlive</key>
-      <true/>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_sbin}/uftpd</string>
-        <string>-d</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>WorkingDirectory</key>
-      <string>#{var}</string>
-    </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>KeepAlive</key>
+        <true/>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/uftpd</string>
+          <string>-d</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>WorkingDirectory</key>
+        <string>#{var}</string>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do

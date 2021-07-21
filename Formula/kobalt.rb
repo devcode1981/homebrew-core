@@ -1,18 +1,19 @@
 class Kobalt < Formula
   desc "Build system"
   homepage "https://beust.com/kobalt/"
-  url "https://github.com/cbeust/kobalt/releases/download/1.0.122/kobalt-1.0.122.zip"
-  sha256 "0fb65c41f025b9c65c7191e77bb5d91bb2e8ae1869cc6fcdb9318a002a28add7"
+  url "https://github.com/cbeust/kobalt/releases/download/1.0.129/kobalt-1.0.129.zip"
+  sha256 "0b4db9992f18f3b04503aa09dbb690bb12761552b392e24d49b04cc77b8bff68"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  # https://github.com/cbeust/kobalt/issues/510
+  disable! date: "2021-06-28", because: :unmaintained
+
+  depends_on "openjdk"
 
   def install
     libexec.install "kobalt-#{version}/kobalt"
-
-    (bin/"kobaltw").write <<~EOS
-      #!/bin/bash
-      java -jar #{libexec}/kobalt/wrapper/kobalt-wrapper.jar $*
-    EOS
+    jar = libexec/"kobalt/wrapper/kobalt-wrapper.jar"
+    bin.write_jar_script jar, "kobaltw"
   end
 
   test do

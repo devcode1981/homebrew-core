@@ -1,15 +1,21 @@
 class Unnethack < Formula
   desc "Fork of Nethack"
-  homepage "https://sourceforge.net/projects/unnethack/"
-  url "https://downloads.sourceforge.net/project/unnethack/unnethack/5.1.0/unnethack-5.1.0-20131208.tar.gz"
-  sha256 "d92886a02fd8f5a427d1acf628e12ee03852fdebd3af0e7d0d1279dc41c75762"
+  homepage "https://unnethack.wordpress.com/"
+  url "https://github.com/UnNetHack/UnNetHack/archive/5.3.2.tar.gz"
+  sha256 "a32a2c0e758eb91842033d53d43f718f3bc719a346e993d9b23bac06f0ac9004"
   head "https://github.com/UnNetHack/UnNetHack.git"
 
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+(?:[._-]\d{6,8})?)$/i)
+  end
+
   bottle do
-    rebuild 1
-    sha256 "49f11fd0bf05d04c18826206e98dda97cf9cb0702ffa38f97b6062a4f29c356b" => :mojave
-    sha256 "2a81f9eaedd5ec9d058e458eade6d84d4186e46887af68e45ea85aded10528f3" => :high_sierra
-    sha256 "0ef61a7b3cf7d0b167ea3db9464cc10855d5131383b2cec1d87ac8f0afeae6f8" => :sierra
+    sha256 arm64_big_sur: "5b4386eee78f20075e693b6ad437df496c8c914518161d8901991c1c4a6ee1f9"
+    sha256 big_sur:       "45d58053580ccdf9b65510768136206b71453b3457f23240a6dc592f817a6145"
+    sha256 catalina:      "5a1aea5f715d4c8892be4a5e76d60157da6637559a0055c41ea8024284807e91"
+    sha256 mojave:        "84267cd44f073a41058516e7a8937da6b8b0f16e3500b0fd10ab0fedad77a5ce"
+    sha256 high_sierra:   "47228cb416afe4d7e9ab31a2b85914e6b27f77e88340f7ef174bb2d9dd3ea2bb"
   end
 
   # directory for temporary level data of running games

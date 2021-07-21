@@ -1,30 +1,30 @@
-require "language/haskell"
-
 class Pandoc < Formula
-  include Language::Haskell::Cabal
-
   desc "Swiss-army knife of markup format conversion"
   homepage "https://pandoc.org/"
-  url "https://hackage.haskell.org/package/pandoc-2.5/pandoc-2.5.tar.gz"
-  sha256 "d57dc5db78a0a304de70436fe59a7599ab0c6d0fb2ab6704eeae498a4536222e"
+  url "https://hackage.haskell.org/package/pandoc-2.14.1/pandoc-2.14.1.tar.gz"
+  sha256 "d8634336ef05a148d380ebd655b605e60a51415abc0d178068f717f2550840ca"
+  license "GPL-2.0-or-later"
   head "https://github.com/jgm/pandoc.git"
 
   bottle do
-    sha256 "daec3da0ebbeb6674a6efc2cc8a95c5563fd393ffa102fa1d8b589b5c7026d3f" => :mojave
-    sha256 "d8a8ad1220ff8aa672e3c6fe88abdd22b27fd69f5894e8f7821e70f0c7650154" => :high_sierra
-    sha256 "cd93731b019ed9a377761fc277ecce40a9778306d24a0addafa4c22ab42e5319" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "de69a86956681d5a69fb797e9223c93606e44d9523b5d800f481d39c1009e3d7"
+    sha256 cellar: :any_skip_relocation, big_sur:       "27e30c0b56e5005f792e13e1f2c3a92f7ed7b30b04a1f21a8dc7306dcc81d0f9"
+    sha256 cellar: :any_skip_relocation, catalina:      "08c9812e82e075c44dbc691f4cdfdafd5265500bdc03c47835c9be4e5fd46950"
+    sha256 cellar: :any_skip_relocation, mojave:        "790cad386bfbfaa3c972c04b4ea0bfcb6a7de3e01f8f41211e9e940ff5a143e9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "1012dab5b576721344348054140c3f560c6c5ed1e1bfa3891224c5dd4b6e764c"
   end
 
   depends_on "cabal-install" => :build
   depends_on "ghc" => :build
 
+  uses_from_macos "unzip" => :build # for cabal install
+  uses_from_macos "zlib"
+
   def install
-    cabal_sandbox do
-      args = []
-      args << "--constraint=cryptonite -support_aesni" if MacOS.version <= :lion
-      install_cabal_package *args
-    end
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args
     (bash_completion/"pandoc").write `#{bin}/pandoc --bash-completion`
+    man1.install "man/pandoc.1"
   end
 
   test do

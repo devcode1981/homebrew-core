@@ -1,18 +1,26 @@
 class Exempi < Formula
   desc "Library to parse XMP metadata"
   homepage "https://wiki.freedesktop.org/libopenraw/Exempi/"
-  url "https://libopenraw.freedesktop.org/download/exempi-2.4.5.tar.bz2"
-  sha256 "406185feb88e84ea1d4b4251370be2991205790d7113a7e28e192ff46a4f221e"
+  url "https://libopenraw.freedesktop.org/download/exempi-2.5.2.tar.bz2"
+  sha256 "52f54314aefd45945d47a6ecf4bd21f362e6467fa5d0538b0d45a06bc6eaaed5"
+
+  livecheck do
+    url "https://libopenraw.freedesktop.org/exempi/"
+    regex(/href=.*?exempi[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "45836b7114756f4a43b21423aa8469526a25300c455055ad76e837bb646aa30b" => :mojave
-    sha256 "cb8963597a18110d41181ef79296a7f649330dbd21581f3bbc02209ad478d1bc" => :high_sierra
-    sha256 "61b309245e23f723bdea631694de9809cc9ff9551abc87386eb063cef351c172" => :sierra
-    sha256 "b1214df8ff8d55b48940e13e27cb7a0fcce0d423a8a791de876974622add734e" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "9993c63e20e0f25bec9217f10830945e93554caeb9ed96530b31386205f3b963"
+    sha256 cellar: :any,                 big_sur:       "3dca3e311a819ad927266feecc2a0fa06a6baf196290655b5531ec02ea97dddd"
+    sha256 cellar: :any,                 catalina:      "3ef58fd5cbd177ac785cfab9b58f813ce24320a507243d9d7b6c940fd463564f"
+    sha256 cellar: :any,                 mojave:        "189bb3c57e78845c33678353cb877ad7cdedd665087c0a4525397f32088abc39"
+    sha256 cellar: :any,                 high_sierra:   "0843f9bc589fd3c9ed0f5dfd724ba60eea4832410a0b6ff831bdb22c6563eafd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e7dad218c3c0e3e3df9efc69e1a84cafd8a992c31157e610f0a382403599a439"
   end
 
   depends_on "boost"
+
+  uses_from_macos "expat"
 
   def install
     system "./configure", "--disable-dependency-tracking",

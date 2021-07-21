@@ -1,35 +1,30 @@
 class Chamber < Formula
   desc "CLI for managing secrets through AWS SSM Parameter Store"
   homepage "https://github.com/segmentio/chamber"
-  url "https://github.com/segmentio/chamber/archive/v2.3.2.tar.gz"
-  sha256 "760557880353beca3cc9aef3183507ff31696ad65d4b3341eaa52c30393146ab"
+  url "https://github.com/segmentio/chamber/archive/v2.10.1.tar.gz"
+  sha256 "ea1ddb05a5dbfbd23ab08f004eb2442366b1a33515333cc3a9b747e5c2424640"
+  license "MIT"
   head "https://github.com/segmentio/chamber.git"
 
+  livecheck do
+    url :stable
+    regex(%r{href=.*?/tag/v?(\d+(?:\.\d+)+(?:-ci\d)?)["' >]}i)
+    strategy :github_latest
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1f0d20b4517f5f288e6dd5bd712dbaa8627cadf5e3f192c2c4e82532fb2f0683" => :mojave
-    sha256 "cdbe6be1a7f516cff12be94469e3007bba0f709fc8a28621a8406b32327e9a34" => :high_sierra
-    sha256 "8f40df94bce52835b9e7b65a59de8417125793b632b440bfb645dbe189e1483c" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "ef86cc1dcd611f94f7ab59377bdc04a4d716f9a782fa17be887551af5629f14d"
+    sha256 cellar: :any_skip_relocation, big_sur:       "4aa6c179d62dc7c35f630d8aa3f8c23030cd41bcf8ae8d175dd7851ea67ca0cf"
+    sha256 cellar: :any_skip_relocation, catalina:      "08e0dfec7c1f00660daa2c5637d2609a05e364a95e28e79997058aabf3fa0078"
+    sha256 cellar: :any_skip_relocation, mojave:        "a7298287685510c1d50a285ee305c04d86c1ceb35be53aa6294802a51f82becd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6aae4dced4d18178af803ec55273c08523f24069876d676230e40298f8355e5a"
   end
 
   depends_on "go" => :build
-  depends_on "govendor" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    ENV["GOOS"] = "darwin"
-    ENV["GOARCH"] = "amd64"
-    ENV["CGO_ENABLED"] = "0"
-
-    path = buildpath/"src/github.com/segmentio/chamber"
-    path.install Dir["{*,.git}"]
-
-    cd "src/github.com/segmentio/chamber" do
-      system "govendor", "sync"
-      system "go", "build", "-o", bin/"chamber",
-                   "-ldflags", "-X main.Version=#{version}"
-      prefix.install_metafiles
-    end
+    system "go", "build", "-ldflags", "-s -w -X main.Version=v#{version}", "-trimpath", "-o", bin/"chamber"
+    prefix.install_metafiles
   end
 
   test do

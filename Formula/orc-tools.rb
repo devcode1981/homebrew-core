@@ -1,10 +1,20 @@
 class OrcTools < Formula
   desc "ORC java command-line tools and utilities"
   homepage "https://orc.apache.org/"
-  url "https://search.maven.org/remotecontent?filepath=org/apache/orc/orc-tools/1.5.3/orc-tools-1.5.3-uber.jar"
-  sha256 "1b8f170d72049bdb1e424dd46c744d924dd7643970410f2a32ac89d51b23c00a"
+  url "https://search.maven.org/remotecontent?filepath=org/apache/orc/orc-tools/1.6.9/orc-tools-1.6.9-uber.jar"
+  sha256 "ff64698b0da36136e21a0c8255f594ea29c671c2386248eb11bc4bee7d5e2028"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  livecheck do
+    url "https://search.maven.org/remotecontent?filepath=org/apache/orc/orc-tools/"
+    regex(%r{href=["']?v?(\d+(?:\.\d+)+)/?["' >]}i)
+  end
+
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "a126a1c6cf7c7cdc9283ac514e0ae8303fd2e55925f1079ea1cca266725105c8"
+  end
+
+  depends_on "openjdk"
 
   def install
     libexec.install "orc-tools-#{version}-uber.jar"

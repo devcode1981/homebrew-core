@@ -1,15 +1,15 @@
 class OsmGpsMap < Formula
   desc "GTK+ library to embed OpenStreetMap maps"
   homepage "https://nzjrs.github.com/osm-gps-map/"
-  url "https://github.com/nzjrs/osm-gps-map/releases/download/1.1.0/osm-gps-map-1.1.0.tar.gz"
-  sha256 "8f2ff865ed9ed9786cc5373c37b341b876958416139d0065ebb785cf88d33586"
-  revision 1
+  url "https://github.com/nzjrs/osm-gps-map/releases/download/1.2.0/osm-gps-map-1.2.0.tar.gz"
+  sha256 "ddec11449f37b5dffb4bca134d024623897c6140af1f9981a8acc512dbf6a7a5"
+  license "GPL-2.0-or-later"
 
   bottle do
-    sha256 "3fc5e8704885ee52388758422a586fe36f67f0bb88f260107d8d51ddaee69131" => :mojave
-    sha256 "9b4ff596f15ef4dd79f8a52869ce0f0dc4e104c827f79dd223c3ff3c60631c5c" => :high_sierra
-    sha256 "5303392a0018ff176e67b844d1808834500c1b0ac8dd5362ad5f2a70939d1bc2" => :sierra
-    sha256 "05bc6efb9676e68162e553bfe41f7467e5f7d8da85cb9cfda5256bf5a79ff884" => :el_capitan
+    sha256 arm64_big_sur: "8d4bfe8a748f9c06582dda25792b96b98eab8b21cec98d58b521cb8b8d4c26cf"
+    sha256 big_sur:       "54380e69472c5e9ae483823a3ec04c8b5bde31a1cdbc581dd9e14efeed2f8324"
+    sha256 catalina:      "c02c8a26f0a806b356e84ef628f71243007da8811b887ddcde2627f3ad763d2b"
+    sha256 mojave:        "af136c4438f1b2ff9fd45c1c89a39db9a5703b18d766137abdf2644c8d418ac2"
   end
 
   head do
@@ -51,6 +51,7 @@ class OsmGpsMap < Formula
     glib = Formula["glib"]
     gdk_pixbuf = Formula["gdk-pixbuf"]
     gtkx3 = Formula["gtk+3"]
+    harfbuzz = Formula["harfbuzz"]
     pango = Formula["pango"]
     flags = %W[
       -I#{atk.opt_include}/atk-1.0
@@ -59,6 +60,7 @@ class OsmGpsMap < Formula
       -I#{glib.opt_include}/glib-2.0
       -I#{glib.opt_lib}/glib-2.0/include
       -I#{gtkx3.opt_include}/gtk-3.0
+      -I#{harfbuzz.opt_include}/harfbuzz
       -I#{pango.opt_include}/pango-1.0
       -I#{include}/osmgpsmap-1.0
       -D_REENTRANT
@@ -80,6 +82,12 @@ class OsmGpsMap < Formula
       -losmgpsmap-1.0
     ]
     system ENV.cc, "test.c", "-o", "test", *flags
+
+    on_linux do
+      # (test:40601): Gtk-WARNING **: 23:06:24.466: cannot open display
+      return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+    end
+
     system "./test"
   end
 end

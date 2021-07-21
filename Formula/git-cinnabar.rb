@@ -1,26 +1,30 @@
 class GitCinnabar < Formula
   desc "Git remote helper to interact with mercurial repositories"
   homepage "https://github.com/glandium/git-cinnabar"
-  url "https://github.com/glandium/git-cinnabar/archive/0.5.0.tar.gz"
-  sha256 "1e09c7c24a34eb172681283ca243677ea06f4da179916a907f43f9027ca59dea"
+  url "https://github.com/glandium/git-cinnabar/archive/0.5.7.tar.gz"
+  sha256 "1f30b79b89b421ba33e47f00a8301da5b7533e10cc6314c4febd23ad6ed4b17b"
+  license "GPL-2.0-only"
   head "https://github.com/glandium/git-cinnabar.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "2e3f534c222993f479e8e2db49e54b0692deb394d07ea79b52eceee5bbc1ad04" => :mojave
-    sha256 "cbd5edcb40be1b5cdf8fb93de3521ba409397e807f575e5a7feeebde40170be1" => :high_sierra
-    sha256 "c5a0fc3194a4d481b9429cab610ec7ba5ef849f0b76b8cfcb1c5fe3bc97025db" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "8b626b0efd0fa40519709c9611ac32134adbe6bbe83ca9ac4068a2f8ce5babc6"
+    sha256 cellar: :any_skip_relocation, big_sur:       "68a335fc1ed34f8207dc50a1772424d25c3f670e8a6ee643d6ac31e95dd7df61"
+    sha256 cellar: :any_skip_relocation, catalina:      "d9b9bdf7c8c135a469842f62b8d95ab68d7135cd3bab11bf350eacc70b9ccd51"
+    sha256 cellar: :any_skip_relocation, mojave:        "c137a58d44bcdc96eac89581334411fe95e5eb98824b558ee4249c30bef9aa67"
   end
 
+  depends_on :macos # Due to Python 2
   depends_on "mercurial"
 
-  conflicts_with "git-remote-hg", :because => "both install `git-remote-hg` binaries"
+  uses_from_macos "curl"
+
+  conflicts_with "git-remote-hg", because: "both install `git-remote-hg` binaries"
 
   def install
     system "make", "helper"
     prefix.install "cinnabar"
     bin.install "git-cinnabar", "git-cinnabar-helper", "git-remote-hg"
-    bin.env_script_all_files(libexec, :PYTHONPATH => prefix)
+    bin.env_script_all_files(libexec, PYTHONPATH: prefix)
   end
 
   test do

@@ -1,30 +1,27 @@
 class Micro < Formula
   desc "Modern and intuitive terminal-based text editor"
   homepage "https://github.com/zyedidia/micro"
-  url "https://github.com/zyedidia/micro/releases/download/v1.4.1/micro-1.4.1-src.tar.gz"
-  sha256 "0b516826226cf1ddf2fbb274f049cab456a5c162efe3d648f0871564fadcf812"
-  head "https://github.com/zyedidia/micro.git", :shallow => false
+  url "https://github.com/zyedidia/micro.git",
+      tag:      "v2.0.9",
+      revision: "6bc498e625e66e3d0c947639dbffb09d986318d0"
+  license "MIT"
+  head "https://github.com/zyedidia/micro.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "f5176ac6e12e25b7b8c88965cc8d92fe0892f6eaec60c28359c3be3e2f460df0" => :mojave
-    sha256 "863a1f4f3cb0f48efe6ca22a0df05cf2c9adcaf63857aea622f2e26e21836dc5" => :high_sierra
-    sha256 "8426c70077cf223e6fb677de514ede5546c3635b9760da0c1980577c7b2dd016" => :sierra
-    sha256 "73755f137c49c168bf9ccc817df71b067959609fa2dc3eabda8002fb8f253e67" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "44592bcca54de4d876b978c4e68631a9c31bdf39c65d961e9700ef6ed05af292"
+    sha256 cellar: :any_skip_relocation, big_sur:       "876f97a93335c70abf96d30d1bca0a4e6dc68f532205a7843451f25184764e97"
+    sha256 cellar: :any_skip_relocation, catalina:      "5d95bee552c50d29d65f4b8bc075a7b2d7d0dddfd756d608e02897ab93fbf2ef"
+    sha256 cellar: :any_skip_relocation, mojave:        "64717e9a4926f13813f47ac3461c4c610367f316b672bd570fee6d9721beffc3"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "0239bac895317d828285292ddb5c3306b3c30a412befd0aaedc0d9c4a4ed60f2"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    (buildpath/"src/github.com/zyedidia/micro").install buildpath.children
-
-    cd "src/github.com/zyedidia/micro" do
-      system "make", "build-quick"
-      bin.install "micro"
-      prefix.install_metafiles
-    end
+    system "make", "build-tags"
+    bin.install "micro"
+    man1.install "assets/packaging/micro.1"
+    prefix.install_metafiles
   end
 
   test do

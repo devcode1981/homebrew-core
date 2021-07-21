@@ -1,25 +1,23 @@
 class Annie < Formula
   desc "Fast, simple and clean video downloader"
   homepage "https://github.com/iawia002/annie"
-  url "https://github.com/iawia002/annie/archive/0.8.5.tar.gz"
-  sha256 "0fa9b0c4c59f0a67d84bef8ecfbd93ec755e7e50945edc6dd877385545d6d8ce"
+  url "https://github.com/iawia002/annie/archive/0.10.3.tar.gz"
+  sha256 "a5252317113cf90e687a532b2e961126206b29829c61d6507fc69881e85d1d34"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "78f86c1e949f2f19f09d7f1898695a96e2f18b77724514562396a3c90588d54b" => :mojave
-    sha256 "19f399b3ad405e02e8f74cde72d1a0cc0489de76f5ed6fe188193acbc96a2999" => :high_sierra
-    sha256 "5f64823d027b16466f052ed2a01d8e4abd832527ead581d240fd945e5f63eb33" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "8cae955f23da39b7322ca960edd82ec3ff4f894e1331ed4661ae6e178b778d6d"
+    sha256 cellar: :any_skip_relocation, big_sur:       "90806f04f7b95fbd43021e7efa9c9e02acef136fa03c731930db4c1a307a5f84"
+    sha256 cellar: :any_skip_relocation, catalina:      "8c608e9147c4f83c6ba931d16967d688e71afb82aaa1a1ba9807e7a23fde0437"
+    sha256 cellar: :any_skip_relocation, mojave:        "5da3e7ca14e3f6305f4b104490656e6d0edc94ec6e73d8d3eb5a6cf237819680"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "2187f28963dc9493cf35d9014eead0919e27ef77072f705787b6bd7d446ce03f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "759aff3b06afe590513ec26419cf8eade0a85ec954ca9064ae414154ab5256d6"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/iawia002/annie").install buildpath.children
-    cd "src/github.com/iawia002/annie" do
-      system "go", "build", "-o", bin/"annie"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args
   end
 
   test do

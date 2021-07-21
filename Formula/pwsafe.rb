@@ -3,18 +3,25 @@ class Pwsafe < Formula
   homepage "https://github.com/nsd20463/pwsafe"
   url "https://src.fedoraproject.org/repo/pkgs/pwsafe/pwsafe-0.2.0.tar.gz/4bb36538a2772ecbf1a542bc7d4746c0/pwsafe-0.2.0.tar.gz"
   sha256 "61e91dc5114fe014a49afabd574eda5ff49b36c81a6d492c03fcb10ba6af47b7"
-  revision 2
+  license "GPL-2.0"
+  revision 4
 
-  bottle do
-    cellar :any
-    sha256 "bdd412155cacaf41af7df75e4fb33d27dd035645af3167dd7457cda2bd4542ef" => :mojave
-    sha256 "be2e0da22fa321f9745b9f9bfe09c20e9fee17852f6369fe365fc457654afb34" => :high_sierra
-    sha256 "2e8928d27de84dac239832ba22f66ebbc85d14ac8c420f5971db90b407e5781e" => :sierra
-    sha256 "124f8d5da3927bf76826f0a3ccfeb59e1fc8674b7f7c8ed4e2b6aed3e86a5263" => :el_capitan
-    sha256 "6c8fffd07460664b877c97d00a9507b232d6fae885a29ed5f0842192bee410f4" => :yosemite
+  livecheck do
+    url "https://src.fedoraproject.org/repo/pkgs/pwsafe/"
+    regex(/href=.*?pwsafe[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  depends_on "openssl"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "a275c6ed6882cc4d69656ce9b779be2ac3cec24a53e2e6a32668f78681a99ec3"
+    sha256 cellar: :any,                 big_sur:       "69517fc542457fad58bbebe4e2f60c8316de47f5e50ac546370dc40afc62c5e6"
+    sha256 cellar: :any,                 catalina:      "5f952aa85147c86d2f77f9054fe228484820388c3b1e92c39c12432a15ca0f54"
+    sha256 cellar: :any,                 mojave:        "94c4b9684c2709c7cbd168609db33271ede431f1f72c348bb508e65a07bf8faa"
+    sha256 cellar: :any,                 high_sierra:   "5d5a277678e752596a342712e46dd2e1ce015d6897ad7f74437509a39f47b5ce"
+    sha256 cellar: :any,                 sierra:        "e5fd7f0c41f73c0bdf2f455b7ad659d27931afc1e78536e11a0553be0e8cade1"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "45c3ced398e2ae04a1449deb1bf23b033a9d82a44d00d1d7da788ce04f81fde1"
+  end
+
+  depends_on "openssl@1.1"
   depends_on "readline"
 
   # A password database for testing is provided upstream. How nice!

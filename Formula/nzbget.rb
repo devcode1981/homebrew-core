@@ -1,44 +1,44 @@
 class Nzbget < Formula
   desc "Binary newsgrabber for nzb files"
   homepage "https://nzbget.net/"
-  url "https://github.com/nzbget/nzbget/releases/download/v20.0/nzbget-20.0-src.tar.gz"
-  sha256 "04dc36d432549c33d55145ecd95cc4309b3ab4a7731a1a03d954de389eacd06f"
-  head "https://github.com/nzbget/nzbget.git", :branch => "develop"
+  url "https://github.com/nzbget/nzbget/releases/download/v21.1/nzbget-21.1-src.tar.gz"
+  sha256 "4e8fc1beb80dc2af2d6a36a33a33f44dedddd4486002c644f4c4793043072025"
+  license "GPL-2.0-or-later"
+  head "https://github.com/nzbget/nzbget.git", branch: "develop"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    sha256 "6e9bb7d0fa4a14eba43d78cca17a4f8a24be119481ec3b1b4f017ebae99dedeb" => :mojave
-    sha256 "e28994fadf8cb1c81dd90de7cec9427f2fb7cf2e26b26a5844f8931b58549d37" => :high_sierra
-    sha256 "ac695e943c123fd8220c22ab9b164ec4f38aabc608f0b06d6415b85985991011" => :sierra
-    sha256 "90cce93915e5013766ea3f1a6ad071e33891752e053773e95c2a847e56869320" => :el_capitan
+    sha256                               big_sur:      "58bdb9f03b4fd13f12a8ae0eaad6c4a020843ee63458b7309350d84dd1507679"
+    sha256                               catalina:     "9a83ad81e63662db998f945f0a3531615332eed2d8b26bf035559aca133d52b6"
+    sha256                               mojave:       "6a63b3f3645d5f03333db43d5e216a8bcc2a8d97935ae79423a892af1f452855"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "7181a81344fa3ca15bd73a984257bf3dd5f7ad75af25dd4e2c54128edb0050ce"
   end
 
   depends_on "pkg-config" => :build
-  depends_on "gcc" if MacOS.version <= :mavericks
-  depends_on "openssl"
+  depends_on "openssl@1.1"
 
-  fails_with :clang do
-    build 600
-    cause "No compiler with C++14 support was found"
-  end
-
-  fails_with :clang do
-    build 500
-    cause <<~EOS
-      Clang older than 5.1 requires flexible array members to be POD types.
-      More recent versions require only that they be trivially destructible.
-    EOS
-  end
-
-  needs :cxx11
+  uses_from_macos "libxml2"
+  uses_from_macos "ncurses"
 
   def install
     ENV.cxx11
 
     # Fix "ncurses library not found"
     # Reported 14 Aug 2016: https://github.com/nzbget/nzbget/issues/264
-    (buildpath/"brew_include").install_symlink MacOS.sdk_path/"usr/include/ncurses.h"
-    ENV["ncurses_CFLAGS"] = "-I#{buildpath}/brew_include"
-    ENV["ncurses_LIBS"] = "-L/usr/lib -lncurses"
+    on_macos do
+      (buildpath/"brew_include").install_symlink MacOS.sdk_path/"usr/include/ncurses.h"
+      ENV["ncurses_CFLAGS"] = "-I#{buildpath}/brew_include"
+      ENV["ncurses_LIBS"] = "-L/usr/lib -lncurses"
+    end
+
+    on_linux do
+      ENV["ncurses_CFLAGS"] = "-I#{Formula["ncurses"].opt_include}"
+      ENV["ncurses_LIBS"] = "-L#{Formula["ncurses"].opt_lib} -lncurses"
+    end
 
     # Tell configure to use OpenSSL
     system "./configure", "--disable-debug", "--disable-dependency-tracking",
@@ -51,44 +51,58 @@ class Nzbget < Formula
 
     # Set upstream's recommended values for file systems without
     # sparse-file support (e.g., HFS+); see Homebrew/homebrew-core#972
-    inreplace "nzbget.conf", "DirectWrite=yes", "DirectWrite=no"
-    inreplace "nzbget.conf", "ArticleCache=0", "ArticleCache=700"
+    on_macos do
+      inreplace "nzbget.conf", "DirectWrite=yes", "DirectWrite=no"
+      inreplace "nzbget.conf", "ArticleCache=0", "ArticleCache=700"
+    end
 
     etc.install "nzbget.conf"
   end
 
-  plist_options :manual => "nzbget"
+  plist_options manual: "nzbget"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/nzbget</string>
-        <string>-s</string>
-        <string>-o</string>
-        <string>OutputMode=Log</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>KeepAlive</key>
-      <true/>
-    </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>EnvironmentVariables</key>
+        <dict>
+          <key>PATH</key>
+          <string>#{HOMEBREW_PREFIX}/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        </dict>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/nzbget</string>
+          <string>-c</string>
+          <string>#{HOMEBREW_PREFIX}/etc/nzbget.conf</string>
+          <string>-s</string>
+          <string>-o</string>
+          <string>OutputMode=Log</string>
+          <string>-o</string>
+          <string>ConfigTemplate=#{HOMEBREW_PREFIX}/opt/nzbget/share/nzbget/nzbget.conf</string>
+          <string>-o</string>
+          <string>WebDir=#{HOMEBREW_PREFIX}/opt/nzbget/share/nzbget/webui</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>KeepAlive</key>
+        <true/>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do
     (testpath/"downloads/dst").mkpath
     # Start nzbget as a server in daemon-mode
-    system "#{bin}/nzbget", "-D"
+    system "#{bin}/nzbget", "-D", "-c", etc/"nzbget.conf"
     # Query server for version information
-    system "#{bin}/nzbget", "-V"
+    system "#{bin}/nzbget", "-V", "-c", etc/"nzbget.conf"
     # Shutdown server daemon
-    system "#{bin}/nzbget", "-Q"
+    system "#{bin}/nzbget", "-Q", "-c", etc/"nzbget.conf"
   end
 end

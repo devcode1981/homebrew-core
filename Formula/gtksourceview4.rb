@@ -1,28 +1,41 @@
 class Gtksourceview4 < Formula
   desc "Text view with syntax, undo/redo, and text marks"
   homepage "https://projects.gnome.org/gtksourceview/"
-  url "https://download.gnome.org/sources/gtksourceview/4.0/gtksourceview-4.0.3.tar.xz"
-  sha256 "3d55a7b82841d96bf414ced2e1e912d4881c9ba2f7b74f0ff8aad636087f9d73"
+  url "https://download.gnome.org/sources/gtksourceview/4.8/gtksourceview-4.8.1.tar.xz"
+  sha256 "d163d71b5fcafbc5b1eec6dd841edbdbcddd3a7511cd5fdcffd86b8bbfe69ac1"
+  license "LGPL-2.1-or-later"
+
+  livecheck do
+    url :stable
+    regex(/gtksourceview[._-]v?(4\.([0-8]\d*?)?[02468](?:\.\d+)*?)\.t/i)
+  end
 
   bottle do
-    sha256 "7d17461644a667ba14d5c76e0f99dfbe820f982ac7106e26294f6648a6edd4af" => :mojave
-    sha256 "9b70d2f3882b03d185615688425f61d157eebd96f3987b1cb51080654512c90f" => :high_sierra
-    sha256 "7dd057f3add8bceb8a1062798e38adb7bdb3ff29159d5069a5ed4d7aa91b739d" => :sierra
+    sha256 arm64_big_sur: "6dfdf21c1f61af35c5cdf091a8b110d8c7d0aecd10aabbc3309d8fbb6bf5f1c1"
+    sha256 big_sur:       "9777a274cb8a7fb9bcddbcf6870242cfaf0100398b31c7492b950eb577245b8a"
+    sha256 catalina:      "43ca1ff6338153338fc2334f41cfc0d1959ad613e224751e4fbcb1902c09af9f"
+    sha256 mojave:        "f0cea7568ac88d30a82d86eacb95d36083fccae6343e08c87f238a9a657ca147"
+    sha256 x86_64_linux:  "08aa9a13358d4404715909532b7e871ad8bf5fd1326dea9f4f9b5aa3a52eae26"
   end
 
   depends_on "gobject-introspection" => :build
-  depends_on "intltool" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "vala" => :build
-  depends_on "gettext"
   depends_on "gtk+3"
 
   def install
-    system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}",
-                          "--enable-vala=yes",
-                          "--enable-gobject-introspection=yes"
-    system "make", "install"
+    args = std_meson_args + %w[
+      -Dgir=true
+      -Dvapi=true
+    ]
+
+    mkdir "build" do
+      system "meson", *args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
   end
 
   test do
@@ -43,6 +56,7 @@ class Gtksourceview4 < Formula
     gettext = Formula["gettext"]
     glib = Formula["glib"]
     gtkx3 = Formula["gtk+3"]
+    harfbuzz = Formula["harfbuzz"]
     libepoxy = Formula["libepoxy"]
     libpng = Formula["libpng"]
     pango = Formula["pango"]
@@ -58,6 +72,7 @@ class Gtksourceview4 < Formula
       -I#{glib.opt_include}/glib-2.0
       -I#{glib.opt_lib}/glib-2.0/include
       -I#{gtkx3.opt_include}/gtk-3.0
+      -I#{harfbuzz.opt_include}/harfbuzz
       -I#{include}/gtksourceview-4
       -I#{libepoxy.opt_include}
       -I#{libpng.opt_include}/libpng16
@@ -81,11 +96,16 @@ class Gtksourceview4 < Formula
       -lglib-2.0
       -lgobject-2.0
       -lgtk-3
-      -lgtksourceview-4.0
-      -lintl
       -lpango-1.0
       -lpangocairo-1.0
     ]
+    on_macos do
+      flags << "-lintl"
+      flags << "-lgtksourceview-4.0"
+    end
+    on_linux do
+      flags << "-lgtksourceview-4"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end

@@ -1,14 +1,20 @@
 class ShibbolethSp < Formula
   desc "Shibboleth 2 Service Provider daemon"
   homepage "https://wiki.shibboleth.net/confluence/display/SHIB2"
-  url "https://shibboleth.net/downloads/service-provider/3.0.2/shibboleth-sp-3.0.2.tar.bz2"
-  sha256 "7aab399aeaf39145c60e1713dbc29a65f618e9eca84505f5ed03cee63e3f31a3"
-  revision 3
+  url "https://shibboleth.net/downloads/service-provider/3.2.3/shibboleth-sp-3.2.3.tar.bz2"
+  sha256 "a02b441c09dc766ca65b78fe631277a17c5eb2f0a441b035cdb6a4720fb94024"
+  license "Apache-2.0"
+
+  livecheck do
+    url "https://shibboleth.net/downloads/service-provider/latest/"
+    regex(/href=.*?shibboleth-sp[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "b1d3c2cb3c8a6c3677c535bc823681fe71395ac30e7de205051745a12a01330b" => :mojave
-    sha256 "8968449274a5e3f545d69bb3c4cfabbc78b98046d6ad73fbd2749c52f6b372eb" => :high_sierra
-    sha256 "40c50c27cdf4b5fb23d9dda3a01eed70abd6a4b1fc7536a5e88589cec1d3706c" => :sierra
+    sha256 arm64_big_sur: "5da6a421faf2e3aaf0d222816712269cd31a78fa716854492d2c9f87a6115a77"
+    sha256 big_sur:       "99e4e8bb7eb6fb35d545079b836382f8b1e5fa71c8e6473cde4f18fb109e3b09"
+    sha256 catalina:      "1f8547fa3587591c061f7569668cd128f4918e78555c9b180a694d5a45adb4ce"
+    sha256 mojave:        "cf2279276c1f7e2585ce9d1cd12f456550215f0b4f8f950be607c1f8e6574cb3"
   end
 
   depends_on "apr" => :build
@@ -17,18 +23,14 @@ class ShibbolethSp < Formula
   depends_on "boost"
   depends_on "httpd" if MacOS.version >= :high_sierra
   depends_on "log4shib"
-  depends_on :macos => :yosemite
   depends_on "opensaml"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
   depends_on "unixodbc"
   depends_on "xerces-c"
   depends_on "xml-security-c"
   depends_on "xml-tooling-c"
 
-  needs :cxx11
-
   def install
-    ENV.O2 # Os breaks the build
     ENV.cxx11
     args = %W[
       --disable-debug
@@ -43,9 +45,7 @@ class ShibbolethSp < Formula
       DYLD_LIBRARY_PATH=#{lib}
     ]
 
-    if MacOS.version >= :high_sierra
-      args << "--with-apxs24=#{Formula["httpd"].opt_bin}/apxs"
-    end
+    args << "--with-apxs24=#{Formula["httpd"].opt_bin}/apxs" if MacOS.version >= :high_sierra
 
     system "./configure", *args
     system "make", "install"
@@ -56,42 +56,31 @@ class ShibbolethSp < Formula
     (var/"cache/shibboleth").mkpath
   end
 
-  def caveats
-    mod = build.with?("apache-22") ? "mod_shib_22.so" : "mod_shib_24.so"
+  plist_options startup: true, manual: "shibd"
+
+  def plist
     <<~EOS
-      You must manually edit httpd.conf to include
-      LoadModule mod_shib #{opt_lib}/shibboleth/#{mod}
-      You must also manually configure
-        #{etc}/shibboleth/shibboleth2.xml
-      as per your own requirements. For more information please see
-        https://wiki.shibboleth.net/confluence/display/EDS10/3.1+Configuring+the+Service+Provider
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_sbin}/shibd</string>
+          <string>-F</string>
+          <string>-f</string>
+          <string>-p</string>
+          <string>#{var}/run/shibboleth/shibd.pid</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>KeepAlive</key>
+        <true/>
+      </dict>
+      </plist>
     EOS
-  end
-
-  plist_options :startup => true, :manual => "shibd"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_sbin}/shibd</string>
-        <string>-F</string>
-        <string>-f</string>
-        <string>-p</string>
-        <string>#{var}/run/shibboleth/shibd.pid</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>KeepAlive</key>
-      <true/>
-    </dict>
-    </plist>
-  EOS
   end
 
   test do

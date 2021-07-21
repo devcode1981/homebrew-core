@@ -1,28 +1,24 @@
 class Ctop < Formula
   desc "Top-like interface for container metrics"
   homepage "https://bcicen.github.io/ctop/"
-  url "https://github.com/bcicen/ctop/archive/v0.7.1.tar.gz"
-  sha256 "baa632235c43ed84557a13b475a1972a8327a55babb6dd08d2d72643f8442ed2"
+  url "https://github.com/bcicen/ctop.git",
+      tag:      "0.7.6",
+      revision: "8f0c9f5048f455b72418625bb5687022a273bb44"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "3c581ea1e2572f43ac4410fcbb5f39e706a031d45998ad54cc1ba474fa2c1cb1" => :mojave
-    sha256 "0d2f00fb47786a5a95578da90f80979683e76d431ad90c62088d082af4ecdeff" => :high_sierra
-    sha256 "3d3968570b78e240fe94f16eb4235f016ba1f5943e3030eb177b0a7a71989934" => :sierra
-    sha256 "149adb4dfa66b7492992c07f1007743f69a6069d380a43d0e14dfffba7bc8988" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "92a1aa5a1b27ddcc1499d196a3e1e87f67a0bbf89664308b8dc009030cf29d5a"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c654814649f0fdefb159bda66af0926fe0615c6ac185f6234a88642e7add2947"
+    sha256 cellar: :any_skip_relocation, catalina:      "517e520dc241ade15a6f493b394efa25e212e779ec2d6f1bfd6b9ecd0f0a9627"
+    sha256 cellar: :any_skip_relocation, mojave:        "8186e049abc8b0e5f1253c5f310ffb6884b7defad2a8ed6fe50dceee573e5bcd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "a8f57a35650d0f5373da569e048732603b8325e345b74680a49f47bc55860ef8"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/bcicen/ctop").install buildpath.children
-    cd "src/github.com/bcicen/ctop" do
-      system "make", "build"
-      bin.install "ctop"
-      prefix.install_metafiles
-    end
+    system "make", "build"
+    bin.install "ctop"
   end
 
   test do

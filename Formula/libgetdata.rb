@@ -6,14 +6,19 @@ class Libgetdata < Formula
   revision 1
 
   bottle do
-    rebuild 2
-    sha256 "fa65dd52dae9d73aeaa6fdf33edb9c589b537c7aa8dde1bc07ba62ecf5718370" => :mojave
-    sha256 "13e9d36f7ee8156ad9b5ffaa646588084e9212238aafbab50849f60c6cad0ab9" => :high_sierra
-    sha256 "9a96ebcf2d456594b5205c2ff0918dc7bcfff29be358fd6e369131f941e02f75" => :sierra
-    sha256 "88055dcabc5ed8b6cc068e244f8174eb798fd778e67a27867b3a0b33b3453121" => :el_capitan
+    rebuild 3
+    sha256 cellar: :any,                 arm64_big_sur: "731e469e2d2f4de61115fc882715a9dbaf33da5f14cc89fc628a1440766738fd"
+    sha256 cellar: :any,                 big_sur:       "3ee0053d39a05cadec5f4ed7edc3f143af7afd3d53b0fb7ee89b905ef7a220c6"
+    sha256 cellar: :any,                 catalina:      "f133f438e1833bff0f5cf43109e27768a983a068dec90a767ba9027d2bc2f0b9"
+    sha256 cellar: :any,                 mojave:        "6c5f143bb202c280c3b3e340a420a1cf6c6d936cba70faf837cd215e451987fe"
+    sha256 cellar: :any,                 high_sierra:   "6b8b5f7801a6cf31ecd5ac82ee02ca344f9634ad01c235a828e3875d0354931b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "ef662c1fb66b8a46d82839d88417254970ff479eed33345b3d67cfec6d2c7f57"
   end
 
   depends_on "libtool"
+
+  uses_from_macos "perl"
+  uses_from_macos "zlib"
 
   def install
     system "./configure", "--prefix=#{prefix}",

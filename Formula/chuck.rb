@@ -1,25 +1,27 @@
 class Chuck < Formula
   desc "Concurrent, on-the-fly audio programming language"
-  homepage "http://chuck.cs.princeton.edu/"
-  url "http://chuck.cs.princeton.edu/release/files/chuck-1.4.0.0.tgz"
-  sha256 "2caee332b8d48e2fddad0f8a0a1811b6cf4c5afab73ae8a17b85ec759cce27ac"
+  homepage "https://chuck.cs.princeton.edu/"
+  url "https://chuck.cs.princeton.edu/release/files/chuck-1.4.1.0.tgz"
+  mirror "http://chuck.stanford.edu/release/files/chuck-1.4.1.0.tgz"
+  sha256 "74bf99ad515e3113c55b833152936fad02a3cf006a54105ff11777c473194928"
+  license "GPL-2.0-or-later"
+  head "https://github.com/ccrma/chuck.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "3dea1fba4982d2770ccfb10c90363a1a1342281900814dc9d617a41b758bc479" => :mojave
-    sha256 "8b3feed2d5a3773ee2479a05af8628e83a5fb8e355f3e269202c72fa7ff80258" => :high_sierra
-    sha256 "17e8770cd31f86a3cb890bca8c648a2e7321511130016b47b67b08eaceeab2b9" => :sierra
+  livecheck do
+    url "https://chuck.cs.princeton.edu/release/files/"
+    regex(/href=.*?chuck[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  depends_on :xcode => :build
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "15d78dc288ef27e39e5440230eee351b8bdd5b9a3600d4a3091b5449301ecaa4"
+    sha256 cellar: :any_skip_relocation, big_sur:       "f0c77148d868e250d5de2e454fa57b63d652c139017bbecdab93bb3083e15a27"
+    sha256 cellar: :any_skip_relocation, catalina:      "c5d475570562295a5ffd68ea6f43444ec6ca35c21d39d851e2dfda605d0f4d8e"
+    sha256 cellar: :any_skip_relocation, mojave:        "479931bcc4ed8b29d80ec7f259f01f113ac5f6a6a75be3228bca9c018b0ffe3d"
+  end
+
+  depends_on xcode: :build
 
   def install
-    # Support for newer macOS versions
-    inreplace "src/core/makefile.x/makefile.osx",
-              "10\\.(6|7|8|9|10|11|12|13)",
-              "10\\.(6|7|8|9|10|11|12|1[0-9])"
-
     system "make", "-C", "src", "osx"
     bin.install "src/chuck"
     pkgshare.install "examples"

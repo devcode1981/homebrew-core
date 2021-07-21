@@ -1,44 +1,53 @@
 class Soci < Formula
   desc "Database access library for C++"
   homepage "https://soci.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/soci/soci/soci-3.2.3/soci-3.2.3.zip"
-  sha256 "ab0f82873b0c5620e0e8eb2ff89abad6517571fd63bae4bdcac64dd767ac9a05"
+  url "https://downloads.sourceforge.net/project/soci/soci/soci-4.0.2/soci-4.0.2.zip"
+  sha256 "3c8a456579320dc828cace5aa20d4d10690b273a50997e9c195d0b270fa668ba"
+  license "BSL-1.0"
 
   bottle do
-    sha256 "2e20ceced92132166cffae968a007d5150a6e620c1059e54e82ae0938eaf42ed" => :mojave
-    sha256 "b6186caa197c5111b9704cc4b4f133f0f5f656727ed3211c7351e2a97302f10f" => :high_sierra
-    sha256 "61ac3ada591371a743198251fa35d70a18cc6018d23e4a36e3ec45aa6ec99db2" => :sierra
-    sha256 "4b8d8acc29c2ed8e826be84c9dc777d947033396336885440fb823530460b470" => :el_capitan
-    sha256 "b802ee253ceb25ebfd2b5a90ef4dc8b229a90c7b1cae1a33533c9bd2ff9e7d50" => :yosemite
+    sha256 arm64_big_sur: "6ab0518edb52f96d06c28fa20fe21eb29551bc933216f36588c87d8f535966fa"
+    sha256 big_sur:       "34a4e4e20bdd5bb3c6d5c8a61badd4d7fc45f99acddb4f8c37ce29eb00dff378"
+    sha256 catalina:      "eaf4f958498990043369a8af4395ff592c58717bc08b38f2905e3d4b4be6e94f"
+    sha256 mojave:        "0cecd3377c20b8bfbd1129d2e10f2aaa8382586881716a7f3b3fb00fc041dc12"
   end
 
-  option "with-oracle", "Enable Oracle support."
-  option "with-boost", "Enable boost support."
-  option "with-mysql", "Enable MySQL support."
-  option "with-odbc", "Enable ODBC support."
-  option "with-pg", "Enable PostgreSQL support."
-
-  depends_on "boost" => [:build, :optional]
   depends_on "cmake" => :build
-  depends_on "sqlite" if MacOS.version <= :snow_leopard
-
-  fails_with :clang do
-    build 421
-    cause "Template oddities"
-  end
+  depends_on "sqlite"
 
   def install
-    args = std_cmake_args + %w[.. -DWITH_SQLITE3:BOOL=ON]
-
-    %w[boost mysql oracle odbc pg].each do |arg|
-      arg_var = (arg == "pg") ? "postgresql" : arg
-      bool = build.with?(arg) ? "ON" : "OFF"
-      args << "-DWITH_#{arg_var.upcase}:BOOL=#{bool}"
-    end
+    args = std_cmake_args + %w[
+      -DSOCI_TESTS:BOOL=OFF
+      -DWITH_SQLITE3:BOOL=ON
+      -DWITH_BOOST:BOOL=OFF
+      -DWITH_MYSQL:BOOL=OFF
+      -DWITH_ODBC:BOOL=OFF
+      -DWITH_ORACLE:BOOL=OFF
+      -DWITH_POSTGRESQL:BOOL=OFF
+    ]
 
     mkdir "build" do
-      system "cmake", *args
+      system "cmake", "..", *args
       system "make", "install"
     end
+  end
+
+  test do
+    (testpath/"test.cxx").write <<~EOS
+      #include "soci/soci.h"
+      #include "soci/empty/soci-empty.h"
+      #include <string>
+
+      using namespace soci;
+      std::string connectString = "";
+      backend_factory const &backEnd = *soci::factory_empty();
+
+      int main(int argc, char* argv[])
+      {
+        soci::session sql(backEnd, connectString);
+      }
+    EOS
+    system ENV.cxx, "-o", "test", "test.cxx", "-std=c++11", "-L#{lib}", "-lsoci_core", "-lsoci_empty"
+    system "./test"
   end
 end

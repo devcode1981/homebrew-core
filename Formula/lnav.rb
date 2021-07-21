@@ -1,15 +1,22 @@
 class Lnav < Formula
   desc "Curses-based tool for viewing and analyzing log files"
-  # lnav.org has an SSL issue: https://github.com/tstack/lnav/issues/401
-  homepage "https://github.com/tstack/lnav"
-  url "https://github.com/tstack/lnav/releases/download/v0.8.4/lnav-0.8.4.tar.gz"
-  sha256 "22283a59eca51f85dd3283eea1f326fdaa175d9a7a4957a6edf8fb894a1f891d"
+  homepage "https://lnav.org/"
+  url "https://github.com/tstack/lnav/releases/download/v0.9.0/lnav-0.9.0.tar.gz"
+  sha256 "03e15449a87fa511cd19c6bb5e95de4fffe17612520ff7683f2528d3b2a7238f"
+  license "BSD-2-Clause"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    sha256 "2fd7a4d77dc91c33314e87a3b6f34d70f6aad47deac63fe14ca33f0181ebcb05" => :mojave
-    sha256 "e7a3dd56d462d6bc1373dc15245a9a5baead456b6368449688c2a9b8b87e98c2" => :high_sierra
-    sha256 "2ce8bb7aa0c2102abeb4e4c0e5d61c1aa55156e7de67587698cfe29f78043730" => :sierra
-    sha256 "20a996133ad0b0f753e2b0ca619471dee7683ed479a652cf84b1f3758386b033" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "6b79f37c40cf7a626865ffef75bc445813d91473d64068e6d906eb3cedeeab4a"
+    sha256 cellar: :any,                 big_sur:       "11eb34ef34f635e008facc8890c0bcb07585d62dd9c273890552890d863adf0e"
+    sha256 cellar: :any,                 catalina:      "b21b188394092e3ca801819e0b2eb26017132fb2baadfcb014d6fb3c8c6253e3"
+    sha256 cellar: :any,                 mojave:        "49510aa07d98f6a05f6d7ea19dc30f2ada6456b3fb644620efe1e7e3c92673b4"
+    sha256 cellar: :any,                 high_sierra:   "538a2a0b9f09829b33901bd33e5d8f566745f23a3d3fe95d6fa7f6608d3bb485"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "dcb21285186fdb65393a3fab4eb29ea3d0bc26d4c6f68e07571e250b5b70ae19"
   end
 
   head do
@@ -22,15 +29,13 @@ class Lnav < Formula
 
   depends_on "pcre"
   depends_on "readline"
-  depends_on "sqlite" if MacOS.version < :sierra
+  depends_on "sqlite"
 
   def install
-    # Fix errors such as "use of undeclared identifier 'sqlite3_value_subtype'"
-    ENV.delete("SDKROOT")
-
     system "./autogen.sh" if build.head?
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
+                          "--with-sqlite=#{Formula["sqlite"].opt_prefix}",
                           "--with-readline=#{Formula["readline"].opt_prefix}"
     system "make", "install"
   end

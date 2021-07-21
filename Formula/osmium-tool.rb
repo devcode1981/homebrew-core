@@ -1,20 +1,22 @@
 class OsmiumTool < Formula
   desc "Libosmium-based command-line tool for processing OpenStreetMap data"
   homepage "https://osmcode.org/osmium-tool/"
-  url "https://github.com/osmcode/osmium-tool/archive/v1.9.1.tar.gz"
-  sha256 "56d6cbc895ce86716b88152f3be788f961d0085580ba2ca024e84ba211695de5"
+  url "https://github.com/osmcode/osmium-tool/archive/v1.13.1.tar.gz"
+  sha256 "d6273e2614d390d8444b767018b7023bdac3538cbe094d2799eee50b6f08cd03"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "734f624dafc9b6f53742bf0997c21bd37cc2cdba9bb7859d8f3739e622747f5e" => :mojave
-    sha256 "e2e09db5a71531ec54f8df660168b8ea681b02d933e9a7258bab6e1f71983ae4" => :high_sierra
-    sha256 "3bfc4c2b838182c1eae0fb0c4ecbe5a05b5f1a9382603b390041c73c2499eccc" => :sierra
-    sha256 "bfdd6374100a7b2615a7dd6d004041a480522f93bbac7ed794be16658d814a87" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "4f31ffcb711de0f25a38037ccfd16dcf1b5f2ed07d56a466124f15911a47473d"
+    sha256 cellar: :any, big_sur:       "09e5b002c6ab672542b2f9ad0c82c37cb988e7d2cc98549f9c66dd6770831c9d"
+    sha256 cellar: :any, catalina:      "9920eb1a2bbb242e0f50efe06959e18a348ca5c8ecbc37fe92e4dfe05052869d"
+    sha256 cellar: :any, mojave:        "d6811e52a681a55880b504d684d6ba8ba19105471fecd574a8000d392689fc6d"
   end
 
   depends_on "cmake" => :build
   depends_on "libosmium" => :build
   depends_on "boost"
+
+  uses_from_macos "expat"
 
   def install
     protozero = Formula["libosmium"].opt_libexec/"include"
@@ -40,7 +42,7 @@ class OsmiumTool < Formula
       </osm>
     EOS
     output = shell_output("#{bin}/osmium fileinfo test.osm")
-    assert_match /Compression.+generator=handwritten/m, output
+    assert_match(/Compression.+generator=handwritten/m, output)
     system bin/"osmium", "tags-filter", "test.osm", "w/name=line", "-f", "osm"
   end
 end

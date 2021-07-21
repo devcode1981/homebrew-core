@@ -1,42 +1,38 @@
 class Getdns < Formula
   desc "Modern asynchronous DNS API"
   homepage "https://getdnsapi.net"
-  url "https://getdnsapi.net/releases/getdns-1-4-2/getdns-1.4.2.tar.gz"
-  sha256 "1685b82dfe297cffc4bae08a773cdc88a3edf9a4e5a1ea27d8764bb5affc0e80"
-  revision 3
+  url "https://getdnsapi.net/releases/getdns-1-7-0/getdns-1.7.0.tar.gz"
+  sha256 "ea8713ce5e077ac76b1418ceb6afd25e6d4e39e9600f6f5e81d3a3a13a60f652"
+  license "BSD-3-Clause"
+  head "https://github.com/getdnsapi/getdns.git", branch: "develop"
+
+  # We check the GitHub releases instead of https://getdnsapi.net/releases/,
+  # since the aforementioned first-party URL has a tendency to lead to an
+  # `execution expired` error.
+  livecheck do
+    url :head
+    strategy :github_latest
+  end
 
   bottle do
-    sha256 "a85a2629ebc943460859ac6751e3ca76f476ab0b2f4710ebaa303146e00724b2" => :mojave
-    sha256 "1669b3d80b3c4f5560b61e7bcf73d211980060f0ab895cd626ea7f6f06d8537b" => :high_sierra
-    sha256 "fa2b076bbc0ff746e699f7f734d0a909f468dc939b497ceaf5450d554749665a" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "98a47841711b19d9dffd76486574d639b8721342356dffa55cf98f6b4777a7cf"
+    sha256 cellar: :any,                 big_sur:       "f59ad5922a0249bd68bdf0241446d1762210899fbbdf9d927c03410e0d8a4e15"
+    sha256 cellar: :any,                 catalina:      "6598dce2c0208622854555338ac788bdc78ec74b9368861008e2a110ef01581c"
+    sha256 cellar: :any,                 mojave:        "0abd0fddbea51c1e89c1588e95a5f384e1c9fcde09385075d1f3999ae387d29e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "059a87084efb2922630ae77970844cfd61cc11324627b1de8674d26723e72e08"
   end
 
-  head do
-    url "https://github.com/getdnsapi/getdns.git", :branch => "develop"
-
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "libtool" => :build
-  end
-
+  depends_on "cmake" => :build
   depends_on "libevent"
-  depends_on "libidn"
-  depends_on "openssl"
+  depends_on "libidn2"
+  depends_on "openssl@1.1"
   depends_on "unbound"
 
   def install
-    if build.head?
-      system "glibtoolize", "-ci"
-      system "autoreconf", "-fi"
-    end
-
-    system "./configure", "--prefix=#{prefix}",
-                          "--with-libevent",
-                          "--with-ssl=#{Formula["openssl"].opt_prefix}",
-                          "--with-trust-anchor=#{etc}/getdns-root.key",
-                          "--without-stubby"
+    system "cmake", ".", *std_cmake_args,
+                         "-DBUILD_TESTING=OFF",
+                         "-DPATH_TRUST_ANCHOR_FILE=#{etc}/getdns-root.key"
     system "make"
-    ENV.deparallelize
     system "make", "install"
   end
 

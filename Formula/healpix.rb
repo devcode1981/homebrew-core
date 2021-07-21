@@ -1,15 +1,16 @@
 class Healpix < Formula
   desc "Hierarchical Equal Area isoLatitude Pixelization of a sphere"
   homepage "https://healpix.jpl.nasa.gov"
-  url "https://downloads.sourceforge.net/project/healpix/Healpix_3.40/Healpix_3.40_2018Jun22.tar.gz"
-  version "3.40"
-  sha256 "f10ce170a10a2f37830c65616554c39005442021741ed19c1efa998994d8a069"
+  url "https://downloads.sourceforge.net/project/healpix/Healpix_3.80/Healpix_3.80_2021Jun22.tar.gz"
+  version "3.80"
+  sha256 "8de4aabaa3d55e0c63a62c621bfd77298732c6b75782016217f5659143acbcf5"
+  license "GPL-2.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "92101cb2e4318646752c725b75b8c6499eae9f62cea5edf1aa2329128e759d1a" => :mojave
-    sha256 "48cdfdf1664a9cd9daa88493b799182e54806c77a68ee697442b2bc142d070e7" => :high_sierra
-    sha256 "ba7b07582cac6c714c868a8e5d8c804601ae0837bb8ccaa8739191be5f5e1d41" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "90a28baa2cde6ca4e323d752775350bbcbce427c761200a2f2f31743aeef182a"
+    sha256 cellar: :any, big_sur:       "70fd0a39e1eb0378c04a372b19d3e87ec7ac640a6a47e7f070c6bc35b3eacade"
+    sha256 cellar: :any, catalina:      "513f76002bb4bb76327dbfab205750d31f0ddd7e6b9e46e86d2b9cfe91f0d4ea"
+    sha256 cellar: :any, mojave:        "cbb907c16bb946f4fab1ee58bf279256fc2f7d80d9d551f5800a404b0b915677"
   end
 
   depends_on "autoconf" => :build
@@ -19,21 +20,26 @@ class Healpix < Formula
   depends_on "cfitsio"
 
   def install
-    configure_args = %W[
+    configure_args = %w[
       --disable-dependency-tracking
       --disable-silent-rules
-      --prefix=#{prefix}
     ]
 
     cd "src/C/autotools" do
       system "autoreconf", "--install"
-      system "./configure", *configure_args
+      system "./configure", "--prefix=#{prefix}", *configure_args
       system "make", "install"
     end
 
-    cd "src/cxx/autotools" do
-      system "autoreconf", "--install"
-      system "./configure", *configure_args
+    cd "src/common_libraries/libsharp" do
+      system "./configure", "--prefix=#{prefix}", *configure_args
+      system "make", "install"
+    end
+
+    cd "src/cxx" do
+      ENV["SHARP_CFLAGS"] = "-I#{include}"
+      ENV["SHARP_LIBS"] = "-L#{lib} -lsharp"
+      system "./configure", "--prefix=#{prefix}", *configure_args
       system "make", "install"
     end
   end

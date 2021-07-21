@@ -1,15 +1,17 @@
 class GnuTar < Formula
   desc "GNU version of the tar archiving utility"
   homepage "https://www.gnu.org/software/tar/"
-  url "https://ftp.gnu.org/gnu/tar/tar-1.30.tar.gz"
-  mirror "https://ftpmirror.gnu.org/tar/tar-1.30.tar.gz"
-  sha256 "4725cc2c2f5a274b12b39d1f78b3545ec9ebb06a6e48e8845e1995ac8513b088"
+  url "https://ftp.gnu.org/gnu/tar/tar-1.34.tar.gz"
+  mirror "https://ftpmirror.gnu.org/tar/tar-1.34.tar.gz"
+  sha256 "03d908cf5768cfe6b7ad588c921c6ed21acabfb2b79b788d1330453507647aed"
+  license "GPL-3.0-or-later"
 
   bottle do
-    sha256 "2a112e5b1a9c895ef51cb85d5ae0f02c9804ada9e9f55cbd8f698ec63b51c69b" => :mojave
-    sha256 "ad87e1488b6d1a2db804c348abf05143b6b7310402c7928f725305c295599708" => :high_sierra
-    sha256 "5a04574acb1ff235b2509e70cb207e6379a8c83191986131bba52717c328fc1b" => :sierra
-    sha256 "1a559b78e6f1a6594b18a9ba2aa2e9828af2736aacc4aec07911fe7638e80e68" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "660e573b78965f1d3fa9f8f7f78a72d38f7f26f77ca66e9f72fec26fe9be6c3a"
+    sha256 cellar: :any_skip_relocation, big_sur:       "a6ab3eb4a49d609f5f1dde43710b847fd827ebc03195aee052c7aeb528aa9bcc"
+    sha256 cellar: :any_skip_relocation, catalina:      "53b9fc4011ca3ca3e669aa96a95a5394ef45138b9b2d52c76c3a17fceb432229"
+    sha256 cellar: :any_skip_relocation, mojave:        "c4f9fcc7bdbb2bc5591a6650cf3bbfc1aa791e85f6d299f165a9466c235c83ae"
+    sha256                               x86_64_linux:  "f4206b84b3b5d4a8244b6cae99226877cf3e4927b149465ab44cbb1edce8b382"
   end
 
   head do
@@ -20,7 +22,9 @@ class GnuTar < Formula
     depends_on "gettext" => :build
   end
 
-  option "with-default-names", "Do not prepend 'g' to the binary"
+  on_linux do
+    conflicts_with "libarchive", because: "both install `tar` binaries"
+  end
 
   def install
     # Work around unremovable, nested dirs bug that affects lots of
@@ -31,42 +35,50 @@ class GnuTar < Formula
     # https://lists.gnu.org/archive/html/bug-tar/2015-10/msg00017.html
     ENV["gl_cv_func_getcwd_abort_bug"] = "no" if MacOS.version == :el_capitan
 
-    args = ["--prefix=#{prefix}", "--mandir=#{man}"]
-    args << "--program-prefix=g" if build.without? "default-names"
+    args = %W[
+      --prefix=#{prefix}
+      --mandir=#{man}
+    ]
 
+    on_macos do
+      args << "--program-prefix=g"
+    end
     system "./bootstrap" if build.head?
     system "./configure", *args
     system "make", "install"
 
-    # Symlink the executable into libexec/gnubin as "tar"
-    if build.without? "default-names"
+    on_macos do
+      # Symlink the executable into libexec/gnubin as "tar"
       (libexec/"gnubin").install_symlink bin/"gtar" =>"tar"
       (libexec/"gnuman/man1").install_symlink man1/"gtar.1" => "tar.1"
     end
+
+    libexec.install_symlink "gnuman" => "man"
   end
 
   def caveats
-    if build.without? "default-names" then <<~EOS
-      gnu-tar has been installed as "gtar".
+    on_macos do
+      <<~EOS
+        GNU "tar" has been installed as "gtar".
+        If you need to use it as "tar", you can add a "gnubin" directory
+        to your PATH from your bashrc like:
 
-      If you really need to use it as "tar", you can add a "gnubin" directory
-      to your PATH from your bashrc like:
-
-          PATH="#{opt_libexec}/gnubin:$PATH"
-
-      Additionally, you can access their man pages with normal names if you add
-      the "gnuman" directory to your MANPATH from your bashrc as well:
-
-          MANPATH="#{opt_libexec}/gnuman:$MANPATH"
-
-    EOS
+            PATH="#{opt_libexec}/gnubin:$PATH"
+      EOS
     end
   end
 
   test do
-    tar = build.with?("default-names") ? bin/"tar" : bin/"gtar"
     (testpath/"test").write("test")
-    system tar, "-czvf", "test.tar.gz", "test"
-    assert_match /test/, shell_output("#{tar} -xOzf test.tar.gz")
+    on_macos do
+      system bin/"gtar", "-czvf", "test.tar.gz", "test"
+      assert_match "test", shell_output("#{bin}/gtar -xOzf test.tar.gz")
+      assert_match "test", shell_output("#{opt_libexec}/gnubin/tar -xOzf test.tar.gz")
+    end
+
+    on_linux do
+      system bin/"tar", "-czvf", "test.tar.gz", "test"
+      assert_match "test", shell_output("#{bin}/tar -xOzf test.tar.gz")
+    end
   end
 end

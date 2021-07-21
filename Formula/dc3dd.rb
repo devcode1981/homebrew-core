@@ -1,16 +1,16 @@
 class Dc3dd < Formula
   desc "Patched GNU dd that is intended for forensic acquisition of data"
   homepage "https://sourceforge.net/projects/dc3dd/"
-  url "https://downloads.sourceforge.net/project/dc3dd/dc3dd/7.2.646/dc3dd%207.2.646/dc3dd-7.2.646.zip",
-      :using => :nounzip
+  url "https://downloads.sourceforge.net/project/dc3dd/dc3dd/7.2.646/dc3dd%207.2.646/dc3dd-7.2.646.zip", using: :nounzip
   sha256 "c4e325e5cbdae49e3855b0849ea62fed17d553428724745cea53fe6d91fd2b7f"
-  revision 1
+  revision 2
 
   bottle do
-    rebuild 1
-    sha256 "91be6d42e350b7af3ae449044fd7ab6d5a78253e8e217578b90065c99a5b15f4" => :mojave
-    sha256 "42eadd524bba6cd7f4d4898f209aafd3aca03522d2dad45af7ede5262dbbb009" => :high_sierra
-    sha256 "bf191ae1f00552deaf5c966367cfca182d98ab6e84e284d06be62da8f517f2eb" => :sierra
+    sha256 big_sur:     "4b01295bd5bab46484c16fd08989ea81bb69711daa15696dee756f75323e9ed2"
+    sha256 catalina:    "fdd027b6a694489b16d05eab760a88903a83add31033296b13bf660c5807ea12"
+    sha256 mojave:      "da27e2227f7fac70c613c4677ec597255c13b1253bc7c79cf58f7321a0a6427e"
+    sha256 high_sierra: "b906b2d7009282e22eb97a1ad07982f3e4545fa4791cb2bc2eaf1e0c101ebaed"
+    sha256 sierra:      "581af2165e8c666a92060e8354107cd0b27ada0143b4e0f5416b1d76739f45b7"
   end
 
   depends_on "gettext"
@@ -39,19 +39,19 @@ class Dc3dd < Formula
       # Fixes error: 'Illegal instruction: 4'; '%n used in a non-immutable format string' on 10.13
       # Patch comes from gnulib upstream (see https://sourceforge.net/p/dc3dd/bugs/17/)
       inreplace "lib/vasnprintf.c",
-                "# if !(__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 3) || ((defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__))",
+                "# if !(__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 3) " \
+                "|| ((defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__))",
                 "# if !(defined __APPLE__ && defined __MACH__)"
 
       chmod 0555, ["build-aux/install-sh", "configure"]
 
-      args = %W[--disable-debug
-                --disable-dependency-tracking
-                --prefix=#{prefix}
-                --infodir=#{info}]
-
-      # Check for stpncpy is broken, and the replacement fails to compile
-      # on Lion and newer; see https://github.com/Homebrew/homebrew/issues/21510
-      args << "gl_cv_func_stpncpy=yes" if MacOS.version >= :lion
+      args = %W[
+        --disable-debug
+        --disable-dependency-tracking
+        --prefix=#{prefix}
+        --infodir=#{info}
+        gl_cv_func_stpncpy=yes
+      ]
       system "./configure", *args
       system "make"
       system "make", "install"

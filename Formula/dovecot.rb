@@ -1,24 +1,35 @@
 class Dovecot < Formula
   desc "IMAP/POP3 server"
   homepage "https://dovecot.org/"
-  url "https://dovecot.org/releases/2.3/dovecot-2.3.2.1.tar.gz"
-  sha256 "4a65118508dc7a562e5f90dd7c3f56219fff22367c496f17d77cd0c7e2724e34"
+  url "https://dovecot.org/releases/2.3/dovecot-2.3.14.tar.gz"
+  sha256 "c8b3d7f3af1e558a3ff0f970309d4013a4d3ce136f8c02a53a3b05f345b9a34a"
+  license all_of: ["BSD-3-Clause", "LGPL-2.1-or-later", "MIT", "Unicode-DFS-2016", :public_domain]
 
-  bottle do
-    sha256 "63acd1b4cb9da5efb409656601b5c50b08b4ca8bf026e0b75110e3d2cda123d4" => :mojave
-    sha256 "a65b0489355543c50a65eff854b5bdbc1ea79246517eea0a49c97617a22edff5" => :high_sierra
-    sha256 "182a940de84e95f3ddf06746c28b616412417d9684d100b1d03ea90991ae5517" => :sierra
-    sha256 "0ea8bb9c76d54244d97a8ef135c98b9321be68c1bf3ff0ddfea1d1080f55c01a" => :el_capitan
+  livecheck do
+    url "https://dovecot.org/download"
+    regex(/href=.*?dovecot[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  option "with-pam", "Build with PAM support"
-  option "with-pigeonhole", "Add Sieve addon for Dovecot mailserver"
+  bottle do
+    sha256 arm64_big_sur: "b9f839dba9468f7eae88b0dd3fc82b5b874090e36a6acda2bb4213aec9643c0f"
+    sha256 big_sur:       "e2e2f8de6497655aaa4f3500e7daf815039ae7d5f4ab665a24479a93f0268f4f"
+    sha256 catalina:      "5e8f0e607c4ae4db5333adcba429c19c4292ad72512ee05a574ec412df1a066a"
+    sha256 mojave:        "23d56aa20b37f916b2942a2183529b9520072593439bb132c21dd82c91ca4d11"
+    sha256 x86_64_linux:  "7c3e4c41a5904e96cff0f9201c9bc83fa139f873832d6f52e68f15a03d4f0a97"
+  end
 
-  depends_on "openssl"
+  depends_on "openssl@1.1"
+
+  uses_from_macos "bzip2"
+  uses_from_macos "sqlite"
+
+  on_linux do
+    depends_on "linux-pam"
+  end
 
   resource "pigeonhole" do
-    url "https://pigeonhole.dovecot.org/releases/2.3/dovecot-2.3-pigeonhole-0.5.2.tar.gz"
-    sha256 "950e8e15c58e539761255e140dd3678dd2477fa432a5f2b804e53821bdc02535"
+    url "https://pigeonhole.dovecot.org/releases/2.3/dovecot-2.3-pigeonhole-0.5.14.tar.gz"
+    sha256 "68ca0f78a3caa6b090a469f45c395c44cf16da8fcb3345755b1ca436c9ffb2d2"
   end
 
   def install
@@ -29,72 +40,42 @@ class Dovecot < Formula
       --sysconfdir=#{etc}
       --localstatedir=#{var}
       --with-bzlib
+      --with-pam
       --with-sqlite
       --with-ssl=openssl
       --with-zlib
     ]
 
-    args << "--with-pam" if build.with? "pam"
-
     system "./configure", *args
     system "make", "install"
 
-    if build.with? "pigeonhole"
-      resource("pigeonhole").stage do
-        args = %W[
-          --disable-dependency-tracking
-          --with-dovecot=#{lib}/dovecot
-          --prefix=#{prefix}
-        ]
+    resource("pigeonhole").stage do
+      args = %W[
+        --disable-dependency-tracking
+        --with-dovecot=#{lib}/dovecot
+        --prefix=#{prefix}
+      ]
 
-        system "./configure", *args
-        system "make"
-        system "make", "install"
-      end
+      system "./configure", *args
+      system "make"
+      system "make", "install"
     end
   end
 
-  def caveats; <<~EOS
-    For Dovecot to work, you may need to create a dovecot user
-    and group depending on your configuration file options.
-  EOS
+  def caveats
+    <<~EOS
+      For Dovecot to work, you may need to create a dovecot user
+      and group depending on your configuration file options.
+    EOS
   end
 
-  plist_options :startup => true
+  plist_options startup: true
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>KeepAlive</key>
-        <false/>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_sbin}/dovecot</string>
-          <string>-F</string>
-        </array>
-        <key>StandardErrorPath</key>
-        <string>#{var}/log/dovecot/dovecot.log</string>
-        <key>StandardOutPath</key>
-        <string>#{var}/log/dovecot/dovecot.log</string>
-        <key>SoftResourceLimits</key>
-        <dict>
-        <key>NumberOfFiles</key>
-        <integer>1000</integer>
-        </dict>
-        <key>HardResourceLimits</key>
-        <dict>
-        <key>NumberOfFiles</key>
-        <integer>1024</integer>
-        </dict>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_sbin/"dovecot", "-F"]
+    environment_variables PATH: std_service_path_env
+    error_log_path var/"log/dovecot/dovecot.log"
+    log_path var/"log/dovecot/dovecot.log"
   end
 
   test do

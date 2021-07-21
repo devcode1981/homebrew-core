@@ -1,18 +1,27 @@
 class Dialog < Formula
   desc "Display user-friendly message boxes from shell scripts"
   homepage "https://invisible-island.net/dialog/"
-  url "https://invisible-mirror.net/archives/dialog/dialog-1.3-20181107.tgz"
-  sha256 "efeaca8027dda53a9f3cf6c7b5c1a77093825b7a9b85c23c0c6c96afc3506457"
+  url "https://invisible-mirror.net/archives/dialog/dialog-1.3-20210621.tgz"
+  sha256 "c3af22ccfcd9baca384062108dd9354e86990929ee270c239eef69518c5da7c8"
+  license "LGPL-2.1-or-later"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "c356e3a474ebf3d580ec4674d87aec9c88ba7137e0f6fefd8c73cbf99d327b76" => :mojave
-    sha256 "cf169dff8e776ac85d3a662db2abd9fbd578affc994dcb866547ee06630b68f6" => :high_sierra
-    sha256 "68b0c43919cde70242f56ba550b666c2a6f9e6baefca50615923efa262052d5b" => :sierra
+  livecheck do
+    url "https://invisible-mirror.net/archives/dialog/"
+    regex(/href=.*?dialog[._-]v?(\d+(?:\.\d+)+-\d{6,8})\.t/i)
   end
 
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "b46e417d73e065176006d358a36cd293d3f9d881b7b6aea5b2be3fa0a381e721"
+    sha256 cellar: :any_skip_relocation, big_sur:       "990bbe5e7a36febc23c79bdbbc454075d695a54dd730e4dab8465d7a66ecab0d"
+    sha256 cellar: :any_skip_relocation, catalina:      "87d270268a38de209e9b6fde7c963e4467554d7f0777425f2aa55a3701f25559"
+    sha256 cellar: :any_skip_relocation, mojave:        "c05946dd7b57aa11f42ccccd0aab7c9b1506e8093c9dcc60588046aadd4b15dd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b2e3820b717ffdec0e6fe7fce8da31784263ebac9ecd49713677dccf5cc5446b"
+  end
+
+  uses_from_macos "ncurses"
+
   def install
-    system "./configure", "--prefix=#{prefix}"
+    system "./configure", "--prefix=#{prefix}", "--with-ncurses"
     system "make", "install-full"
   end
 

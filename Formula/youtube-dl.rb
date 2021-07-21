@@ -1,27 +1,33 @@
 class YoutubeDl < Formula
-  desc "Download YouTube videos from the command-line"
-  homepage "https://rg3.github.io/youtube-dl/"
-  url "https://github.com/rg3/youtube-dl/releases/download/2018.12.03/youtube-dl-2018.12.03.tar.gz"
-  sha256 "7ff247c0d2518d5def8dc7df9cff4c87a1c348fabca7238a8166d217772cd536"
+  include Language::Python::Virtualenv
 
-  head do
-    url "https://github.com/rg3/youtube-dl.git"
-    depends_on "pandoc" => :build
+  desc "Download YouTube videos from the command-line"
+  homepage "https://youtube-dl.org/"
+  url "https://files.pythonhosted.org/packages/c6/75/05979677d9abc76851d13d8db3951e39017ac223545adab6e8576fa0cbe7/youtube_dl-2021.6.6.tar.gz"
+  sha256 "cb2d3ee002158ede783e97a82c95f3817594df54367ea6a77ce5ceea4772f0ab"
+  license "Unlicense"
+
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "c8488b8408d6382b7bce6359cc18f7e14ab5f250152f18f69d250fbc6dd4f081"
+    sha256 cellar: :any_skip_relocation, big_sur:       "f4c3781a6c30a1da5319e581cac99be7fd533295fa8780ef66c3bf696f755e5f"
+    sha256 cellar: :any_skip_relocation, catalina:      "f4c3781a6c30a1da5319e581cac99be7fd533295fa8780ef66c3bf696f755e5f"
+    sha256 cellar: :any_skip_relocation, mojave:        "f4c3781a6c30a1da5319e581cac99be7fd533295fa8780ef66c3bf696f755e5f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "8cf1a12113ca9116896c792441ac44197a47df59a347eb09685dd6476fdb3ef3"
   end
 
-  bottle :unneeded
+  depends_on "python@3.9"
 
   def install
-    system "make", "PREFIX=#{prefix}" if build.head?
-    bin.install "youtube-dl"
-    man1.install "youtube-dl.1"
-    bash_completion.install "youtube-dl.bash-completion"
-    zsh_completion.install "youtube-dl.zsh" => "_youtube-dl"
-    fish_completion.install "youtube-dl.fish"
+    virtualenv_install_with_resources
+    man1.install_symlink libexec/"share/man/man1/youtube-dl.1" => "youtube-dl.1"
+    bash_completion.install libexec/"etc/bash_completion.d/youtube-dl.bash-completion"
+    fish_completion.install libexec/"etc/fish/completions/youtube-dl.fish"
   end
 
   test do
-    system "#{bin}/youtube-dl", "--simulate", "https://www.youtube.com/watch?v=he2a4xK8ctk"
-    system "#{bin}/youtube-dl", "--simulate", "--yes-playlist", "https://www.youtube.com/watch?v=AEhULv4ruL4&list=PLZdCLR02grLrl5ie970A24kvti21hGiOf"
+    # commit history of homebrew-core repo
+    system "#{bin}/youtube-dl", "--simulate", "https://www.youtube.com/watch?v=pOtd1cbOP7k"
+    # homebrew playlist
+    system "#{bin}/youtube-dl", "--simulate", "--yes-playlist", "https://www.youtube.com/watch?v=pOtd1cbOP7k&list=PLMsZ739TZDoLj9u_nob8jBKSC-mZb0Nhj"
   end
 end

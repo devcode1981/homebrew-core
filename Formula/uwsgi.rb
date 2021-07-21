@@ -1,73 +1,65 @@
 class Uwsgi < Formula
   desc "Full stack for building hosting services"
-  homepage "https://uwsgi-docs.readthedocs.org/en/latest/"
+  homepage "https://uwsgi-docs.readthedocs.io/en/latest/"
+  license "GPL-2.0-or-later"
+  revision 1
   head "https://github.com/unbit/uwsgi.git"
 
   stable do
-    url "https://projects.unbit.it/downloads/uwsgi-2.0.17.1.tar.gz"
-    sha256 "d2318235c74665a60021a4fc7770e9c2756f9fc07de7b8c22805efe85b5ab277"
+    url "https://files.pythonhosted.org/packages/c7/75/45234f7b441c59b1eefd31ba3d1041a7e3c89602af24488e2a22e11e7259/uWSGI-2.0.19.1.tar.gz"
+    sha256 "faa85e053c0b1be4d5585b0858d3a511d2cd10201802e8676060fd0a109e5869"
 
     # Fix "library not found for -lgcc_s.10.5" with 10.14 SDK
     # Remove in next release
     patch do
-      url "https://github.com/unbit/uwsgi/commit/6b1b397f.diff?full_index=1"
-      sha256 "b2c3a22f980a4e3bd2ab2fe5c5356d8a91e567a3ab3e6ccbeeeb2ba4efe4568a"
+      url "https://github.com/unbit/uwsgi/commit/6b1b397f.patch?full_index=1"
+      sha256 "85725f31ea0f914e89e3abceffafc64038ee5e44e979ae85eb8d58c80de53897"
     end
   end
 
   bottle do
-    rebuild 1
-    sha256 "bedd428644e52332dea9c0c022e1b95572e86b82a26f00676d9041e1d3668041" => :mojave
-    sha256 "a324da423d63b2e6fa8c36680a84a19c5a2a82f33c8e819c1c3c3ca318fb48a7" => :high_sierra
-    sha256 "c46dd9c0e215063d503b275759ec1055521b124d1f8c5d378de086d186089088" => :sierra
+    sha256 arm64_big_sur: "59e4770011029a82e5f7e1c89e61909dcfc0909f4c450378b688b1e941c7e463"
+    sha256 big_sur:       "fa9547b417d0a9d2deaf55cf8ebad966798b81252d160921053ce21ca8aa5999"
+    sha256 catalina:      "22eff54752a60c52e2b21fd541f86a0e4949f6a16e6cc308052ae5d6d5b463bb"
+    sha256 mojave:        "eddfcd8b7114e8a8a68eeb9dc837475184799cd01712b318dd5950015964eabb"
   end
 
-  deprecated_option "with-python3" => "with-python"
-
-  depends_on "go" => [:build, :optional]
   depends_on "pkg-config" => :build
-  depends_on "openssl"
+  depends_on "openssl@1.1"
   depends_on "pcre"
-  depends_on "python@2"
+  depends_on "python@3.9"
   depends_on "yajl"
 
-  depends_on "libyaml" => :optional
-  depends_on "python" => :optional
-  depends_on "zeromq" => :optional
+  uses_from_macos "curl"
+  uses_from_macos "libxml2"
+  uses_from_macos "openldap"
+  uses_from_macos "perl"
 
-  # "no such file or directory: '... libpython2.7.a'"
-  # Reported 23 Jun 2016: https://github.com/unbit/uwsgi/issues/1299
-  patch do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/726bff4/uwsgi/libpython-tbd-xcode-sdk.diff"
-    sha256 "d71c879774b32424b5a9051ff47d3ae6e005412e9214675d806857ec906f9336"
+  on_linux do
+    depends_on "linux-pam"
   end
 
   def install
     # Fix file not found errors for /usr/lib/system/libsystem_symptoms.dylib and
     # /usr/lib/system/libsystem_darwin.dylib on 10.11 and 10.12, respectively
-    if MacOS.version == :sierra || MacOS.version == :el_capitan
-      ENV["SDKROOT"] = MacOS.sdk_path
-    end
+    ENV["SDKROOT"] = MacOS.sdk_path if MacOS.version <= :sierra
 
-    ENV.append %w[CFLAGS LDFLAGS], "-arch #{MacOS.preferred_arch}"
-    openssl = Formula["openssl"]
+    openssl = Formula["openssl@1.1"]
     ENV.prepend "CFLAGS", "-I#{openssl.opt_include}"
     ENV.prepend "LDFLAGS", "-L#{openssl.opt_lib}"
-
-    yaml = build.with?("libyaml") ? "libyaml" : "embedded"
 
     (buildpath/"buildconf/brew.ini").write <<~EOS
       [uwsgi]
       ssl = true
       json = yajl
       xml = libxml2
-      yaml = #{yaml}
+      yaml = embedded
       inherit = base
       plugin_dir = #{libexec}/uwsgi
       embedded_plugins = null
     EOS
 
-    system "python", "uwsgiconfig.py", "--verbose", "--build", "brew"
+    system "python3", "uwsgiconfig.py", "--verbose", "--build", "brew"
 
     plugins = %w[airbrake alarm_curl alarm_speech asyncio cache
                  carbon cgi cheaper_backlog2 cheaper_busyness
@@ -86,58 +78,50 @@ class Uwsgi < Formula
                  transformation_offload transformation_tofile
                  transformation_toupper ugreen webdav zergpool]
 
-    plugins << "gccgo" if build.with? "go"
-
     (libexec/"uwsgi").mkpath
     plugins.each do |plugin|
-      system "python", "uwsgiconfig.py", "--verbose", "--plugin", "plugins/#{plugin}", "brew"
+      system "python3", "uwsgiconfig.py", "--verbose", "--plugin", "plugins/#{plugin}", "brew"
     end
 
-    python_versions = {
-      "python"  => "python2.7",
-      "python2" => "python2.7",
-    }
-    python_versions["python3"] = "python3" if build.with? "python"
-    python_versions.each do |k, v|
-      system v, "uwsgiconfig.py", "--verbose", "--plugin", "plugins/python", "brew", k
-    end
+    system "python3", "uwsgiconfig.py", "--verbose", "--plugin", "plugins/python", "brew", "python3"
 
     bin.install "uwsgi"
   end
 
-  plist_options :manual => "uwsgi"
+  plist_options manual: "uwsgi"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>KeepAlive</key>
-        <true/>
-        <key>ProgramArguments</key>
-        <array>
-            <string>#{opt_bin}/uwsgi</string>
-            <string>--uid</string>
-            <string>_www</string>
-            <string>--gid</string>
-            <string>_www</string>
-            <string>--master</string>
-            <string>--die-on-term</string>
-            <string>--autoload</string>
-            <string>--logto</string>
-            <string>#{HOMEBREW_PREFIX}/var/log/uwsgi.log</string>
-            <string>--emperor</string>
-            <string>#{HOMEBREW_PREFIX}/etc/uwsgi/apps-enabled</string>
-        </array>
-        <key>WorkingDirectory</key>
-        <string>#{HOMEBREW_PREFIX}</string>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>KeepAlive</key>
+          <true/>
+          <key>ProgramArguments</key>
+          <array>
+              <string>#{opt_bin}/uwsgi</string>
+              <string>--uid</string>
+              <string>_www</string>
+              <string>--gid</string>
+              <string>_www</string>
+              <string>--master</string>
+              <string>--die-on-term</string>
+              <string>--autoload</string>
+              <string>--logto</string>
+              <string>#{HOMEBREW_PREFIX}/var/log/uwsgi.log</string>
+              <string>--emperor</string>
+              <string>#{HOMEBREW_PREFIX}/etc/uwsgi/apps-enabled</string>
+          </array>
+          <key>WorkingDirectory</key>
+          <string>#{HOMEBREW_PREFIX}</string>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do
@@ -147,13 +131,15 @@ class Uwsgi < Formula
         return [b"Hello World"]
     EOS
 
+    port = free_port
+
     pid = fork do
-      exec "#{bin}/uwsgi --http-socket 127.0.0.1:8080 --protocol=http --plugin python -w helloworld"
+      exec "#{bin}/uwsgi --http-socket 127.0.0.1:#{port} --protocol=http --plugin python3 -w helloworld"
     end
     sleep 2
 
     begin
-      assert_match "Hello World", shell_output("curl localhost:8080")
+      assert_match "Hello World", shell_output("curl localhost:#{port}")
     ensure
       Process.kill("SIGINT", pid)
       Process.wait(pid)

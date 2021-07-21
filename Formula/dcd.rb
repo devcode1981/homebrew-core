@@ -2,14 +2,16 @@ class Dcd < Formula
   desc "Auto-complete program for the D programming language"
   homepage "https://github.com/dlang-community/DCD"
   url "https://github.com/dlang-community/DCD.git",
-      :tag      => "v0.9.13",
-      :revision => "baddc0a3fe97521e0b7fdbc1a45bde18afed4314"
-  head "https://github.com/dlang-community/dcd.git", :shallow => false
+      tag:      "v0.13.6",
+      revision: "02acaa534b9be65142aed7b202a6a8d5524abf2a"
+  license "GPL-3.0-or-later"
+  head "https://github.com/dlang-community/dcd.git"
 
   bottle do
-    sha256 "7d4f107a95d461b88545bb23a0c773f23291f10a82401d749caeb50347438ab1" => :mojave
-    sha256 "93c5b0c23def8f15e0a0fa326db8cfd90d6604e0b3f5ee8c1ff7ff7e28e4ef85" => :high_sierra
-    sha256 "01efe880d58d23cc46f03e7907ad933cbe746400ec08ded499d19f7059350ef7" => :sierra
+    sha256 cellar: :any_skip_relocation, big_sur:      "e97405796485c96ea4dd9f7458cd548ed609f61ed8d5e006fb73ec00072d0811"
+    sha256 cellar: :any_skip_relocation, catalina:     "1455dd1a3d4919d261c6cc8a73d05f62f4436f17b66d8790db249bcf4fbdcc6f"
+    sha256 cellar: :any_skip_relocation, mojave:       "484f3c51a322172c8bab3cfa850685f91ce9dfdcccc85daeedead97cc63f13e1"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "58b613aa6a40fb855b592944f97bc7d66cbf87ee30e2243fd4e1551536b02d4f"
   end
 
   depends_on "dmd" => :build
@@ -20,19 +22,19 @@ class Dcd < Formula
   end
 
   test do
-    begin
-      # spawn a server, using a non-default port to avoid
-      # clashes with pre-existing dcd-server instances
-      server = fork do
-        exec "#{bin}/dcd-server", "-p9167"
-      end
-      # Give it generous time to load
-      sleep 0.5
-      # query the server from a client
-      system "#{bin}/dcd-client", "-q", "-p9167"
-    ensure
-      Process.kill "TERM", server
-      Process.wait server
+    port = free_port
+
+    # spawn a server, using a non-default port to avoid
+    # clashes with pre-existing dcd-server instances
+    server = fork do
+      exec "#{bin}/dcd-server", "-p", port.to_s
     end
+    # Give it generous time to load
+    sleep 0.5
+    # query the server from a client
+    system "#{bin}/dcd-client", "-q", "-p", port.to_s
+  ensure
+    Process.kill "TERM", server
+    Process.wait server
   end
 end

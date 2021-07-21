@@ -1,43 +1,50 @@
 class Openblas < Formula
   desc "Optimized BLAS library"
   homepage "https://www.openblas.net/"
-  url "https://github.com/xianyi/OpenBLAS/archive/v0.3.3.tar.gz"
-  sha256 "49d88f4494ae780e3d7fa51769c00d982d7cdb73e696054ac3baa81d42f13bab"
-  head "https://github.com/xianyi/OpenBLAS.git", :branch => "develop"
+  url "https://github.com/xianyi/OpenBLAS/archive/v0.3.17.tar.gz"
+  sha256 "df2934fa33d04fd84d839ca698280df55c690c86a5a1133b3f7266fce1de279f"
+  license "BSD-3-Clause"
+  head "https://github.com/xianyi/OpenBLAS.git", branch: "develop"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    rebuild 1
-    sha256 "27a016e4f304469322480bf63ca22858aeb552a5c32996676251c741115f3fd5" => :mojave
-    sha256 "9d83d7ffa579907aba6e8ee168670d7cad2a23091cefe34a9cf9d3690915f6c5" => :high_sierra
-    sha256 "eaa3fe7a25a94152c79bc40244aa87ae585081a268669e5c6489656277f22fe1" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "c9ae01370ce517ab827b58d78908765b6a786d04f6f70c86bccdb5978cecef7e"
+    sha256 cellar: :any,                 big_sur:       "1cbdb7f1dfd423ff76b92825c6a073166f555a785f012bba9ad86f3b8eae4752"
+    sha256 cellar: :any,                 catalina:      "14891978c20a81ab3b4839e5c6cc5504daee971ca39a3806a36e8a0a90a38ef0"
+    sha256 cellar: :any,                 mojave:        "a5c4b0222ae4225f96fb72046921bc5c625445e10361407dfacbc4719aa90283"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "110436100fa51f165c534e88ad6283cb666d131b857e7e3ee8d4cfa2de05b9f3"
   end
 
-  keg_only :provided_by_macos,
-           "macOS provides BLAS and LAPACK in the Accelerate framework"
-
-  option "with-openmp", "Enable parallel computations with OpenMP"
+  keg_only :shadowed_by_macos, "macOS provides BLAS in Accelerate.framework"
 
   depends_on "gcc" # for gfortran
-
-  # Upstream fix for issue https://github.com/xianyi/OpenBLAS/issues/1735
-  # "OpenBLAS : Program will terminate because you tried to start too many threads"
-  patch do
-    url "https://github.com/xianyi/OpenBLAS/commit/4d183e5567346f80f2ef97eb98f8601c47f8cb56.patch?full_index=1"
-    sha256 "9b02860bd78252ed9f09abb65a62fff22c0aeca002757d503f5b643a11b744bf"
-  end
-
-  fails_with :clang if build.with? "openmp"
+  fails_with :clang
 
   def install
-    ENV["DYNAMIC_ARCH"] = "1" if build.bottle?
-    ENV["USE_OPENMP"] = "1" if build.with? "openmp"
+    ENV.runtime_cpu_detection
+    ENV.deparallelize # build is parallel by default, but setting -j confuses it
+
+    ENV["DYNAMIC_ARCH"] = "1"
+    ENV["USE_OPENMP"] = "1"
+    # Force a large NUM_THREADS to support larger Macs than the VMs that build the bottles
+    ENV["NUM_THREADS"] = "56"
+    ENV["TARGET"] = case Hardware.oldest_cpu
+    when :arm_vortex_tempest
+      "VORTEX"
+    else
+      Hardware.oldest_cpu.upcase.to_s
+    end
 
     # Must call in two steps
     system "make", "CC=#{ENV.cc}", "FC=gfortran", "libs", "netlib", "shared"
     system "make", "PREFIX=#{prefix}", "install"
 
-    lib.install_symlink "libopenblas.dylib" => "libblas.dylib"
-    lib.install_symlink "libopenblas.dylib" => "liblapack.dylib"
+    lib.install_symlink shared_library("libopenblas") => shared_library("libblas")
+    lib.install_symlink shared_library("libopenblas") => shared_library("liblapack")
   end
 
   test do

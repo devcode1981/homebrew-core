@@ -1,33 +1,49 @@
 class Passenger < Formula
   desc "Server for Ruby, Python, and Node.js apps via Apache/NGINX"
   homepage "https://www.phusionpassenger.com/"
-  url "https://github.com/phusion/passenger/releases/download/release-6.0.0/passenger-6.0.0.tar.gz"
-  sha256 "3f826e55065bb69ff5cc945b7b8ab5eb69f957e108053d15401c2ea059321b83"
-  head "https://github.com/phusion/passenger.git", :branch => "stable-6.0"
+  url "https://github.com/phusion/passenger/releases/download/release-6.0.10/passenger-6.0.10.tar.gz"
+  sha256 "3eb2c52652c96a136cc69cf342e3a61a8dd0e92cdbe9310a7aae249ab1abe0d4"
+  license "MIT"
+  head "https://github.com/phusion/passenger.git", branch: "stable-6.0"
 
   bottle do
-    sha256 "215b84b960021443f48c9425299dacce7532140e0c4b560a012354116ff6a996" => :mojave
-    sha256 "9d7dc31d44f43c9f09da7aba58c07ee0a9dd97c49655f917c443a6f1e8a2fd32" => :high_sierra
-    sha256 "3c0ec433a8b3158c39cc1c56753a16af3011fb3ae4f2d496be968c4e3991064a" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "1822d611ddac669b76ccc2519e7529ed251fc5c6ef41e31798f4337385a228ea"
+    sha256 cellar: :any, big_sur:       "3e56f6fd3afa1b36435e64b39ae36db97642dbbc89e98d38d85f1da679752af9"
+    sha256 cellar: :any, catalina:      "718a353511df67865cc188d315724cf2d0d682c539610a5a176c526614228da8"
+    sha256 cellar: :any, mojave:        "c516f5b61984f6b8bea3fba648803279e3881bcf6c67deb50f0a02ea5a573fee"
   end
 
-  option "without-apache2-module", "Disable Apache2 module"
-
-  depends_on :macos => :lion
-  depends_on "openssl"
+  # to build nginx module
+  depends_on "nginx" => [:build, :test]
+  depends_on "openssl@1.1"
   depends_on "pcre"
+  uses_from_macos "ruby", since: :catalina
 
   def install
-    # https://github.com/Homebrew/homebrew-core/pull/1046
-    ENV.delete("SDKROOT")
-
-    inreplace "src/ruby_supportlib/phusion_passenger/platform_info/openssl.rb" do |s|
-      s.gsub! "-I/usr/local/opt/openssl/include", "-I#{Formula["openssl"].opt_include}"
-      s.gsub! "-L/usr/local/opt/openssl/lib", "-L#{Formula["openssl"].opt_lib}"
+    if MacOS.version >= :mojave && MacOS::CLT.installed?
+      ENV["SDKROOT"] = MacOS::CLT.sdk_path(MacOS.version)
+    else
+      ENV.delete("SDKROOT")
     end
 
-    system "rake", "apache2" if build.with? "apache2-module"
+    inreplace "src/ruby_supportlib/phusion_passenger/platform_info/openssl.rb" do |s|
+      s.gsub! "-I/usr/local/opt/openssl/include", "-I#{Formula["openssl@1.1"].opt_include}"
+      s.gsub! "-L/usr/local/opt/openssl/lib", "-L#{Formula["openssl@1.1"].opt_lib}"
+    end
+
+    system "rake", "apache2"
     system "rake", "nginx"
+    nginx_addon_dir = `./bin/passenger-config about nginx-addon-dir`.strip
+
+    mkdir "nginx" do
+      system "tar", "-xf", "#{Formula["nginx"].opt_pkgshare}/src/src.tar.xz", "--strip-components", "1"
+      args = (Formula["nginx"].opt_pkgshare/"src/configure_args.txt").read.split("\n")
+      args << "--add-dynamic-module=#{nginx_addon_dir}"
+
+      system "./configure", *args
+      system "make"
+      (libexec/"modules").install "objs/ngx_http_passenger_module.so"
+    end
 
     (libexec/"download_cache").mkpath
 
@@ -38,10 +54,10 @@ class Passenger < Formula
 
     necessary_files = %w[configure Rakefile README.md CONTRIBUTORS
                          CONTRIBUTING.md LICENSE CHANGELOG package.json
-                         passenger.gemspec build bin doc images man dev src
+                         passenger.gemspec build bin doc images dev src
                          resources buildout]
-    libexec.mkpath
-    cp_r necessary_files, libexec, :preserve => true
+
+    cp_r necessary_files, libexec, preserve: true
 
     # Allow Homebrew to create symlinks for the Phusion Passenger commands.
     bin.install_symlink Dir["#{libexec}/bin/*"]
@@ -49,45 +65,76 @@ class Passenger < Formula
     # Ensure that the Phusion Passenger commands can always find their library
     # files.
 
-    locations_ini = `/usr/bin/ruby ./bin/passenger-config --make-locations-ini --for-native-packaging-method=homebrew`
+    locations_ini = `./bin/passenger-config --make-locations-ini --for-native-packaging-method=homebrew`
     locations_ini.gsub!(/=#{Regexp.escape Dir.pwd}/, "=#{libexec}")
     (libexec/"src/ruby_supportlib/phusion_passenger/locations.ini").write(locations_ini)
 
-    ruby_libdir = `/usr/bin/ruby ./bin/passenger-config about ruby-libdir`.strip
+    ruby_libdir = `./bin/passenger-config about ruby-libdir`.strip
     ruby_libdir.gsub!(/^#{Regexp.escape Dir.pwd}/, libexec)
-    system "/usr/bin/ruby", "./dev/install_scripts_bootstrap_code.rb",
+    system "./dev/install_scripts_bootstrap_code.rb",
       "--ruby", ruby_libdir, *Dir[libexec/"bin/*"]
 
-    system("/usr/bin/ruby ./bin/passenger-config compile-nginx-engine")
-    cp Dir["buildout/support-binaries/nginx*"], libexec/"buildout/support-binaries", :preserve => true
+    system "./bin/passenger-config", "compile-nginx-engine"
+    cp Dir["buildout/support-binaries/nginx*"], libexec/"buildout/support-binaries", preserve: true
 
-    nginx_addon_dir = `/usr/bin/ruby ./bin/passenger-config about nginx-addon-dir`.strip
     nginx_addon_dir.gsub!(/^#{Regexp.escape Dir.pwd}/, libexec)
-    system "/usr/bin/ruby", "./dev/install_scripts_bootstrap_code.rb",
+    system "./dev/install_scripts_bootstrap_code.rb",
       "--nginx-module-config", libexec/"bin", "#{nginx_addon_dir}/config"
 
-    mv libexec/"man", share
+    man1.install Dir["man/*.1"]
+    man8.install Dir["man/*.8"]
   end
 
   def caveats
-    s = <<~EOS
+    <<~EOS
       To activate Phusion Passenger for Nginx, run:
-        brew install nginx --with-passenger
+        brew install nginx
+      And add the following to #{etc}/nginx/nginx.conf at the top scope (outside http{}):
+        load_module #{opt_libexec}/modules/ngx_http_passenger_module.so;
+      And add the following to #{etc}/nginx/nginx.conf in the http scope:
+        passenger_root #{opt_libexec}/src/ruby_supportlib/phusion_passenger/locations.ini;
+        passenger_ruby /usr/bin/ruby;
 
-    EOS
-
-    s += <<~EOS if build.with? "apache2-module"
       To activate Phusion Passenger for Apache, create /etc/apache2/other/passenger.conf:
         LoadModule passenger_module #{opt_libexec}/buildout/apache2/mod_passenger.so
         PassengerRoot #{opt_libexec}/src/ruby_supportlib/phusion_passenger/locations.ini
         PassengerDefaultRuby /usr/bin/ruby
-
     EOS
-    s
   end
 
   test do
     ruby_libdir = `#{HOMEBREW_PREFIX}/bin/passenger-config --ruby-libdir`.strip
     assert_equal "#{libexec}/src/ruby_supportlib", ruby_libdir
+
+    (testpath/"nginx.conf").write <<~EOS
+      load_module #{opt_libexec}/modules/ngx_http_passenger_module.so;
+      worker_processes 4;
+      error_log #{testpath}/error.log;
+      pid #{testpath}/nginx.pid;
+
+      events {
+        worker_connections 1024;
+      }
+
+      http {
+        passenger_root #{opt_libexec}/src/ruby_supportlib/phusion_passenger/locations.ini;
+        passenger_ruby /usr/bin/ruby;
+        client_body_temp_path #{testpath}/client_body_temp;
+        fastcgi_temp_path #{testpath}/fastcgi_temp;
+        proxy_temp_path #{testpath}/proxy_temp;
+        scgi_temp_path #{testpath}/scgi_temp;
+        uwsgi_temp_path #{testpath}/uwsgi_temp;
+        passenger_temp_path #{testpath}/passenger_temp;
+
+        server {
+          passenger_enabled on;
+          listen 8080;
+          root #{testpath};
+          access_log #{testpath}/access.log;
+          error_log #{testpath}/error.log;
+        }
+      }
+    EOS
+    system "#{Formula["nginx"].opt_bin}/nginx", "-t", "-c", testpath/"nginx.conf"
   end
 end

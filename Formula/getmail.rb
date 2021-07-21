@@ -1,15 +1,20 @@
 class Getmail < Formula
   desc "Extensible mail retrieval system with POP3, IMAP4, SSL support"
   homepage "http://pyropus.ca/software/getmail/"
-  url "http://pyropus.ca/software/getmail/old-versions/getmail-5.6.tar.gz"
-  sha256 "460d2c8834936df88d594095d789c4585edca9b0bdbeded9f6267f0d90dcd59a"
+  url "http://pyropus.ca/software/getmail/old-versions/getmail-5.15.tar.gz"
+  sha256 "d453805ffc3f8fe2586ee705733bd666777e53693125fdb149494d22bd14162a"
+  license "GPL-2.0-only"
+
+  livecheck do
+    url :homepage
+    regex(/href=.*?getmail[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "087dfb1285595c973190bf3d8d61e88823b3bc59375f2d2b001e315d2ebcb449" => :mojave
-    sha256 "e68ba106188d5de7ba03e4cc6335eb920b8fae875770fd33ec9c7f13f6cc25ac" => :high_sierra
-    sha256 "e68ba106188d5de7ba03e4cc6335eb920b8fae875770fd33ec9c7f13f6cc25ac" => :sierra
-    sha256 "e68ba106188d5de7ba03e4cc6335eb920b8fae875770fd33ec9c7f13f6cc25ac" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "6c2efe9061839c88f5041cb06a8a9d5aeb8681f57d0f82d889725239b5b14ec6"
+    sha256 cellar: :any_skip_relocation, big_sur:       "e3481bec43a52377745e09fe62324f4daa35964f862150b23ba8044a6a85eeca"
+    sha256 cellar: :any_skip_relocation, catalina:      "a69c9ebda4863ac97ea2259b007d15a4024b7af75912fca0ef9f39cbe972ba8f"
+    sha256 cellar: :any_skip_relocation, mojave:        "c729f338af43aebe206c4b0cbddebd1d1619d94a8277e4f1dc43908fba631b8b"
   end
 
   def install

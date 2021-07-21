@@ -1,13 +1,15 @@
 class Scrcpy < Formula
   desc "Display and control your Android device"
   homepage "https://github.com/Genymobile/scrcpy"
-  url "https://github.com/Genymobile/scrcpy/archive/v1.5.tar.gz"
-  sha256 "9eef28d352d064320b8a2b9cc1000d478fb617a99807f2456a54af855b39ecf9"
+  url "https://github.com/Genymobile/scrcpy/archive/v1.18.tar.gz"
+  sha256 "2995d74409e9a486e4f69d0f623299ebf615d9427d8e974dfd82355538a313e9"
+  license "Apache-2.0"
 
   bottle do
-    sha256 "3f1fc3cb5964c4f94383531dca5a548e24680fc3698d33bf65a90c1edf4a9346" => :mojave
-    sha256 "457937e11c5eff7accd216cf8cb0b1ace90f1eec22171c1b2e90edc590d6b383" => :high_sierra
-    sha256 "1b2d6071d5afb0d583a8a7bcd2fd277f364e67c41766f59865764d668f4d3071" => :sierra
+    sha256 arm64_big_sur: "0fd6c2d4d56cdbc09df21e7a8aabbeaa75a7658f99eb8478bdfd6b97d510dad6"
+    sha256 big_sur:       "6c960c8555c710cd1058e256b34e6c93be8b3294a6b34bbc58ead2344d6da740"
+    sha256 catalina:      "c6262834293a4667e870ec7977e90fe1b5dda59d646555f9c71435195ac4a970"
+    sha256 mojave:        "1c5e721c141ecb90418ccf5500756c94bf48c2dc1ead190e6cc16024b5449430"
   end
 
   depends_on "meson" => :build
@@ -17,18 +19,17 @@ class Scrcpy < Formula
   depends_on "sdl2"
 
   resource "prebuilt-server" do
-    url "https://github.com/Genymobile/scrcpy/releases/download/v1.5/scrcpy-server-v1.5.jar"
-    sha256 "c827f566172a5c5946e63b8378ac93d374dff9e229083e5cd9980df57536947b"
+    url "https://github.com/Genymobile/scrcpy/releases/download/v1.18/scrcpy-server-v1.18"
+    sha256 "641c5c6beda9399dfae72d116f5ff43b5ed1059d871c9ebc3f47610fd33c51a3"
   end
 
   def install
     r = resource("prebuilt-server")
-    r.verify_download_integrity(r.fetch)
+    r.fetch
     cp r.cached_download, buildpath/"prebuilt-server.jar"
 
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}",
-                      "--buildtype=release",
+      system "meson", *std_meson_args,
                       "-Dprebuilt_server=#{buildpath}/prebuilt-server.jar",
                       ".."
 
@@ -36,12 +37,13 @@ class Scrcpy < Formula
     end
   end
 
-  def caveats; <<~EOS
-    At runtime, adb must be accessible from your PATH.
+  def caveats
+    <<~EOS
+      At runtime, adb must be accessible from your PATH.
 
-    You can install adb from Homebrew Cask:
-      brew cask install android-platform-tools
-  EOS
+      You can install adb from Homebrew Cask:
+        brew install --cask android-platform-tools
+    EOS
   end
 
   test do

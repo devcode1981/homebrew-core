@@ -1,78 +1,83 @@
 class NodeExporter < Formula
   desc "Prometheus exporter for machine metrics"
   homepage "https://prometheus.io/"
-  url "https://github.com/prometheus/node_exporter/archive/v0.16.0.tar.gz"
-  sha256 "2ed1c1c199e047b1524b49a6662d5969936e81520d6613b8b68cc3effda450cf"
+  url "https://github.com/prometheus/node_exporter/archive/v1.2.0.tar.gz"
+  sha256 "01ee195671868a3d250f380528df9ecc8cdf082d2e681d130377c802f30e0c81"
+  license "Apache-2.0"
+  head "https://github.com/prometheus/node_exporter.git"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "18aec98484b6171e130b362cb4fdf061ae556889b5a4d0f5e54590bed772d40f" => :mojave
-    sha256 "73a63fee885b246f401e3bb5f2ba2ef151a0d445d2c5be3480eb5ad7e34c5150" => :high_sierra
-    sha256 "a2f81f31c72150cff3ce0442ae63e783b4c8d9ea6b04cce353caed36f373c464" => :sierra
-    sha256 "43917856258a8a777b2632921070b002853b266438495320ca20d5eda6a95809" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a2d0f58a7507651d8d9c130413af92470635acfca6513582e48c7c030c9775c4"
+    sha256 cellar: :any_skip_relocation, big_sur:       "661b7f371988c70cefe9cf852b4541e61581c558d2d0cc3eef09661d0f9211fb"
+    sha256 cellar: :any_skip_relocation, catalina:      "0ea107911c1a5c5537ed4c4e9b762615380baff2be4bafcfdd9596ccaa911a22"
+    sha256 cellar: :any_skip_relocation, mojave:        "9ab5a47bacb3f65b457030995ebd6579490931516fe3b8b86b5583e76d1cda67"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "acbcdf3ac39fb1596159f043cd6fe8dd6f5bb41e37f0bba3207d404dd1b5f85b"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/prometheus").mkpath
-    ln_s buildpath, "src/github.com/prometheus/node_exporter"
-    system "go", "build", "-o", bin/"node_exporter", "-ldflags",
-           "-X github.com/prometheus/node_exporter/vendor/github.com/prometheus/common/version.Version=#{version}",
-           "github.com/prometheus/node_exporter"
+    ldflags = %W[
+      -X github.com/prometheus/common/version.Version=#{version}
+      -X github.com/prometheus/common/version.BuildUser=Homebrew
+    ]
+    system "go", "build", "-ldflags", ldflags.join(" "), "-trimpath",
+           "-o", bin/"node_exporter"
+    prefix.install_metafiles
+
+    touch etc/"node_exporter.args"
+
+    (bin/"node_exporter_brew_services").write <<~EOS
+      #!/bin/bash
+      exec #{bin}/node_exporter $(<#{etc}/node_exporter.args)
+    EOS
   end
 
-  def caveats; <<~EOS
-    When used with `brew services`, node_exporter's configuration is stored as command line flags in
-      #{etc}/node_exporter.args
-
-    Example configuration:
-      echo --web.listen-address :9101 > #{etc}/node_exporter.args
-
-    For the full list of options, execute
-      node_exporter -h
-  EOS
+  def caveats
+    <<~EOS
+      When run from `brew services`, `node_exporter` is run from
+      `node_exporter_brew_services` and uses the flags in:
+        #{etc}/node_exporter.args
+    EOS
   end
 
-  plist_options :manual => "node_exporter"
+  plist_options manual: "node_exporter"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-      <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>sh</string>
-          <string>-c</string>
-          <string>#{opt_bin}/node_exporter $(&lt; #{etc}/node_exporter.args)</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>KeepAlive</key>
-        <false/>
-        <key>StandardErrorPath</key>
-        <string>#{var}/log/node_exporter.err.log</string>
-        <key>StandardOutPath</key>
-        <string>#{var}/log/node_exporter.log</string>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_bin}/node_exporter_brew_services</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>KeepAlive</key>
+          <false/>
+          <key>StandardErrorPath</key>
+          <string>#{var}/log/node_exporter.err.log</string>
+          <key>StandardOutPath</key>
+          <string>#{var}/log/node_exporter.log</string>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do
-    output = shell_output("#{bin}/node_exporter --version 2>&1")
-    assert_match version.to_s, output
-    begin
-      pid = fork { exec bin/"node_exporter" }
-      sleep 2
-      assert_match "# HELP", shell_output("curl -s localhost:9100/metrics")
-    ensure
-      Process.kill("SIGINT", pid)
-      Process.wait(pid)
-    end
+    assert_match "node_exporter", shell_output("#{bin}/node_exporter --version 2>&1")
+
+    fork { exec bin/"node_exporter" }
+    sleep 2
+    assert_match "# HELP", shell_output("curl -s localhost:9100/metrics")
   end
 end

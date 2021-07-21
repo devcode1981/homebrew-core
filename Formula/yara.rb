@@ -1,29 +1,39 @@
 class Yara < Formula
   desc "Malware identification and classification tool"
   homepage "https://github.com/VirusTotal/yara/"
-  url "https://github.com/VirusTotal/yara/archive/v3.8.1.tar.gz"
-  sha256 "283527711269354d3c60e2705f7f74b1f769d2d35ddba8f7f9ce97d0fd5cb1ca"
-  revision 1
+  url "https://github.com/VirusTotal/yara/archive/v4.1.1.tar.gz"
+  sha256 "5f85c69606fad5cdb42e8f8101c96f6962a4928667395d9471e5aaea961e9b1d"
+  license "BSD-3-Clause"
   head "https://github.com/VirusTotal/yara.git"
 
   bottle do
-    cellar :any
-    sha256 "4c3626f044e8883aeec924eb86a3f911c066dec08a27e3942cd42740dc1d437c" => :mojave
-    sha256 "33a367347f06bebdac1538402fc1ecebb86658f4aec70c764c8aa98bbc81d7fd" => :high_sierra
-    sha256 "334989f4b87c6b28b9e5258dab53b5617a11cc096d788f794039e48c40425e26" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "82f2f7cd67e9e17b091238deb8a5efc439a6d6a31973f214ca97354c9efa508a"
+    sha256 cellar: :any,                 big_sur:       "1c537a6806077a1182e064caba4fd1ff8a85876bc00075ed7cb9fa5d0f23c63e"
+    sha256 cellar: :any,                 catalina:      "9f67abadf869d00f103dbad51fc21bccb664b348184d943e0e2c758097e50c0c"
+    sha256 cellar: :any,                 mojave:        "037207f1ffcc9bf9b3122f6f9a0ca3b1cfc944d8526d1aa24634ba3ade1760a3"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e6980d415663481bc089d2b5be9ef97574c719b04d8d5e15d25d45dfd2621de2"
   end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
   depends_on "libtool" => :build
-  depends_on "openssl"
+  depends_on "pkg-config" => :build
+  depends_on "jansson"
+  depends_on "libmagic"
+  depends_on "openssl@1.1"
+  depends_on "protobuf-c"
 
   def install
     system "./bootstrap.sh"
     system "./configure", "--disable-silent-rules",
                           "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
-                          "--enable-dotnet"
+                          "--enable-dotnet",
+                          "--enable-cuckoo",
+                          "--enable-magic",
+                          "--enable-macho",
+                          "--enable-dex",
+                          "--with-crypto"
     system "make", "install"
   end
 

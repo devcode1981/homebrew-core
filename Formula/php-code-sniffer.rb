@@ -1,14 +1,18 @@
 class PhpCodeSniffer < Formula
   desc "Check coding standards in PHP, JavaScript and CSS"
   homepage "https://github.com/squizlabs/PHP_CodeSniffer/"
-  url "https://github.com/squizlabs/PHP_CodeSniffer/releases/download/3.3.2/phpcs.phar"
-  sha256 "692a281f40b0afa3120f25e195102d0d327efef5ef16ce18cb9e5731a45ee35a"
+  url "https://github.com/squizlabs/PHP_CodeSniffer/releases/download/3.6.0/phpcs.phar"
+  sha256 "3f7e099bd4b03681e12f96582ce0d76e065213ba15a3b1c22d79349e213ab169"
+  license "BSD-3-Clause"
+  revision 1
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "25ce66947a536c9a0901e068382f4e8cbb05c1515ff5258260be2869f9ae7500"
+  end
 
   resource "phpcbf.phar" do
-    url "https://github.com/squizlabs/PHP_CodeSniffer/releases/download/3.3.2/phpcbf.phar"
-    sha256 "c43e2e924bf28eb48f825df12a9031ad4a96bf2e2e609ce78ad2653ce969ace3"
+    url "https://github.com/squizlabs/PHP_CodeSniffer/releases/download/3.6.0/phpcbf.phar"
+    sha256 "e19755c44800f955cd4d234657f90ead1ecb08c4957528fcad6424526b0c8b13"
   end
 
   def install
@@ -30,8 +34,8 @@ class PhpCodeSniffer < Formula
       */
     EOS
 
-    assert_match /FOUND 13 ERRORS/, shell_output("#{bin}/phpcs --runtime-set ignore_errors_on_exit true test.php")
-    assert_match /13 ERRORS WERE FIXED/, shell_output("#{bin}/phpcbf test.php", 1)
+    assert_match "FOUND 13 ERRORS", shell_output("#{bin}/phpcs --runtime-set ignore_errors_on_exit true test.php")
+    assert_match "13 ERRORS WERE FIXED", shell_output("#{bin}/phpcbf test.php", 1)
     system "#{bin}/phpcs", "test.php"
   end
 end

@@ -1,51 +1,56 @@
 class Evince < Formula
   desc "GNOME document viewer"
   homepage "https://wiki.gnome.org/Apps/Evince"
-  url "https://download.gnome.org/sources/evince/3.30/evince-3.30.2.tar.xz"
-  sha256 "a95bbdeb452c9cc910bba751e7c782ce60ffe7972c461bccbe8bbcdb8ca5f24c"
+  url "https://download.gnome.org/sources/evince/40/evince-40.4.tar.xz"
+  sha256 "33420500e0e060f178a435063197d42dae7b67e39cc437a96510a33ddf7e95fb"
+  license "GPL-2.0-or-later"
 
   bottle do
-    sha256 "79376de9e7e365c98d51ec709de00966aed241ea33eeb2996284849b05361dd6" => :mojave
-    sha256 "00e766f45adca27bb77a032eb7e51d5e0aaafe11e1ad0356f88e1c273611ceb8" => :high_sierra
-    sha256 "8b260fa7c0da0fbd2ff4585689049b90fe3cb88260099bf4fc5742ac01dcf32e" => :sierra
+    sha256 arm64_big_sur: "0b857551882828d6169395ef9b6232462fb3b421a489b528e81c69cbb4c16987"
+    sha256 big_sur:       "c121140000b1f012f76a8a36cc98ac388c47197814a7ad33c029729de7bc24bc"
+    sha256 catalina:      "a3530de6c041916c4d7080e3693c6ff27230ba6bfe34c8b9c98690ea0f5627b8"
+    sha256 mojave:        "312e6831954556798dc9e171f9787b467d19357b14f60b92780656fe01ffe519"
   end
 
   depends_on "gobject-introspection" => :build
-  depends_on "intltool" => :build
   depends_on "itstool" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "adwaita-icon-theme"
   depends_on "djvulibre"
   depends_on "gspell"
   depends_on "gtk+3"
   depends_on "hicolor-icon-theme"
+  depends_on "libarchive"
+  depends_on "libgxps"
+  depends_on "libhandy"
   depends_on "libsecret"
   depends_on "libspectre"
-  depends_on "libxml2"
   depends_on "poppler"
-  depends_on "python@2"
+  depends_on "python@3.9"
 
   def install
-    # Fix build failure "ar: illegal option -- D"
-    # Reported 15 Sep 2017 https://bugzilla.gnome.org/show_bug.cgi?id=787709
-    inreplace "configure", "AR_FLAGS=crD", "AR_FLAGS=r"
+    ENV["DESTDIR"] = "/"
 
-    # forces use of gtk3-update-icon-cache instead of gtk-update-icon-cache. No bugreport should
-    # be filed for this since it only occurs because Homebrew renames gtk+3's gtk-update-icon-cache
-    # to gtk3-update-icon-cache in order to avoid a collision between gtk+ and gtk+3.
-    inreplace "data/Makefile.in", "gtk-update-icon-cache", "gtk3-update-icon-cache"
+    args = %w[
+      -Dnautilus=false
+      -Ddjvu=enabled
+      -Dgxps=enabled
+      -Dcomics=enabled
+      -Dgtk_doc=false
+      -Dintrospection=true
+      -Dbrowser_plugin=false
+      -Dgspell=enabled
+      -Ddbus=false
+      -Dps=enabled
+    ]
 
-    system "./configure", "--disable-debug",
-                          "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--prefix=#{prefix}",
-                          "--disable-nautilus",
-                          "--disable-schemas-compile",
-                          "--enable-introspection",
-                          "--enable-djvu",
-                          "--disable-browser-plugin"
-    ENV.append_path "PYTHONPATH", "#{Formula["libxml2"].opt_lib}/python2.7/site-packages"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args, *args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
   end
 
   def post_install

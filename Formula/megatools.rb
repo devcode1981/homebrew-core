@@ -1,22 +1,31 @@
 class Megatools < Formula
   desc "Command-line client for Mega.co.nz"
   homepage "https://megatools.megous.com/"
-  url "https://megatools.megous.com/builds/megatools-1.10.2.tar.gz"
-  sha256 "179e84c68e24696c171238a72bcfe5e28198e4c4e9f9043704f36e5c0b17c38a"
+  url "https://megatools.megous.com/builds/megatools-1.10.3.tar.gz"
+  sha256 "8dc1ca348633fd49de7eb832b323e8dc295f1c55aefb484d30e6475218558bdb"
+  license "GPL-2.0"
+
+  livecheck do
+    url "https://megatools.megous.com/builds/"
+    regex(/href=.*?megatools[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "68c1b72427e231c8bb1d05c79e78b0159eef3a9efec2ab6e11428813ecd39206" => :mojave
-    sha256 "f18ae236c38b575b3524c3dd1762b6291257231fdbadd09c8c84ef166cc3c34c" => :high_sierra
-    sha256 "096b9459462956a3257a8869154f9ce3003decaf3ed4f20ef65ba4d6094abc11" => :sierra
-    sha256 "956a0731c11c8ae3f999386cc95d57a787a19ad7ead8007b09efc7a96412c034" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "9aa259fd94e583acf13b382bbf3f300632862741b34f78d8f853b976306bc224"
+    sha256 cellar: :any,                 big_sur:       "cf95741a2c3766205c7e24a56018b07ba5716a6c2ae889ecd35d3bd9990a5f02"
+    sha256 cellar: :any,                 catalina:      "88c7b8cf60517507c7d6e7d9709b53bca671d949c7363c117e27ffb7d860f855"
+    sha256 cellar: :any,                 mojave:        "21844a1f366aec458b92ad00debef361388aca790bdd43583ebe51df22e7f68d"
+    sha256 cellar: :any,                 high_sierra:   "0f295ea8f68a858f114ef09bd4f53b82c5a401664e16beee28af7cca2d1aef5c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "56f981aea4ce43496323a83ecd3e1c9c6de26ed9b68300700774aeb7f50ad535"
   end
 
   depends_on "asciidoc" => :build
   depends_on "pkg-config" => :build
   depends_on "glib"
   depends_on "glib-networking"
-  depends_on "openssl"
+  depends_on "openssl@1.1"
+
+  uses_from_macos "curl"
 
   def install
     system "./configure", "--disable-debug",

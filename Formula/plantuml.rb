@@ -1,23 +1,34 @@
 class Plantuml < Formula
   desc "Draw UML diagrams"
   homepage "https://plantuml.com/"
-  url "https://downloads.sourceforge.net/project/plantuml/1.2018.12/plantuml.1.2018.12.jar"
-  sha256 "44177405dcd123cc8524a776bc45c9c8f3bcf46637b5df28343839fef927b1f9"
+  url "https://downloads.sourceforge.net/project/plantuml/1.2021.8/plantuml.1.2021.8.jar"
+  sha256 "12614d3b7792e5c718c6fb4c399ae1476fce7ae705e0e5b6ac08b84cfbde7111"
+  license "GPL-3.0-or-later"
   version_scheme 1
 
-  bottle :unneeded
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/plantuml[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
+
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "122b87bb56a535de568427e34d28ea5ba8421d00b7fcd3c41eedfd4387c98431"
+  end
 
   depends_on "graphviz"
-  depends_on :java
+  depends_on "openjdk"
 
   def install
     jar = "plantuml.jar"
     libexec.install "plantuml.#{version}.jar" => jar
     (bin/"plantuml").write <<~EOS
       #!/bin/bash
-      GRAPHVIZ_DOT="#{Formula["graphviz"].opt_bin}/dot" exec java -jar #{libexec}/#{jar} "$@"
+      if [[ "$*" != *"-gui"* ]]; then
+        VMARGS="-Djava.awt.headless=true"
+      fi
+      GRAPHVIZ_DOT="#{Formula["graphviz"].opt_bin}/dot" exec "#{Formula["openjdk"].opt_bin}/java" $VMARGS -jar #{libexec}/#{jar} "$@"
     EOS
-    chmod 0555, bin/"plantuml"
+    chmod 0755, bin/"plantuml"
   end
 
   test do

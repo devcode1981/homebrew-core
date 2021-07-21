@@ -1,24 +1,32 @@
 class DoubleConversion < Formula
   desc "Binary-decimal and decimal-binary routines for IEEE doubles"
   homepage "https://github.com/google/double-conversion"
-  url "https://github.com/google/double-conversion/archive/v3.1.1.tar.gz"
-  sha256 "c49a6b3fa9c917f827b156c8e0799ece88ae50440487a99fc2f284cfd357a5b9"
+  url "https://github.com/google/double-conversion/archive/v3.1.5.tar.gz"
+  sha256 "a63ecb93182134ba4293fd5f22d6e08ca417caafa244afaa751cbfddf6415b13"
+  license "BSD-3-Clause"
+  revision 1
   head "https://github.com/google/double-conversion.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "f749b917ef7b94719212489781681cfe46ff65729c272d136282d62c8925759d" => :mojave
-    sha256 "96f51c2d05fe260eefd15c9718a2a9ee332aad9d669f1311dec8f0036a1a08e1" => :high_sierra
-    sha256 "279e9cd2113226f9ba4f6649fb16ceacf8ce664858cfb3eb0ea08146be9546f6" => :sierra
-    sha256 "dcdac9ac3b9a2621bdbb190baadc85d332bd0bfb75663f80b0e3787e94f630c1" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "928fbd4a31967ec090b4b292b1a212fec7eb75f27443493d0c175ca8bb56a9dc"
+    sha256 cellar: :any,                 big_sur:       "0f7c08daace9fc854f8526a7699102f40de9898fa1e6b05a0199b5da3c9e1a7d"
+    sha256 cellar: :any,                 catalina:      "20b93e20891d48912ffbfbdf3ef470f7305684df2381ef93056a11cedd95c65f"
+    sha256 cellar: :any,                 mojave:        "ec700c89a4f1794170b4466f5a0a100b6eafee7cb0a794e55ea53de18114a1d3"
+    sha256 cellar: :any,                 high_sierra:   "9b54153b09683b8fa40160588792385e04f6be56ba355c5a530a2209b9f0526d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e2796bb25c0134e6c05a40d43f8b417af7ba8d5216838c6e980b429c685d1793"
   end
 
   depends_on "cmake" => :build
 
   def install
     mkdir "dc-build" do
-      system "cmake", "..", *std_cmake_args
+      system "cmake", "..", "-DBUILD_SHARED_LIBS=ON", *std_cmake_args
       system "make", "install"
+      system "make", "clean"
+
+      system "cmake", "..", "-DBUILD_SHARED_LIBS=OFF", *std_cmake_args
+      system "make"
+      lib.install "libdouble-conversion.a"
     end
   end
 

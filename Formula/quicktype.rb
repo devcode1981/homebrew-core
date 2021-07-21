@@ -4,14 +4,17 @@ class Quicktype < Formula
   desc "Generate types and converters from JSON, Schema, and GraphQL"
   homepage "https://github.com/quicktype/quicktype"
   # quicktype should only be updated every 10 releases on multiples of 10
-  url "https://registry.npmjs.org/quicktype/-/quicktype-15.0.160.tgz"
-  sha256 "78f8710596ce755853401c9c2e8b7919e8b157c4406fed6737b14427d3f8b1c7"
+  url "https://registry.npmjs.org/quicktype/-/quicktype-15.0.260.tgz"
+  sha256 "57ffeb7f12f3c3476bd7e0213716006b49a8159c20e63fd60cb07eefa4289b6f"
+  license "Apache-2.0"
+  head "https://github.com/quicktype/quicktype.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "dd5ff21d05787bbc4f00136fbbb763e76ec909fbbbe559d7e031a7a4e031c353" => :mojave
-    sha256 "113a536930c4c950122ed00e55d30f7999da8b19c5cc33c83a66a8a3f49bedce" => :high_sierra
-    sha256 "13761db950b5fb839570fb1ecb57b6b4802b0c1d9a891b5d439af9843cafb796" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "2fa5aaec1d5d1cb1809dd3ad614dda13af59447772cfa4526945e4fbedcd780e"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b2a13d97e30ebcbff8e32903e82ad8857ed108ad84e695cb92df7e870c7948bd"
+    sha256 cellar: :any_skip_relocation, catalina:      "313dd23d76101d388259319a688d84a0cb5d44a16e7d34b4a0b7611048d995a4"
+    sha256 cellar: :any_skip_relocation, mojave:        "81f40f8f11e16c51c4e30881094256be0b9f91228e2ebf131d261c5ee6a8339c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "59a2b6555eebd5c338dee762e7685577bd1ea0e5db27686c139a9bdb393e9548"
   end
 
   depends_on "node"

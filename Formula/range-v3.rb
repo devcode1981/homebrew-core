@@ -1,14 +1,16 @@
 class RangeV3 < Formula
-  desc "Experimental range library for C++11/14/17"
+  desc "Experimental range library for C++14/17/20"
   homepage "https://ericniebler.github.io/range-v3/"
-  url "https://github.com/ericniebler/range-v3/archive/0.4.0.tar.gz"
-  sha256 "5dbc878b7dfc500fb04b6b9f99d63993a2731ea34b0a4b8d5f670a5a71a18e39"
+  url "https://github.com/ericniebler/range-v3/archive/0.11.0.tar.gz"
+  sha256 "376376615dbba43d3bef75aa590931431ecb49eb36d07bb726a19f680c75e20c"
+  license "BSL-1.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "e9f7e57576943c1786a6d5776d31dfe594a6d88de7dd5cefe0bb48f7481863b1" => :mojave
-    sha256 "8d44dcaec99ccbf6fcae8c2ecff860481a6b43900a96f8a24e9a1392e7d46fd7" => :high_sierra
-    sha256 "8d44dcaec99ccbf6fcae8c2ecff860481a6b43900a96f8a24e9a1392e7d46fd7" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "2500d54ef2231b737505f3cad48f4a3ffb996b3941b8cbee4f8e2b1a44692aec"
+    sha256 cellar: :any_skip_relocation, big_sur:       "f22133b9d6ec765bef17f0ad8a81796ceafff1067954eb46a019b63e6aaa4f91"
+    sha256 cellar: :any_skip_relocation, catalina:      "bffbe0872b344db9b7838d3a63b10e95df57385d26bfaeffc4da5a3d940893c6"
+    sha256 cellar: :any_skip_relocation, mojave:        "bffbe0872b344db9b7838d3a63b10e95df57385d26bfaeffc4da5a3d940893c6"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "bffbe0872b344db9b7838d3a63b10e95df57385d26bfaeffc4da5a3d940893c6"
   end
 
   depends_on "cmake" => :build
@@ -35,7 +37,7 @@ class RangeV3 < Formula
         std::cout << std::endl;
       }
     EOS
-    system ENV.cc, "-std=c++11", "-stdlib=libc++", "-lc++",
+    system ENV.cc, "-std=c++14", "-stdlib=libc++", "-lc++",
                    "-o", "test", "test.cpp"
     assert_equal "h e l l o \n", shell_output("./test")
   end

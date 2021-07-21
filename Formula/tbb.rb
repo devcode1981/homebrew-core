@@ -1,60 +1,104 @@
 class Tbb < Formula
   desc "Rich and complete approach to parallelism in C++"
-  homepage "https://www.threadingbuildingblocks.org/"
-  url "https://github.com/01org/tbb/archive/2019_U3.tar.gz"
-  version "2019_U3"
-  sha256 "b2244147bc8159cdd8f06a38afeb42f3237d3fc822555499d7ccfbd4b86f8ece"
+  homepage "https://github.com/oneapi-src/oneTBB"
+  url "https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.3.0.tar.gz"
+  sha256 "8f616561603695bbb83871875d2c6051ea28f8187dbe59299961369904d1d49e"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any
-    sha256 "e71225b00b1600e1f5d6fb863b7e4ed2331d2f003966f7360cb2ceb5a5c62ca2" => :mojave
-    sha256 "65ab527434fae8d12d0945065ecf41ba37a5a6ebff179adceb60744a524816e1" => :high_sierra
-    sha256 "3df673cbf9c0d3b44866b5154e528e8f1a6d941a112bdccaa0b4951ae10077a1" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "0b38fba5657af959e0e2392daa9163309c51b469e7db92c5b70f535c554ab63a"
+    sha256 cellar: :any,                 big_sur:       "18d284f2fa0792ab119b10260eebc9a87fd00dc68cf0fdcd70ee00d6d7af5570"
+    sha256 cellar: :any,                 catalina:      "953989fa59711ea79f8690ae08a79a4a7722325fa36445ddffaf11c6729e25ee"
+    sha256 cellar: :any,                 mojave:        "e2c2e8c35d0df2fc1659c59c0b501b0e2420c43a6d8afe629c9f49afa1bae236"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "826e5e4bdbcdec6e72a99bb61a6d89eba61438d3f820af714e9e684cb0f085c9"
   end
 
   depends_on "cmake" => :build
   depends_on "swig" => :build
-  # requires malloc features first introduced in Lion
-  # https://github.com/Homebrew/homebrew/issues/32274
-  depends_on :macos => :lion
-  depends_on "python@2"
+  depends_on "python@3.9"
+
+  # Fix installation of Python components
+  # See https://github.com/oneapi-src/oneTBB/issues/343
+  patch :DATA
 
   def install
-    compiler = (ENV.compiler == :clang) ? "clang" : "gcc"
-    system "make", "tbb_build_prefix=BUILDPREFIX", "compiler=#{compiler}"
-    lib.install Dir["build/BUILDPREFIX_release/*.dylib"]
+    args = *std_cmake_args + %w[
+      -DTBB_TEST=OFF
+      -DTBB4PY_BUILD=ON
+    ]
 
-    # Build and install static libraries
-    system "make", "tbb_build_prefix=BUILDPREFIX", "compiler=#{compiler}",
-                   "extra_inc=big_iron.inc"
-    lib.install Dir["build/BUILDPREFIX_release/*.a"]
-    include.install "include/tbb"
-
-    cd "python" do
-      ENV["TBBROOT"] = prefix
-      system "python", *Language::Python.setup_install_args(prefix)
+    mkdir "build" do
+      system "cmake", "..", *args
+      system "make"
+      system "make", "install"
     end
 
-    system "cmake", "-DTBB_ROOT=#{prefix}",
-                    "-DTBB_OS=Darwin",
-                    "-DSAVE_TO=lib/cmake/TBB",
-                    "-P", "cmake/tbb_config_generator.cmake"
+    cd "python" do
+      ENV.append_path "CMAKE_PREFIX_PATH", prefix.to_s
+      on_macos do
+        ENV["LDFLAGS"] = "-rpath #{opt_lib}"
+      end
 
-    (lib/"cmake"/"TBB").install Dir["lib/cmake/TBB/*.cmake"]
+      ENV["TBBROOT"] = prefix
+      system Formula["python@3.9"].opt_bin/"python3", *Language::Python.setup_install_args(prefix)
+    end
+
+    on_linux do
+      inreplace prefix/"rml/CMakeFiles/irml.dir/flags.make",
+                "#{HOMEBREW_LIBRARY}/Homebrew/shims/linux/super/g++-5",
+                "/usr/bin/c++"
+      inreplace prefix/"rml/CMakeFiles/irml.dir/build.make",
+                "#{HOMEBREW_LIBRARY}/Homebrew/shims/linux/super/g++-5",
+                "/usr/bin/c++"
+      inreplace prefix/"rml/CMakeFiles/irml.dir/link.txt",
+                "#{HOMEBREW_LIBRARY}/Homebrew/shims/linux/super/g++-5",
+                "/usr/bin/c++"
+    end
   end
 
   test do
-    (testpath/"test.cpp").write <<~EOS
-      #include <tbb/task_scheduler_init.h>
+    (testpath/"sum1-100.cpp").write <<~EOS
       #include <iostream>
+      #include <tbb/blocked_range.h>
+      #include <tbb/parallel_reduce.h>
 
       int main()
       {
-        std::cout << tbb::task_scheduler_init::default_num_threads();
+        auto total = tbb::parallel_reduce(
+          tbb::blocked_range<int>(0, 100),
+          0.0,
+          [&](tbb::blocked_range<int> r, int running_total)
+          {
+            for (int i=r.begin(); i < r.end(); ++i) {
+              running_total += i + 1;
+            }
+
+            return running_total;
+          }, std::plus<int>()
+        );
+
+        std::cout << total << std::endl;
         return 0;
       }
     EOS
-    system ENV.cxx, "test.cpp", "-L#{lib}", "-ltbb", "-o", "test"
-    system "./test"
+
+    system ENV.cxx, "sum1-100.cpp", "--std=c++14", "-L#{lib}", "-ltbb", "-o", "sum1-100"
+    assert_equal "5050", shell_output("./sum1-100").chomp
+
+    system Formula["python@3.9"].opt_bin/"python3", "-c", "import tbb"
   end
 end
+
+__END__
+diff --git a/python/CMakeLists.txt b/python/CMakeLists.txt
+index 1d2b05f..81ba8de 100644
+--- a/python/CMakeLists.txt
++++ b/python/CMakeLists.txt
+@@ -49,7 +49,7 @@ add_test(NAME python_test
+                  -DPYTHON_MODULE_BUILD_PATH=${PYTHON_BUILD_WORK_DIR}/build
+                  -P ${PROJECT_SOURCE_DIR}/cmake/python/test_launcher.cmake)
+
+-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${PYTHON_BUILD_WORK_DIR}/build/
++install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${PYTHON_BUILD_WORK_DIR}/
+         DESTINATION .
+         COMPONENT tbb4py)

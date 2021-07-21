@@ -1,15 +1,16 @@
 class Webdis < Formula
   desc "Redis HTTP interface with JSON output"
   homepage "https://webd.is/"
-  url "https://github.com/nicolasff/webdis/archive/0.1.4.tar.gz"
-  sha256 "2e384eae48cfc2e4503e3311c61d4790e5d3b3ab5cf82ec554c0bef5d84c6807"
+  url "https://github.com/nicolasff/webdis/archive/0.1.16.tar.gz"
+  sha256 "7aa3b741ca44595cf8113b40a161aa8bf55a1ecf338af7d1d078337f9212e9a6"
+  license "BSD-2-Clause"
 
   bottle do
-    cellar :any
-    sha256 "212a9557b0dc359e000c970e6d7810f5511fc9da3e207adcec92e80c349bed02" => :mojave
-    sha256 "6d657c81a720f4891f8d04e3f7d575cfe1df10c70a30047ce06de33ff8fd57fc" => :high_sierra
-    sha256 "3d8b342f5638b134799bd307af578c0d95a28ccd3ecb8060749a6c026140510e" => :sierra
-    sha256 "2b8ba2575cd03917af7362218324fbefa38336306565875565f40daa20b0f050" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "ceb0a4d0bb8e67399ba8c7f6fed1b3435bddf640f714340fab7c2a11dbf3f373"
+    sha256 cellar: :any,                 big_sur:       "904aa896e27354330cfebd4054304ef91240396e579525d001ba32b26e4df0f9"
+    sha256 cellar: :any,                 catalina:      "645f9bfd01e32888199dedde784e2cc580f35b867be8452f48eff3dd2cd28734"
+    sha256 cellar: :any,                 mojave:        "7fda79301bd18193d8b9d16042299e309533eb50bd3fc03edafddbafa3890b27"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "252df9c420034e2cc7586c55a5d9ee6f4934c0f63835ff4dfd7eb53a2e359cce"
   end
 
   depends_on "libevent"
@@ -20,7 +21,7 @@ class Webdis < Formula
 
     inreplace "webdis.prod.json" do |s|
       s.gsub! "/var/log/webdis.log", "#{var}/log/webdis.log"
-      s.gsub! /daemonize":\s*true/, "daemonize\":\tfalse"
+      s.gsub!(/daemonize":\s*true/, "daemonize\":\tfalse")
     end
 
     etc.install "webdis.json", "webdis.prod.json"
@@ -30,45 +31,48 @@ class Webdis < Formula
     (var/"log").mkpath
   end
 
-  plist_options :manual => "webdis #{HOMEBREW_PREFIX}/etc/webdis.json"
+  plist_options manual: "webdis #{HOMEBREW_PREFIX}/etc/webdis.json"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-            <string>#{opt_bin}/webdis</string>
-            <string>#{etc}/webdis.prod.json</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>KeepAlive</key>
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
         <dict>
-            <key>SuccessfulExit</key>
-            <false/>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+              <string>#{opt_bin}/webdis</string>
+              <string>#{etc}/webdis.prod.json</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>KeepAlive</key>
+          <dict>
+              <key>SuccessfulExit</key>
+              <false/>
+          </dict>
+          <key>WorkingDirectory</key>
+          <string>#{var}</string>
         </dict>
-        <key>WorkingDirectory</key>
-        <string>#{var}</string>
-      </dict>
-    </plist>
-  EOS
+      </plist>
+    EOS
   end
 
   test do
-    begin
-      server = fork do
-        exec "#{bin}/webdis", "#{etc}/webdis.json"
-      end
-      sleep 0.5
-      # Test that the response is from webdis
-      assert_match(/Server: Webdis/, shell_output("curl --silent -XGET -I http://localhost:7379/PING"))
-    ensure
-      Process.kill "TERM", server
-      Process.wait server
+    port = free_port
+    cp "#{etc}/webdis.json", "#{testpath}/webdis.json"
+    inreplace "#{testpath}/webdis.json", "\"http_port\":\t7379,", "\"http_port\":\t#{port},"
+
+    server = fork do
+      exec "#{bin}/webdis", "#{testpath}/webdis.json"
     end
+    sleep 0.5
+    # Test that the response is from webdis
+    assert_match(/Server: Webdis/, shell_output("curl --silent -XGET -I http://localhost:#{port}/PING"))
+  ensure
+    Process.kill "TERM", server
+    Process.wait server
   end
 end

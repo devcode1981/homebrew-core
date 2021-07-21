@@ -1,43 +1,33 @@
 class Sysbench < Formula
   desc "System performance benchmark tool"
   homepage "https://github.com/akopytov/sysbench"
-  url "https://github.com/akopytov/sysbench/archive/1.0.15.tar.gz"
-  sha256 "7f004534ae58311a010480af8852b3ab4fdacd2292688e678bed9cbfe68c3c06"
+  url "https://github.com/akopytov/sysbench/archive/1.0.20.tar.gz"
+  sha256 "e8ee79b1f399b2d167e6a90de52ccc90e52408f7ade1b9b7135727efe181347f"
+  license "GPL-2.0-or-later"
+  revision 1
+  head "https://github.com/akopytov/sysbench.git"
 
   bottle do
-    rebuild 1
-    sha256 "88e3ab23abe4cefc6c3aa3971a1572c122dc6da07d16be8a7a507bcfe65e7440" => :mojave
-    sha256 "c0cac7822ea2b4e68b29373f924a8d367f77e42635a9cf28392b41e2f45d3ebf" => :high_sierra
-    sha256 "8aae1f5f0966a4ad0915d1443cbc2dd0aeac5e919fbc094af545ad78c2686c5b" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "8f5fd6827291b2eb5f3a5b4c842a059182802d2ad97dcbd894046e5b2750914f"
+    sha256 cellar: :any,                 big_sur:       "a9c638a46ddda6841018ad7354673315882a83e2aad7a480f46663db25e3c553"
+    sha256 cellar: :any,                 catalina:      "f85e28b078ef05d9a155d0655275e6a9418494d94ab3dd524607a9c6ca84806b"
+    sha256 cellar: :any,                 mojave:        "a29e37acd73943d5a1d72e6a5cb2f0812e2be3aeb061f919d271a8b31f2ac412"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "8f9cf704a34e18ddf2b4e826500a6b98b6e0df6e9b2dcf85e93dfe9f5fa2988f"
   end
-
-  deprecated_option "without-mysql" => "without-mysql-client"
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
   depends_on "libtool" => :build
   depends_on "pkg-config" => :build
-  depends_on "openssl"
-  depends_on "mysql-client" => :recommended
-  depends_on "postgresql" => :optional
+  depends_on "luajit-openresty"
+  depends_on "mysql-client"
+  depends_on "openssl@1.1"
+
+  uses_from_macos "vim" # needed for xxd
 
   def install
     system "./autogen.sh"
-
-    # Fix for luajit build breakage.
-    # Per https://luajit.org/install.html: If MACOSX_DEPLOYMENT_TARGET
-    # is not set then it's forced to 10.4, which breaks compile on Mojave.
-    ENV["MACOSX_DEPLOYMENT_TARGET"] = MacOS.version
-
-    args = ["--prefix=#{prefix}"]
-    if build.with? "mysql-client"
-      args << "--with-mysql"
-    else
-      args << "--without-mysql"
-    end
-    args << "--with-psql" if build.with? "postgresql"
-
-    system "./configure", *args
+    system "./configure", "--prefix=#{prefix}", "--with-mysql", "--with-system-luajit"
     system "make", "install"
   end
 

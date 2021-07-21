@@ -1,15 +1,17 @@
 class SoundTouch < Formula
   desc "Audio processing library"
   homepage "https://www.surina.net/soundtouch/"
-  url "https://www.surina.net/soundtouch/soundtouch-2.0.0.tar.gz"
-  sha256 "d224f7d1421b5f8e74a74c85741345bd9802618a40ae30ce5b427a5705c89d25"
+  url "https://gitlab.com/soundtouch/soundtouch/-/archive/2.2/soundtouch-2.2.tar.gz"
+  sha256 "525478c745a51dadaf7adb8e5386ec1f903d47196fab5947dc37414344684560"
+  license "LGPL-2.1"
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "f082ce515895d8cb5230e4afb0778731febf47800c93e62f4cafad9b14547852" => :mojave
-    sha256 "d3b8c7fc1c53208d848c810f0f15d4f2da334e602ca8e5ffd373630233546d36" => :high_sierra
-    sha256 "b17dfb640d87dcc75b1c9676e4be249ae6536739aafd4d55869f941ce43f4b86" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "3f1a856a43235f03b83369a1edf8e29cedc4457129c74147433deb48ad102fbf"
+    sha256 cellar: :any,                 big_sur:       "00c6ee28e38c679ca677309863fab484f20eef02d05fda58fd594b4a13b6b65f"
+    sha256 cellar: :any,                 catalina:      "514181f2783b615a363bb51c4dcf9edc320850d9a4d1effa17b681e2d47736af"
+    sha256 cellar: :any,                 mojave:        "f990e0d947c1026c51a83471b4466b5e6955c8f7a599d6ecb7da5c8466dcce8f"
+    sha256 cellar: :any,                 high_sierra:   "34e3a02dd0906028a4b7acd7b1ecd26d24df0002fe3e765fb49d24afa3f6a9fb"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c582052d0eecbd327166e28eaf3f75fa781b8c1bd792b45cc126c6709119d24d"
   end
 
   depends_on "autoconf" => :build
@@ -29,6 +31,6 @@ class SoundTouch < Formula
   end
 
   test do
-    assert_match /SoundStretch v#{version} -/, shell_output("#{bin}/soundstretch 2>&1", 255)
+    assert_match "SoundStretch v#{version} -", shell_output("#{bin}/soundstretch 2>&1", 255)
   end
 end

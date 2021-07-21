@@ -1,15 +1,23 @@
 class Cabextract < Formula
   desc "Extract files from Microsoft cabinet files"
   homepage "https://www.cabextract.org.uk/"
-  url "https://www.cabextract.org.uk/cabextract-1.7.tar.gz"
-  sha256 "297203c826c004801ea1b17414f568e7bdf56c3ae9bbaca4d8514e8a56e506bd"
+  url "https://www.cabextract.org.uk/cabextract-1.9.1.tar.gz"
+  sha256 "afc253673c8ef316b4d5c29cc4aa8445844bee14afffbe092ee9469405851ca7"
+  license "GPL-3.0"
+
+  livecheck do
+    url :homepage
+    regex(/href=.*?cabextract[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "2b5dcbad4ce24c5debc85c2be62441de02a1344212b6e09e346128150be60cd2" => :mojave
-    sha256 "f21c7ec553310281e57747bdf83cf5ea354ffc2dbd5f832e4ec4fcce52ddaa6d" => :high_sierra
-    sha256 "97075ab9f0784e98476a3f93049bd90f228e3cbd5cbae3bd6c89407a2878bd0a" => :sierra
-    sha256 "334776a65d21dcec7002177408ebd2dd7116a707d78d74429add1cb9cc515705" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "f421b4d93548f37080a4041a1ae83cffa6e0407489913ea09525e3e3f482d39e"
+    sha256 cellar: :any_skip_relocation, big_sur:       "1ddac23f5e64926d1f2cd400e6fa0739db93dc0517712965b2b0ca1b3e74eabd"
+    sha256 cellar: :any_skip_relocation, catalina:      "d60179c028ac5fb69580f2f01cd9f59c1d1544c8f6d84a230a7dd3587f3c27e0"
+    sha256 cellar: :any_skip_relocation, mojave:        "cd27b939a0191d4dfff8ae13300b260b5ae01c563a21613718160012a982d5e8"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "c77caa7c32b4320f9e887abeea99261345e83f03e2c321ec9e99ddd9c75f5d98"
+    sha256 cellar: :any_skip_relocation, sierra:        "c531546af69afda3101f07b509eb143cdaef00f4fdcbdd420e60287508a87e5e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "4a5504109fb1efe70b9d92f53cb617486f9036597ca77c606ff71d9e4b373f4b"
   end
 
   def install

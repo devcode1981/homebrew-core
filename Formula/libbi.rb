@@ -1,16 +1,17 @@
 class Libbi < Formula
   desc "Bayesian state-space modelling on parallel computer hardware"
   homepage "https://libbi.org/"
-  url "https://github.com/libbi/LibBi/archive/1.4.2.tar.gz"
-  sha256 "17824f6b466777a02d6bc6bb4704749fb64ce56ec4468b936086bc9901b5bf78"
-  revision 2
-  head "https://github.com/libbi/LibBi.git"
+  url "https://github.com/lawmurray/LibBi/archive/1.4.5.tar.gz"
+  sha256 "af2b6d30e1502f99a3950d63ceaf7d7275a236f4d81eff337121c24fbb802fbe"
+  license "GPL-2.0-only"
+  revision 4
+  head "https://github.com/lawmurray/LibBi.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "f41e59dcedb80e736d51fcbd7046a969d7d673e343ce067a481abfcabd18a177" => :mojave
-    sha256 "f95535ce37790f404fd5942a3aa1422f4a6557e179b7395d159fdc05d0a0f155" => :high_sierra
-    sha256 "73a677ced1a8ba4b9f7783bfcb63c469118c341cc5ca5db994f085b953a154c0" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "95b9bd0f690a89f42ec6a1e670248a5464ba14fc7e80589a6bc4b28788a30f1d"
+    sha256 cellar: :any_skip_relocation, big_sur:       "9739fadb79161f0b2db4e73d8ff9bbe2c2bc3f9c40bebc6fb6cadc9387121741"
+    sha256 cellar: :any_skip_relocation, catalina:      "fa9a991443966cd592070a228cf2d8092b3e154eda52ac390ea756d03b30e670"
+    sha256 cellar: :any_skip_relocation, mojave:        "c90c7105c8eaa9bb53ce0fc9e608dc0c4df8d082361846ce764dfc0d141ec5b4"
   end
 
   depends_on "automake"
@@ -18,6 +19,8 @@ class Libbi < Formula
   depends_on "gsl"
   depends_on "netcdf"
   depends_on "qrupdate"
+
+  uses_from_macos "perl"
 
   resource "Test::Simple" do
     url "https://cpan.metacpan.org/authors/id/E/EX/EXODIST/Test-Simple-1.302133.tar.gz"
@@ -100,8 +103,8 @@ class Libbi < Formula
   end
 
   resource "thrust" do
-    url "https://github.com/thrust/thrust/releases/download/1.8.2/thrust-1.8.2.zip"
-    sha256 "00925daee4d9505b7f33d0ed42ab0de0f9c68c4ffbe2a41e6d04452cdee77b2d"
+    url "https://github.com/thrust/thrust/archive/1.8.2.tar.gz"
+    sha256 "83bc9e7b769daa04324c986eeaf48fcb53c2dda26bcc77cb3c07f4b1c359feb8"
   end
 
   def install
@@ -110,6 +113,7 @@ class Libbi < Formula
     resources.each do |r|
       r.stage do
         next if r.name == "thrust"
+
         # need to set TT_ACCEPT=y for Template library for non-interactive install
         perl_flags = "TT_ACCEPT=y" if r.name == "Template"
         system "perl", "Makefile.PL", "INSTALL_BASE=#{libexec}", perl_flags
@@ -118,7 +122,7 @@ class Libbi < Formula
       end
     end
 
-    (include/"thrust").install resource("thrust")
+    resource("thrust").stage { (include/"thrust").install Dir["thrust/*"] }
 
     system "perl", "Makefile.PL", "INSTALL_BASE=#{libexec}", "INSTALLSITESCRIPT=#{bin}"
 
@@ -131,7 +135,7 @@ class Libbi < Formula
     system "make", "install"
 
     pkgshare.install "Test.bi", "test.conf"
-    bin.env_script_all_files(libexec+"bin", :PERL5LIB => ENV["PERL5LIB"])
+    bin.env_script_all_files(libexec+"bin", PERL5LIB: ENV["PERL5LIB"])
   end
 
   test do

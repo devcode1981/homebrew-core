@@ -1,14 +1,17 @@
 class Dartsim < Formula
   desc "Dynamic Animation and Robotics Toolkit"
   homepage "https://dartsim.github.io/"
-  url "https://github.com/dartsim/dart/archive/v6.6.2.tar.gz"
-  sha256 "3ac648fdac0633a2ea4dac37f78e37e5ced6edc2d82c3e2e9b7d8b7793df0845"
+  url "https://github.com/dartsim/dart/archive/v6.10.1.tar.gz"
+  sha256 "bf19cdef8e28dbc4059dcbb11997576d6e1d825791bd756e8272d2ddc5b147ce"
+  license "BSD-2-Clause"
   revision 2
 
   bottle do
-    sha256 "83f2ebcce524c618f43c405bd2510320101cd70024181b3abe8f4840fcc119a0" => :mojave
-    sha256 "f85e3a4f32ef05e0209baa9d8c17de918718430891afe48cc41033270f99dd83" => :high_sierra
-    sha256 "042184ad7aeb294016ca89cb7e606c44c6e2bc10111e36a52242cd146b394e33" => :sierra
+    rebuild 1
+    sha256 arm64_big_sur: "9040d281f8c9b79be449d5a1a675dae00bf0f3aa5c3b2d0378dff33f0e96cc6f"
+    sha256 big_sur:       "3f0f960d2f6d85b3c3a77e57bbccf89bc8d45e7a8a20f7a5f3640829213767a1"
+    sha256 catalina:      "e0d7a5fca7beef0c9d468061f533c5c496c12853d82781acfe5daa049a80f37c"
+    sha256 mojave:        "e282979646c3970e9c29178f33368f8ea60aa0120bff13a14dd99758bfd6a16f"
   end
 
   depends_on "cmake" => :build
@@ -19,6 +22,7 @@ class Dartsim < Formula
   depends_on "eigen"
   depends_on "fcl"
   depends_on "flann"
+  depends_on "ipopt"
   depends_on "libccd"
   depends_on "nlopt"
   depends_on "ode"
@@ -26,27 +30,23 @@ class Dartsim < Formula
   depends_on "tinyxml2"
   depends_on "urdfdom"
 
-  needs :cxx11
-
   def install
     ENV.cxx11
+    args = std_cmake_args
 
-    # Force to link to system GLUT (see: https://cmake.org/Bug/view.php?id=16045)
-    system "cmake", ".", "-DGLUT_glut_LIBRARY=/System/Library/Frameworks/GLUT.framework",
-                         *std_cmake_args
-    system "make", "install"
-
-    # Avoid revision bumps whenever fcl's or libccd's Cellar paths change
-    inreplace share/"dart/cmake/dart_dartTargets.cmake" do |s|
-      s.gsub! Formula["fcl"].prefix.realpath, Formula["fcl"].opt_prefix
-      s.gsub! Formula["libccd"].prefix.realpath, Formula["libccd"].opt_prefix
+    on_macos do
+      # Force to link to system GLUT (see: https://cmake.org/Bug/view.php?id=16045)
+      glut_lib = "#{MacOS.sdk_path}/System/Library/Frameworks/GLUT.framework"
+      args << "-DGLUT_glut_LIBRARY=#{glut_lib}"
     end
 
-    # Avoid revision bumps whenever urdfdom's or urdfdom_headers's Cellar paths change
-    inreplace share/"dart/cmake/dart_utils-urdfTargets.cmake" do |s|
-      s.gsub! Formula["urdfdom"].prefix.realpath, Formula["urdfdom"].opt_prefix
-      s.gsub! Formula["urdfdom_headers"].prefix.realpath, Formula["urdfdom_headers"].opt_prefix
+    mkdir "build" do
+      system "cmake", "..", *args, "-DCMAKE_INSTALL_RPATH=#{rpath}"
+      system "make", "install"
     end
+
+    # Clean up the build file garbage that has been installed.
+    rm_r Dir["#{share}/doc/dart/**/CMakeFiles/"]
   end
 
   test do
@@ -62,7 +62,7 @@ class Dartsim < Formula
                     "-I#{include}", "-L#{lib}", "-ldart",
                     "-L#{Formula["assimp"].opt_lib}", "-lassimp",
                     "-L#{Formula["boost"].opt_lib}", "-lboost_system",
-                    "-std=c++11", "-o", "test"
+                    "-std=c++14", "-o", "test"
     system "./test"
   end
 end

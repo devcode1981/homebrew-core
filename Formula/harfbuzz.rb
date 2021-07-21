@@ -1,55 +1,51 @@
 class Harfbuzz < Formula
   desc "OpenType text shaping engine"
-  homepage "https://wiki.freedesktop.org/www/Software/HarfBuzz/"
-  url "https://www.freedesktop.org/software/harfbuzz/release/harfbuzz-2.2.0.tar.bz2"
-  sha256 "b7ccfcbd56b970a709e8b9ea9fb46c922c606c2feef8f086fb6a8492e530f810"
+  homepage "https://github.com/harfbuzz/harfbuzz"
+  url "https://github.com/harfbuzz/harfbuzz/archive/2.8.2.tar.gz"
+  sha256 "4164f68103e7b52757a732227cfa2a16cfa9984da513843bb4eb7669adc6f220"
+  license "MIT"
+  head "https://github.com/harfbuzz/harfbuzz.git"
 
   bottle do
-    sha256 "1abb827d792e1eaceb8ac4dee2c229c397700bc1ec1b09cd892927ef4c79f81c" => :mojave
-    sha256 "026b71cba62332d52269304541ae1e2f1fc5c15711461257d2dd9f15a76286b4" => :high_sierra
-    sha256 "12b56f39902912c8346b92892c824f0bfff79285072b32f4f33412260206b4ec" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "30891c4b5ab922c7d1c8b9bc19a8d4cd8a3c917eb480c67437b507097ea715e2"
+    sha256 cellar: :any, big_sur:       "c7b09192eba72dcbf12c88806cf867598463529e12aab72b25197b7c1cf264e1"
+    sha256 cellar: :any, catalina:      "770f015a98bf6341eb0b49b16be103219b12065c33f7701d68fe097f817f838c"
+    sha256 cellar: :any, mojave:        "ec242538c3011c16ed51e24b59f64275b5cffbe0251cc0893cae9e7521bcfadf"
+    sha256               x86_64_linux:  "caff3a8e292ee113e10b998fcf15276e5bbf9bffc1d5eca9c12470351d20fc95"
   end
 
-  head do
-    url "https://github.com/behdad/harfbuzz.git"
-
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "libtool" => :build
-    depends_on "ragel" => :build
-  end
-
-  depends_on "gobject-introspection" => :build
-  depends_on "pkg-config" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "cairo"
   depends_on "freetype"
   depends_on "glib"
+  depends_on "gobject-introspection"
   depends_on "graphite2"
   depends_on "icu4c"
 
   resource "ttf" do
-    url "https://github.com/behdad/harfbuzz/raw/fc0daafab0336b847ac14682e581a8838f36a0bf/test/shaping/fonts/sha1sum/270b89df543a7e48e206a2d830c0e10e5265c630.ttf"
+    url "https://github.com/harfbuzz/harfbuzz/raw/fc0daafab0336b847ac14682e581a8838f36a0bf/test/shaping/fonts/sha1sum/270b89df543a7e48e206a2d830c0e10e5265c630.ttf"
     sha256 "9535d35dab9e002963eef56757c46881f6b3d3b27db24eefcc80929781856c77"
   end
 
   def install
-    args = %W[
-      --disable-dependency-tracking
-      --prefix=#{prefix}
-      --enable-introspection=yes
-      --enable-static
-      --with-cairo=yes
-      --with-coretext=yes
-      --with-freetype=yes
-      --with-glib=yes
-      --with-gobject=yes
-      --with-graphite2=yes
-      --with-icu=yes
+    args = %w[
+      --default-library=both
+      -Dcairo=enabled
+      -Dcoretext=enabled
+      -Dfreetype=enabled
+      -Dglib=enabled
+      -Dgobject=enabled
+      -Dgraphite=enabled
+      -Dicu=enabled
+      -Dintrospection=enabled
     ]
 
-    system "./autogen.sh" if build.head?
-    system "./configure", *args
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args, *args, ".."
+      system "ninja"
+      system "ninja", "install"
+    end
   end
 
   test do

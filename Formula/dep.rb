@@ -2,31 +2,40 @@ class Dep < Formula
   desc "Go dependency management tool"
   homepage "https://github.com/golang/dep"
   url "https://github.com/golang/dep.git",
-      :tag      => "v0.5.0",
-      :revision => "224a564abe296670b692fe08bb63a3e4c4ad7978"
+      tag:      "v0.5.4",
+      revision: "1f7c19e5f52f49ffb9f956f64c010be14683468b"
+  license "BSD-3-Clause"
   head "https://github.com/golang/dep.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "582943ea885a3e996b81052ce226d090b7563b5a14a342197d8361e80ca13772" => :mojave
-    sha256 "6c774e11ada19f1f1c71ba7b1d74d0f34290ab3657b316ee2b5f57a3aa633f0a" => :high_sierra
-    sha256 "9cb09a385da8bd6a23fd147a3c8eed29a223ecd8919b10127b259dfd6921a4a0" => :sierra
-    sha256 "7dc66f06e23b66f966540e80da1f16db9d9460edaf98338a66e4fdc935551160" => :el_capitan
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, big_sur:  "5bd49a3da392e08bef0ae821a534bd699c4c3f6d116d90b53007477fbad6a374"
+    sha256 cellar: :any_skip_relocation, catalina: "be9871f4e01aa179f9f3b32931838f21c5e64d33840ac36c8b601adeebb5e95b"
+    sha256 cellar: :any_skip_relocation, mojave:   "a86103fd9d7349cde0906850b1adaaa4e9b6c787cb11b0a791127c9af16ede8a"
   end
+
+  deprecate! date: "2020-11-25", because: :repo_archived
 
   depends_on "go"
 
-  conflicts_with "deployer", :because => "both install `dep` binaries"
+  conflicts_with "deployer", because: "both install `dep` binaries"
 
   def install
     ENV["GOPATH"] = buildpath
-    arch = MacOS.prefer_64_bit? ? "amd64" : "386"
+
+    platform = nil
+    on_macos do
+      platform = "darwin"
+    end
+    on_linux do
+      platform = "linux"
+    end
     (buildpath/"src/github.com/golang/dep").install buildpath.children
     cd "src/github.com/golang/dep" do
-      ENV["DEP_BUILD_PLATFORMS"] = "darwin"
-      ENV["DEP_BUILD_ARCHS"] = arch
+      ENV["DEP_BUILD_PLATFORMS"] = platform
+      ENV["DEP_BUILD_ARCHS"] = "amd64"
       system "hack/build-all.bash"
-      bin.install "release/dep-darwin-#{arch}" => "dep"
+      bin.install "release/dep-#{platform}-amd64" => "dep"
       prefix.install_metafiles
     end
   end

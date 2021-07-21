@@ -1,26 +1,30 @@
 class AwsOkta < Formula
   desc "Authenticate with AWS using your Okta credentials"
   homepage "https://github.com/segmentio/aws-okta"
-  url "https://github.com/segmentio/aws-okta/archive/v0.19.4.tar.gz"
-  sha256 "5bd6f81376cfa45ea5d0a067bed68e8dec14fe1a2f4bd7f4954db89172b32710"
+  url "https://github.com/segmentio/aws-okta/archive/v1.0.11.tar.gz"
+  sha256 "444a84cd9c81097a7c462f806605193c5676879133255cfa0f610b7d14756b65"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "cf692e08b3054ac9b9f16a2fa3996fd3d4a888905ceb35c7496a535f21dd7b8a" => :mojave
-    sha256 "455fcea7890c8c29446867192966f58a625287b36dc9a0760ab2a72f581b8229" => :high_sierra
-    sha256 "101f4ea15a1a2dabb2932078ac846ec858718a8b9c65d4b1b03a5381abd52414" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "6de4fd8fa42cddba3a914ed99123469230646bc2ac2598ff40fd0d0c9bf51efe"
+    sha256 cellar: :any_skip_relocation, big_sur:       "178f359eaabc71c8a677f89e1acb35fe73ae35ba4010a06876bdb630b66878b2"
+    sha256 cellar: :any_skip_relocation, catalina:      "2edc4ebb817ff4f0a3188a0c0eea6416ce2a83a6d9b5cc5b3969034ee65e27ca"
+    sha256 cellar: :any_skip_relocation, mojave:        "910418c2dd89b78a7d665cdd8082d9941de433c6c8db800ce0515dfb6c1eb25b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "108a796410008799835a58ab990dca87d12e602bff10a47f49b6b126f223b36c"
   end
+
+  # See https://github.com/segmentio/aws-okta/issues/278
+  deprecate! date: "2020-01-20", because: :deprecated_upstream
 
   depends_on "go" => :build
 
+  on_linux do
+    depends_on "pkg-config" => :build
+    depends_on "libusb"
+  end
+
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/segmentio/aws-okta").install buildpath.children
-    cd "src/github.com/segmentio/aws-okta" do
-      system "go", "build", "-ldflags", "-X main.Version=#{version}"
-      bin.install "aws-okta"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args, "-ldflags", "-s -w -X main.Version=#{version}"
   end
 
   test do
@@ -29,11 +33,18 @@ class AwsOkta < Formula
     PTY.spawn("#{bin}/aws-okta --backend file add") do |input, output, _pid|
       output.puts "organization\n"
       input.gets
+      output.puts "us\n"
+      input.gets
+      output.puts "fakedomain.okta.com\n"
+      input.gets
       output.puts "username\n"
       input.gets
       output.puts "password\n"
       input.gets
-      output.puts "\n"
+      input.gets
+      input.gets
+      input.gets
+      input.gets
       input.gets
       input.gets
       assert_match "Failed to validate credentials", input.gets.chomp

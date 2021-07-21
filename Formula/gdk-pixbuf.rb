@@ -1,30 +1,29 @@
 class GdkPixbuf < Formula
   desc "Toolkit for image loading and pixel buffer manipulation"
   homepage "https://gtk.org"
-  url "https://download.gnome.org/sources/gdk-pixbuf/2.38/gdk-pixbuf-2.38.0.tar.xz"
-  sha256 "dd50973c7757bcde15de6bcd3a6d462a445efd552604ae6435a0532fbbadae47"
+  url "https://download.gnome.org/sources/gdk-pixbuf/2.42/gdk-pixbuf-2.42.6.tar.xz"
+  sha256 "c4a6b75b7ed8f58ca48da830b9fa00ed96d668d3ab4b1f723dcf902f78bde77f"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    sha256 "f49a95e28e72c80d2376a0028cfe8ea77b8343c1aadb71fbe5ccb5c31100674f" => :mojave
-    sha256 "b5fcfc3b0f9217182ead5b34ddb23dfdf5793fd249a813995f64296cff599ffb" => :high_sierra
-    sha256 "fa967244c2682026689bf53ffa3b77792470c8a5fb1db261c13af564253e43bc" => :sierra
-    sha256 "cafc68c2bfb6013f6f6f0fad456eb6454065346f38679b11c23a2fed75e714e6" => :el_capitan
+    sha256 arm64_big_sur: "1aa92bcea0846fe0b37a4d65bf5947f5c27ffc750a93bd94db69bfe25369fda3"
+    sha256 big_sur:       "f4cf795b20c84fb5074ceeeeaf7b1d22e164b7af13adb6d0b95e3655d867fd41"
+    sha256 catalina:      "94835aba06d5e7160fd19bb14e05d3aad2f27be4c7030c019e42208369cf6014"
+    sha256 mojave:        "4bd3543b83cd74bfd0de1bd94a9e0200374c0834ef636cfe99621fe3c2145aaa"
+    sha256 x86_64_linux:  "cd3d671f4129a4dddef888e1317b4e5840d217b75fee8e46a17b33630da674c8"
   end
 
   depends_on "gobject-introspection" => :build
-  depends_on "meson-internal" => :build
+  depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
   depends_on "glib"
   depends_on "jpeg"
   depends_on "libpng"
   depends_on "libtiff"
-  depends_on "jasper" => :optional
 
-  patch do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/3d39ffd/gdk-pixbuf/meson-patches.diff"
-    sha256 "eb78bdfd5452c617ea0873629a5ec8f502a986357aa2d1a462dc9f2551b37c38"
+  on_linux do
+    depends_on "shared-mime-info"
   end
 
   # gdk-pixbuf has an internal version number separate from the overall
@@ -44,8 +43,7 @@ class GdkPixbuf < Formula
               "-DGDK_PIXBUF_LIBDIR=\"@0@\"'.format(gdk_pixbuf_libdir)",
               "-DGDK_PIXBUF_LIBDIR=\"@0@\"'.format('#{HOMEBREW_PREFIX}/lib')"
 
-    args = %W[
-      --prefix=#{prefix}
+    args = std_meson_args + %w[
       -Dx11=false
       -Ddocs=false
       -Dgir=true
@@ -54,8 +52,6 @@ class GdkPixbuf < Formula
       -Dinstalled_tests=false
       -Dman=false
     ]
-
-    args << "-Djasper=true" if build.with?("jasper")
 
     ENV["DESTDIR"] = "/"
     mkdir "build" do
@@ -112,8 +108,10 @@ class GdkPixbuf < Formula
       -lgdk_pixbuf-2.0
       -lglib-2.0
       -lgobject-2.0
-      -lintl
     ]
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end

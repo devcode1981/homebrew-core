@@ -1,16 +1,16 @@
 class Putty < Formula
   desc "Implementation of Telnet and SSH"
   homepage "https://www.chiark.greenend.org.uk/~sgtatham/putty/"
-  url "https://the.earth.li/~sgtatham/putty/0.70/putty-0.70.tar.gz"
-  sha256 "bb8aa49d6e96c5a8e18a057f3150a1695ed99a24eef699e783651d1f24e7b0be"
+  url "https://the.earth.li/~sgtatham/putty/0.76/putty-0.76.tar.gz"
+  sha256 "547cd97a8daa87ef71037fab0773bceb54a8abccb2f825a49ef8eba5e045713f"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "cf7d4ac28f94d4486e3edd4424d86c7074cd5dd59a876d49a03b6d248277260f" => :mojave
-    sha256 "832bf75b4d9927e461c853e802a7951724522fd083a0774f0609141965c06c82" => :high_sierra
-    sha256 "b212b6d5db7478c43d0f6883c459373e257219f9bfc4aa24abe2992d82f9294e" => :sierra
-    sha256 "658a1736398dedd1dc5bc1c267c08b126a6bd9b2653fb2ef3b425f401a14f293" => :el_capitan
-    sha256 "ef3e944e9b322ce16da3264e68bce6a23f58a23f45f8d84d27954670a8d71379" => :yosemite
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "adb57691d42b70e51a4336dc37126996c782f2bf66db5d0f05813ebd04178ebf"
+    sha256 cellar: :any_skip_relocation, big_sur:       "75e23ad8100002d5ade0acf3745f4f40a9add28a25ea4814caafd0cb37be7cb8"
+    sha256 cellar: :any_skip_relocation, catalina:      "ab58a1de02894bd5364c31e4a5b864acb81cbc0160814d048f98077bfe01a4b1"
+    sha256 cellar: :any_skip_relocation, mojave:        "4aab22d3d6867678be1d1be95edb5fe41fcd7d807892b00b83d0280b6f356f46"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "51689b0cb6c740349175dad1786ac7786b639e78f5e5b3765272ae83162009d4"
   end
 
   head do
@@ -19,12 +19,13 @@ class Putty < Formula
     depends_on "autoconf" => :build
     depends_on "automake" => :build
     depends_on "halibut" => :build
-    depends_on "gtk+3" => :optional
   end
 
   depends_on "pkg-config" => :build
 
-  conflicts_with "pssh", :because => "both install `pscp` binaries"
+  uses_from_macos "expect" => :test
+
+  conflicts_with "pssh", because: "both install `pscp` binaries"
 
   def install
     if build.head?
@@ -33,18 +34,10 @@ class Putty < Formula
       system "make", "-C", "doc"
     end
 
-    args = %W[
-      --prefix=#{prefix}
-      --disable-silent-rules
-      --disable-dependency-tracking
+    args = std_configure_args + %w[
       --disable-gtktest
+      --without-gtk
     ]
-
-    if build.head? && build.with?("gtk+3")
-      args << "--with-gtk=3" << "--with-quartz"
-    else
-      args << "--without-gtk"
-    end
 
     system "./configure", *args
 
@@ -52,17 +45,15 @@ class Putty < Formula
     system "make", "VER=-DRELEASE=#{build_version}"
 
     bin.install %w[plink pscp psftp puttygen]
-    bin.install %w[putty puttytel pterm] if build.head? && build.with?("gtk+3")
 
     cd "doc" do
       man1.install %w[plink.1 pscp.1 psftp.1 puttygen.1]
-      man1.install %w[putty.1 puttytel.1 pterm.1] if build.head? && build.with?("gtk+3")
     end
   end
 
   test do
     (testpath/"command.sh").write <<~EOS
-      #!/usr/bin/expect -f
+      #!/usr/bin/env expect
       set timeout -1
       spawn #{bin}/puttygen -t rsa -b 4096 -q -o test.key
       expect -exact "Enter passphrase to save key: "

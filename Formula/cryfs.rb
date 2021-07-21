@@ -1,29 +1,34 @@
 class Cryfs < Formula
   desc "Encrypts your files so you can safely store them in Dropbox, iCloud, etc."
   homepage "https://www.cryfs.org"
-  url "https://github.com/cryfs/cryfs/releases/download/0.9.9/cryfs-0.9.9.tar.xz"
-  sha256 "aa8d90bb4c821cf8347f0f4cbc5f68a1e0f4eb461ffd8f1ee093c4d37eac2908"
+  url "https://github.com/cryfs/cryfs/releases/download/0.10.2/cryfs-0.10.2.tar.xz"
+  sha256 "5531351b67ea23f849b71a1bc44474015c5718d1acce039cf101d321b27f03d5"
+  license "LGPL-3.0"
 
   bottle do
-    cellar :any
-    sha256 "9ad2ecacb4813c16b2b706d4cf6b4348ff86ef019fe6c5a7d9c39fb418010c46" => :mojave
-    sha256 "8f58cac3f867d51a95f09e17e15b893dc4415df18476963dd8cdd72c9a99f56c" => :high_sierra
-    sha256 "db97f7cd1d28b3036165d4f8142688b73e3bce12416d0a1a0b9eff03d44a0245" => :sierra
-    sha256 "2fab8415b94e7b2f782ec642e2e4fb0ce345524f5fd014cc21d14b2b410c8635" => :el_capitan
+    rebuild 1
+    sha256 cellar: :any, catalina:    "3a5986dc3775877188cbf4442bd72c6f20ffe1d384fefebac8041c0d8f9ff09b"
+    sha256 cellar: :any, mojave:      "cc94e5ba2d13205b0199e59779cecd7dd094965ee22c4ebf92d53ecaa65f8be7"
+    sha256 cellar: :any, high_sierra: "daa6d8961ef98fc509e806614c4daf6f589ee7d76bbb483066962b6bd700a2fe"
+    sha256 cellar: :any, sierra:      "252aa90f3281ccff1b9d0c6292856df1a08be17ada7aacd320f05d2d2508565f"
   end
 
   head do
-    url "https://github.com/cryfs/cryfs.git", :branch => "develop", :shallow => false
-    depends_on "libomp"
+    url "https://github.com/cryfs/cryfs.git", branch: "develop"
   end
 
   depends_on "cmake" => :build
   depends_on "boost"
-  depends_on "cryptopp"
-  depends_on "openssl"
-  depends_on :osxfuse
+  depends_on "libomp"
+  depends_on "openssl@1.1"
 
-  needs :cxx11
+  on_macos do
+    disable! date: "2021-04-08", because: "requires closed-source macFUSE"
+  end
+
+  on_linux do
+    depends_on "libfuse"
+  end
 
   def install
     configure_args = [
@@ -45,8 +50,31 @@ class Cryfs < Formula
     system "make", "install"
   end
 
+  def caveats
+    on_macos do
+      <<~EOS
+        The reasons for disabling this formula can be found here:
+          https://github.com/Homebrew/homebrew-core/pull/64491
+
+        An external tap may provide a replacement formula. See:
+          https://docs.brew.sh/Interesting-Taps-and-Forks
+      EOS
+    end
+  end
+
   test do
     ENV["CRYFS_FRONTEND"] = "noninteractive"
-    assert_match "CryFS", shell_output("#{bin}/cryfs", 10)
+
+    # Test showing help page
+    assert_match "CryFS", shell_output("#{bin}/cryfs 2>&1", 10)
+
+    # Test mounting a filesystem. This command will ultimately fail because homebrew tests
+    # don't have the required permissions to mount fuse filesystems, but before that
+    # it should display "Mounting filesystem". If that doesn't happen, there's something
+    # wrong. For example there was an ABI incompatibility issue between the crypto++ version
+    # the cryfs bottle was compiled with and the crypto++ library installed by homebrew to.
+    mkdir "basedir"
+    mkdir "mountdir"
+    assert_match "Operation not permitted", pipe_output("#{bin}/cryfs -f basedir mountdir 2>&1", "password")
   end
 end

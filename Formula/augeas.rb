@@ -1,14 +1,23 @@
 class Augeas < Formula
   desc "Configuration editing tool and API"
-  homepage "http://augeas.net"
-  url "http://download.augeas.net/augeas-1.11.0.tar.gz"
-  sha256 "393ce8f4055af89cd4c20bf903eacbbd909cf427891f41b56dc2ba66243ea0b0"
+  homepage "https://augeas.net/"
+  url "http://download.augeas.net/augeas-1.12.0.tar.gz"
+  sha256 "321942c9cc32185e2e9cb72d0a70eea106635b50269075aca6714e3ec282cb87"
+  license "LGPL-2.1"
+
+  livecheck do
+    url "http://download.augeas.net/"
+    regex(/href=.*?augeas[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "cebc1b3db31952c0d347586576b983a7f0585f0791e6ed9cab40bbd7485eeca8" => :mojave
-    sha256 "589af77e50225882c0f052379ffdcf935bba550f01190074395f6b5e195cb332" => :high_sierra
-    sha256 "1fbc0ab4f4537d59730fc84829cac47eb98362178423fed6f3e3241ec0c306d2" => :sierra
-    sha256 "afd1ca94038dfcccb49b2d5c36ebbc45ca95d749d847a25e26c39c080edf5f64" => :el_capitan
+    sha256 arm64_big_sur: "a470a4b47f5072f27cf308fac97ff3b9cdd30f88aa4a950fbc73a4527ec9c6ba"
+    sha256 big_sur:       "339c6898b7b3fd115fc3cc3c9a0cdb3eb6a1eab3f492e5f2de6513d7c6171c0e"
+    sha256 catalina:      "00a45b8b446df0a95c2c45cbe608410df2d7be7787247f4b3a8fc1c2c19b41b6"
+    sha256 mojave:        "9a561491e3574dfe2cfe7da2a618c12d02218f88f760de46722d9b603e4f27ba"
+    sha256 high_sierra:   "0e1477f692cf67442dfcaf7c20a24733838df072ec867f59322070a7eaf3f925"
+    sha256 sierra:        "55b3fab93f2ec4a703dc2bb3b3d58c47375456bdb5f0308e0856b231d309c02d"
+    sha256 x86_64_linux:  "6d95bdecb26786ee6aaaae8fe49ce90d91a10782d9c6f55d6b2de37d4b5e8aea"
   end
 
   head do
@@ -23,6 +32,8 @@ class Augeas < Formula
   depends_on "pkg-config" => :build
   depends_on "readline"
 
+  uses_from_macos "libxml2"
+
   def install
     args = %W[--disable-debug --disable-dependency-tracking --prefix=#{prefix}]
 
@@ -35,10 +46,11 @@ class Augeas < Formula
     system "make", "install"
   end
 
-  def caveats; <<~EOS
-    Lenses have been installed to:
-      #{HOMEBREW_PREFIX}/share/augeas/lenses/dist
-  EOS
+  def caveats
+    <<~EOS
+      Lenses have been installed to:
+        #{HOMEBREW_PREFIX}/share/augeas/lenses/dist
+    EOS
   end
 
   test do

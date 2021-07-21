@@ -1,54 +1,48 @@
 class Libgxps < Formula
   desc "GObject based library for handling and rendering XPS documents"
   homepage "https://wiki.gnome.org/Projects/libgxps"
-  url "https://download.gnome.org/sources/libgxps/0.2/libgxps-0.2.5.tar.xz"
-  sha256 "3e7594c5c9b077171ec9ccd3ff2b4f4c4b29884d26d4f35e740c8887b40199a0"
-  revision 2
+  url "https://download.gnome.org/sources/libgxps/0.3/libgxps-0.3.2.tar.xz"
+  sha256 "6d27867256a35ccf9b69253eb2a88a32baca3b97d5f4ef7f82e3667fa435251c"
+  license "LGPL-2.1-or-later"
+  revision 1
+  head "https://gitlab.gnome.org/GNOME/libgxps.git"
+
+  livecheck do
+    url :stable
+    regex(/libgxps[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "b1980e4de0e2d17d0232472ba8d1591d81196514461d89ea1b32a20d469ad4ad" => :mojave
-    sha256 "c3e944367cacd85f4a7d2baa0c2d6174d80b586591b9664ef4b36f758ae597f9" => :high_sierra
-    sha256 "4cfffe7346052e0b1e58d90c121a3f5019a5dbc84ba615f2b61d12489b6f83a6" => :sierra
-    sha256 "98487c22daa05bf49ae4975759c71f568b574a55f96cdbdd9834c4d05293155c" => :el_capitan
-    sha256 "234ce5d81d10db1eac54601306fb9889a549559c4e2a87e972782971103ae399" => :yosemite
+    sha256 cellar: :any, arm64_big_sur: "0243fa2f8e5b1559b417e47e5aea3b6ab8745164f397963c2ac94952c3915324"
+    sha256 cellar: :any, big_sur:       "6ad3b9179f42d68083b2b8bf54fe2d36433ed45d51e8ee13af392638e1b07174"
+    sha256 cellar: :any, catalina:      "52dc9223c583d315cc9b6edd29e696ac4e8dab1fe5d4d452c9ac3f20af185412"
+    sha256 cellar: :any, mojave:        "e113e3685b5f6a000d1e23f2bf67cb78e67c5bba58562156d5a78311ee28c05c"
   end
 
-  head do
-    url "https://github.com/GNOME/libgxps.git"
+  keg_only "it conflicts with `ghostscript`"
 
-    depends_on "gnome-common" => :build
-    depends_on "gtk-doc" => :build
-    depends_on "libtool" => :build
-  end
-
-  depends_on "autoconf" => :build
-  depends_on "automake" => :build
+  depends_on "gobject-introspection" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "cairo"
-  depends_on "freetype"
-  depends_on "jpeg"
+  depends_on "glib"
+  depends_on "gtk+3"
   depends_on "libarchive"
-  depends_on "libpng"
-  depends_on "libtiff"
   depends_on "little-cms2"
 
   def install
-    args = %W[
-      --prefix=#{prefix}
-      --disable-debug
-      --disable-dependency-tracking
-      --disable-silent-rules
-      --enable-man
-    ]
-
-    if build.head?
-      ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
-      system "./autogen.sh", *args
-    else
-      system "./configure", *args
+    mkdir "build" do
+      system "meson", *std_meson_args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
     end
-    system "make", "install"
+  end
+
+  def caveats
+    <<~EOS
+      `ghostscript` now installs a conflicting #{shared_library("libgxps")}.
+      You may need to `brew unlink libgxps` if you have both installed.
+    EOS
   end
 
   test do

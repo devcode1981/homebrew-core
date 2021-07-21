@@ -1,48 +1,23 @@
-require "language/go"
-
 class Jvgrep < Formula
   desc "Grep for Japanese users of Vim"
   homepage "https://github.com/mattn/jvgrep"
-  url "https://github.com/mattn/jvgrep/archive/v5.6.0.tar.gz"
-  sha256 "9d74f885c70bad15034cafb7210a5b2e1be299a5e41387bb9550471e5c52e0ea"
+  url "https://github.com/mattn/jvgrep/archive/v5.8.9.tar.gz"
+  sha256 "37e1b9aa4571f98a102b4f7322d7f581c608c0fcd50542dfaa7af742184fb1dc"
+  license "MIT"
   head "https://github.com/mattn/jvgrep.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "407b0911147336a3c3ea23c7d45b1380d3aa1bae20e86ab34bb84d1ef8ffaea0" => :mojave
-    sha256 "209459f0c498623c7349a57890f23fd5607a05d724a898b603a758cf0149c6c4" => :high_sierra
-    sha256 "52331b106d3bdcc174a2373c38e2ff0ec7c2eb2cdd35f6ccb89b46b49f25a2ab" => :sierra
-    sha256 "1f29a4b104991321423593f016c7d8afb554888a8358f917fce6277a457babe1" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a9f22b7d0972294f7d6d1dec7f88628df527656aad3e3f5331da3b16d78928cb"
+    sha256 cellar: :any_skip_relocation, big_sur:       "d7d7ed4778bab36afa71a8b06b5a42b5d4178bb3bd08c94a90e9f099af5ea92e"
+    sha256 cellar: :any_skip_relocation, catalina:      "da1235bed154594ddbda2614b02a42cefe359aeb02835bd99cce97642aa83df7"
+    sha256 cellar: :any_skip_relocation, mojave:        "dde02ed909386bfbbd045fb7c6109544a7e7f3f047b0add74d2ace9ff1fa5d62"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "71d2759da7b593510e62d9231f76834468b9eebfaf33c4cc6a12656eae4ff270"
   end
 
   depends_on "go" => :build
 
-  go_resource "github.com/mattn/go-colorable" do
-    url "https://github.com/mattn/go-colorable.git",
-        :revision => "efa589957cd060542a26d2dd7832fd6a6c6c3ade"
-  end
-
-  go_resource "github.com/mattn/go-isatty" do
-    url "https://github.com/mattn/go-isatty.git",
-        :revision => "6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c"
-  end
-
-  go_resource "golang.org/x/net" do
-    url "https://go.googlesource.com/net.git",
-        :revision => "5f9ae10d9af5b1c89ae6904293b14b064d4ada23"
-  end
-
-  go_resource "golang.org/x/text" do
-    url "https://go.googlesource.com/text.git",
-        :revision => "7922cc490dd5a7dbaa7fd5d6196b49db59ac042f"
-  end
-
   def install
-    ENV["GOPATH"] = buildpath
-    mkdir_p buildpath/"src/github.com/mattn"
-    ln_s buildpath, buildpath/"src/github.com/mattn/jvgrep"
-    Language::Go.stage_deps resources, buildpath/"src"
-    system "go", "build", "-o", bin/"jvgrep"
+    system "go", "build", *std_go_args
   end
 
   test do

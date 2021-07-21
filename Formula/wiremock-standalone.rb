@@ -1,24 +1,24 @@
 class WiremockStandalone < Formula
   desc "Simulator for HTTP-based APIs"
   homepage "http://wiremock.org/docs/running-standalone/"
-  url "https://search.maven.org/remotecontent?filepath=com/github/tomakehurst/wiremock-standalone/2.18.0/wiremock-standalone-2.18.0.jar"
-  sha256 "b6ca6b6c9e0dbbf8ec6d6752f93f61beb99325c88fe067377e4250fd390c03c9"
+  url "https://search.maven.org/remotecontent?filepath=com/github/tomakehurst/wiremock-jre8-standalone/2.29.0/wiremock-jre8-standalone-2.29.0.jar"
+  sha256 "74304822f8b83e1a54fb2b8860c83599d5316e485187310faab6d770e8ca4c41"
+  license "Apache-2.0"
+  head "https://github.com/tomakehurst/wiremock.git"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "646876162e46b2de6e0921016cf41a29113a1998e9094f510d6e788daec42b52"
+  end
 
-  depends_on :java => "1.8+"
+  depends_on "openjdk"
 
   def install
-    libexec.install "wiremock-standalone-#{version}.jar"
-    bin.write_jar_script libexec/"wiremock-standalone-#{version}.jar", "wiremock"
+    libexec.install "wiremock-jre8-standalone-#{version}.jar"
+    bin.write_jar_script libexec/"wiremock-jre8-standalone-#{version}.jar", "wiremock"
   end
 
   test do
-    require "socket"
-
-    server = TCPServer.new(0)
-    port = server.addr[1]
-    server.close
+    port = free_port
 
     wiremock = fork do
       exec "#{bin}/wiremock", "-port", port.to_s

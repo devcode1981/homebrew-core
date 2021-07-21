@@ -1,14 +1,16 @@
 class Gspell < Formula
   desc "Flexible API to implement spellchecking in GTK+ applications"
   homepage "https://wiki.gnome.org/Projects/gspell"
-  url "https://download.gnome.org/sources/gspell/1.8/gspell-1.8.1.tar.xz"
-  sha256 "819a1d23c7603000e73f5e738bdd284342e0cd345fb0c7650999c31ec741bbe5"
+  url "https://download.gnome.org/sources/gspell/1.8/gspell-1.8.4.tar.xz"
+  sha256 "cf4d16a716e813449bd631405dc1001ea89537b8cdae2b8abfb3999212bd43b4"
+  license "LGPL-2.1-or-later"
+  revision 2
 
   bottle do
-    sha256 "073769b3815f1f8228242aa2aca8f5f0dd59f5b20e3c03e989985232b2398ef8" => :mojave
-    sha256 "9b0d29afd1b3811c0c976879641f318504798b519bccc7c6eb8bcee93fd281a1" => :high_sierra
-    sha256 "20df1e6769419c13b1743bec961676477fc42e1341f3d5e9cfaf4e30f372f9d6" => :sierra
-    sha256 "4051d5ce5656be42be8b3d53db5282936157ca0b6320f2a782240b7f2f29d341" => :el_capitan
+    sha256 arm64_big_sur: "79824aa69126a2d3ced920aaf400ac842e8299c6b15d8ad167624f77753bc4db"
+    sha256 big_sur:       "ca7552734c97645c5b9c37ba06533c3a6b671e2b0a3c4c34c208cc3a3ec49353"
+    sha256 catalina:      "6843801c766f244f4d831e589c940c481f71310e67b744b6029b22c5c65adc28"
+    sha256 mojave:        "fd9ac81aebe4786bca2c0c4175c74514ffa26cf8a1d79142ebc96bd5c48ff86d"
   end
 
   depends_on "autoconf" => :build
@@ -18,14 +20,19 @@ class Gspell < Formula
   depends_on "pkg-config" => :build
   depends_on "enchant"
   depends_on "gtk+3"
-  depends_on "gtk-mac-integration"
   depends_on "iso-codes"
-  depends_on "vala" => :recommended
+  depends_on "vala"
+
+  uses_from_macos "libffi"
+
+  on_macos do
+    depends_on "gtk-mac-integration"
+  end
 
   patch :DATA
 
   def install
-    system "autoreconf", "-i"
+    system "autoreconf", "-if"
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
                           "--prefix=#{prefix}"
@@ -50,7 +57,6 @@ class Gspell < Formula
     gettext = Formula["gettext"]
     glib = Formula["glib"]
     gtkx3 = Formula["gtk+3"]
-    gtk_mac_integration = Formula["gtk-mac-integration"]
     harfbuzz = Formula["harfbuzz"]
     libepoxy = Formula["libepoxy"]
     libpng = Formula["libpng"]
@@ -67,7 +73,12 @@ class Gspell < Formula
       -I#{glib.opt_include}/gio-unix-2.0/
       -I#{glib.opt_include}/glib-2.0
       -I#{glib.opt_lib}/glib-2.0/include
-      -I#{gtk_mac_integration.opt_include}/gtkmacintegration
+    ]
+    on_macos do
+      gtk_mac_integration = Formula["gtk-mac-integration"]
+      flags << "-I#{gtk_mac_integration.opt_include}/gtkmacintegration"
+    end
+    flags += %W[
       -I#{gtkx3.opt_include}/gtk-3.0
       -I#{harfbuzz.opt_include}/harfbuzz
       -I#{include}/gspell-1
@@ -95,11 +106,17 @@ class Gspell < Formula
       -lgobject-2.0
       -lgspell-1
       -lgtk-3
-      -lintl
       -lpango-1.0
       -lpangocairo-1.0
     ]
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
+    ENV["G_DEBUG"] = "fatal-warnings"
+
+    # This test will fail intentionally when iso-codes gets updated.
+    # Resolve by increasing the `revision` on this formula.
     system "./test"
   end
 end
@@ -130,4 +147,3 @@ index 076a9fd..6c67184 100644
  endif # OS_OSX
 
  if HAVE_INTROSPECTION
-

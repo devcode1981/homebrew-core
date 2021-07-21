@@ -3,14 +3,19 @@ class Librasterlite < Formula
   homepage "https://www.gaia-gis.it/fossil/librasterlite/index"
   url "https://www.gaia-gis.it/gaia-sins/librasterlite-sources/librasterlite-1.1g.tar.gz"
   sha256 "0a8dceb75f8dec2b7bd678266e0ffd5210d7c33e3d01b247e9e92fa730eebcb3"
-  revision 4
+  license any_of: ["MPL-1.1", "GPL-2.0-or-later", "LGPL-2.1-or-later"]
+  revision 8
+
+  livecheck do
+    skip "No longer developed"
+  end
 
   bottle do
-    cellar :any
-    sha256 "0a776d9f46cc0a829b65cc97ebefc04508886779e4fb6863934e5064de1545cf" => :mojave
-    sha256 "65caf1ad410dbec8ab61630fd43051eebdc0a152278ceacb1b9f9c470f7daaf2" => :high_sierra
-    sha256 "c35a4604e8ca5b6bff8368bdf18f42858b7c1e616c2153539d91f92f3d1cba22" => :sierra
-    sha256 "24120f69886a7fcd617896f8b80c4d25648a840eb44b14d3a0ee1457230810e1" => :el_capitan
+    sha256 cellar: :any,                 arm64_big_sur: "9a685c2da2eca32a3b8e277e224465cb37c896717043407e64bcf54dbbe2fe67"
+    sha256 cellar: :any,                 big_sur:       "cf093e2b4e2d5e1e86f089d0dd47cf9fcb7197e2f7028cedc728ce174e5abeaa"
+    sha256 cellar: :any,                 catalina:      "87bda7a32b6106dd10a0a7b69ab9e2eb7795d72f09be14a264e3cf57c37706e0"
+    sha256 cellar: :any,                 mojave:        "58f04df469c79fdf8e57077e7ed2226bca0ebda941b527950baefc792df365ac"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6daf56bea60e8cff42c3375976009255c9998ae09c65d939700f81f1db4a1449"
   end
 
   depends_on "pkg-config" => :build
